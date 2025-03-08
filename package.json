@@ -1,0 +1,25 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.9",
+        "autoprefixer": "^10.4.20",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "laravel-echo": "^2.0.2",
+        "laravel-vite-plugin": "^1.2.0",
+        "postcss": "^8.5.3",
+        "pusher-js": "^8.4.0",
+        "tailwindcss": "^4.0.9",
+        "vite": "^6.2.0"
+    },
+    "dependencies": {
+        "jquery": "^3.7.1",
+        "sweetalert2": "^11.17.2",
+        "whatwg-fetch": "^3.6.20"
+    }
+}
