@@ -6,7 +6,6 @@ if (import.meta.env.MODE === 'development') {
 
 import "./sendErrorEmail";
 import "./notification";
-// import "./customOnError";
 import "./errorMessage";
 
 

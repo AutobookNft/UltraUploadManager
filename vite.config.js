@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
-import laravel, { refreshPaths } from 'laravel-vite-plugin'; // Assicurati che il plugin sia installato
-import tailwindcss from '@tailwindcss/vite'
+import laravel, { refreshPaths } from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [
@@ -11,11 +11,12 @@ export default defineConfig({
                 'resources/js/app.js',                             // Asset della sandbox
                 'packages/ultra/uploadmanager/resources/css/app.css',      // Asset del pacchetto
                 'packages/ultra/uploadmanager/resources/js/app.js',        // Asset del pacchetto
-                'packages/ultra/uploadmanager/resources/ts/file_upload_manager.ts' // Asset del pacchetto
+                'packages/ultra/uploadmanager/resources/ts/core/file_upload_manager.ts' // Asset del pacchetto
             ],
             refresh: [
                 ...refreshPaths,
-                'resources/views/**', // Aggiungi refresh per le viste del pacchetto
+                'resources/views/**',                              // Viste della sandbox
+                'packages/ultra/uploadmanager/resources/views/**', // Viste del pacchetto
             ],
         }),
     ],
@@ -23,21 +24,29 @@ export default defineConfig({
         alias: {
             '@': '/resources/js',
             '@ts': '/resources/ts',
+            // Aggiungi alias per il pacchetto se necessario
+            '@uploadmanager': '/packages/ultra/uploadmanager/resources',
+            '@ultra-images': '/packages/ultra/uploadmanager/resources/ts/assets/images',
         },
     },
     build: {
-        outDir: 'public/build',
+        outDir: 'public/build', // Genera nella root della sandbox
         manifest: true,
-        sourcemap: true, // Utile per sviluppo, opzionale per produzione
+        sourcemap: true, // Opzionale, rimuovilo in production
     },
     server: {
         watch: {
-            usePolling: true, // Importante per WSL2/Windows 10
+            usePolling: true, // Per WSL2/Windows
         },
         hmr: {
             host: 'localhost',
-            port: 5173, // Porto per il server di sviluppo
+            port: 5173,
         },
     },
+    fs: {
+        allow: [
+            './resources',
+            './packages/ultra/uploadmanager/resources',
+        ],
+    },
 });
-

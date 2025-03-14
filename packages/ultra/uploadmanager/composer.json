@@ -11,7 +11,9 @@
     ],
     "require": {
         "php": "^8.3",
-        "illuminate/support": "^12.0"
+        "illuminate/support": "^12.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "pusher/pusher-php-server": "^7.2"
     },
     "autoload": {
         "psr-4": {
@@ -21,7 +23,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Ultra\\UploadManager\\UploadManagerServiceProvider"
+                "Ultra\\UploadManager\\UploadManagerServiceProvider",
+                "Ultra\\UploadManager\\BroadcastingConfigServiceProvider"
             ]
         }
     },

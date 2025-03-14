@@ -1,15 +1,28 @@
 <?php
 
-use App\Http\Controllers\ErrorCodeController;
 use Illuminate\Support\Facades\Route;
+use Ultra\UploadManager\Controllers\Config\ConfigController;
 use Ultra\UploadManager\Controllers\ErrorEmailController;
 use Ultra\UploadManager\Controllers\ErrorReportingController;
 use Ultra\UploadManager\Controllers\FileController;
+use Ultra\UploadManager\Controllers\Handlers\BaseUploadController;
 use Ultra\UploadManager\Controllers\ItemsEdit;
 use Ultra\UploadManager\Controllers\NonBlockingErrorController;
+use Ultra\UploadManager\Controllers\SaveTemporaryFiles;
+use Ultra\UploadManager\Controllers\ScanVirusController;
+use Ultra\UploadManager\Controllers\SystemTempFileController;
 use Ultra\UploadManager\Controllers\UploadingFiles;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
-
+Route::get('/test-event', function() {
+    event(new \Ultra\UploadManager\Events\FileProcessingUpload(
+        'Test message',
+        'virusScan',
+        null
+    ));
+    return 'Evento inviato!';
+});
 
 Route::get('/', function () {
     return view('welcome');
@@ -39,10 +52,10 @@ Route::get('/get-non-blocking-error-constant/{code}', [NonBlockingErrorControlle
 Route::middleware(['throttle:50,1'])
     ->group(function () {
         Route::redirect('/', '/marketplace');
-        Route::post('/upload-temp', [UploadingFiles::class, 'saveTemporaryFile']);
+        Route::post('/upload-temp', [SaveTemporaryFiles::class, 'saveTemporaryFile']);
         Route::post('/uploading-files', [UploadingFiles::class, 'upload']);
         Route::post('/scanvirus', [UploadingFiles::class, 'scanVirus']);
-        Route::post('/scan-virus', [UploadingFiles::class, 'startVirusScan']);
+        // Route::post('/scan-virus', [UploadingFiles::class, 'startVirusScan']);
         Route::post('/get-presigned-url', [UploadingFiles::class, 'getPresignedUrl']);
         Route::post('/set-file-ACL', [UploadingFiles::class, 'setFileACL']);
         Route::post('/delete-temporary-file-local', [UploadingFiles::class, 'deleteTemporaryFileLocal']);
@@ -57,4 +70,20 @@ Route::middleware(['throttle:50,1'])
         Route::post('/report-js-error', [ErrorReportingController::class, 'reportJsError']);
 
         Route::get('/uploading', [UploadingFiles::class, 'show'])->name('uploading');
+
+        Route::post('/uploading/default', [BaseUploadController::class, 'hendler'])->name('uploading.hendler');
+
+        Route::get('/config/global-config', [ConfigController::class, 'getGlobalConfig'])->name('global.config');
+
+        Route::post('/upload-system-temp', [SystemTempFileController::class, 'saveToSystemTemp'])
+            ->name('upload.system.temp');
+
+        Route::post('/delete-system-temp', [SystemTempFileController::class, 'deleteSystemTempFile'])
+            ->name('delete.system.temp');
+
+        Route::post('/scan-virus', [ScanVirusController::class, 'startVirusScan'])
+            ->name('scan.virus');
+
     });
+
+

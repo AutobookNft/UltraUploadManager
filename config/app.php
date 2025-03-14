@@ -36,6 +36,8 @@ return [
         ]
     ],
 
+    'images_path' => 'asset/images',
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -117,6 +119,31 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bucket Path File Folder
+    |--------------------------------------------------------------------------
+    |
+     */
+    'bucket_folder_temp' => env('BUCKET_FOLDER_TEMP'),
+    'bucket_temp_file_folder' => env('BUCKET_TMP_FILE_FOLDER'),
+    'local_server' => env('LOCAL_SERVER'),
+    'bucket_path_file_folder' => env('BUCKET_PATH_FILE_FOLDER'),
+    'bucket_root_file_folder' => env('BUCKET_ROOT_FILE_FOLDER'),
+    'bucket_root_utilities_files' => env('FOLDER_ROOT_UTILITY_FILES'),
+    'bucket_uri_end_utilities_files' => env('FOLDER_URI_END_UTILITY_FILES'),
+    'bucket_path_file_folder_metadata' => env('BUCKET_ROOT_FILE_FOLDER_METADATA'),
+    'bucket_path_file_folder_read' => env('BUCKET_PATH_FILE_FOLDER_READ'),
+    'do_access_key_id' => env('DO_ACCESS_KEY_ID'),
+    'do_secret_access_key' => env('DO_SECRET_ACCESS_KEY'),
+    'do_default_region' => env('DO_DEFAULT_REGION'),
+    'do_bucket' => env('DO_BUCKET'),
+    'do_use_path_style_endpoint' => env('DO_USE_PATH_STYLE_ENDPOINT'),
+    'do_endpoint' => env('DO_ENDPOINT'),
+    'do_bucket_folder' => env('DO_BUCKET_FOLDER'),
+
 
     /*
     |--------------------------------------------------------------------------

@@ -17,6 +17,7 @@ export default defineConfig({
         alias: {
             '@': '/resources/js',
             '@ts': '/resources/ts',
+            '@ultra-images': '/packages/ultra/uploadmanager/resources/ts/assets/images',
         },
     },
     build: {
@@ -31,6 +32,12 @@ export default defineConfig({
         hmr: {
             host: 'localhost',
             port: 5173, // Porto per il server di sviluppo
+        },
+        fs: {
+            allow: [
+                './resources',
+                './packages/ultra/uploadmanager/resources',
+            ],
         },
     },
 });

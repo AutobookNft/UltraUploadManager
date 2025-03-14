@@ -2,21 +2,18 @@
 
 namespace Ultra\UploadManager\Controllers;
 
-use App\Events\FileProcessingUpload;
+use Ultra\UploadManager\Events\FileProcessingUpload;
 
-use App\Exceptions\VirusException;
-use App\Exceptions\CustomException;
-use App\Jobs\DeleteTempFolder;
+use Ultra\UploadManager\Exceptions\VirusException;
+use Ultra\UploadManager\Exceptions\CustomException;
+use Ultra\UploadManager\Jobs\DeleteTempFolder;
 use App\Models\Teams_item;
-use App\Services\TestingConditionsManager;
+use Ultra\UploadManager\Services\TestingConditionsManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Traits\HasValidation;
 use Illuminate\Support\Facades\Auth;
 use App\Util\FileHelper;
-use App\Traits\HasUtilitys;
-use App\Traits\TestingTrait;
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use Exception;
@@ -24,10 +21,13 @@ use Fabio\UltraLogManager\Facades\UltraLog;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\Process\Process;
 use Illuminate\Routing\Controller;
+use Ultra\UploadManager\Traits\HasUtilitys;
+use Ultra\UploadManager\Traits\HasValidation;
+use Ultra\UploadManager\Traits\TestingTrait;
 
 class UploadingFiles extends Controller
 {
-    // use HasValidation, HasUtilitys, TestingTrait;
+    use HasValidation, HasUtilitys, TestingTrait;
 
     protected $user_id;
     protected $current_team;
@@ -71,7 +71,7 @@ class UploadingFiles extends Controller
         UltraLog::log('info', 'INIZIO UPLOAD', "");
 
         // Verifica i permessi dell'utente
-        $this->validateUserPermissions();
+        // $this->validateUserPermissions();
 
         $state = "";
         $this->user_id = Auth::id();
@@ -308,519 +308,6 @@ class UploadingFiles extends Controller
         ]);
     }
 
-
-
-
-
-
-
-
-    /**
-     * Salva un file temporaneo con gestione robusta dei permessi.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function saveTemporaryFile(Request $request)
-    {
-        // Verifica se è stato caricato un file
-        if (!$request->hasFile('file')) {
-            Log:: channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Nessun file caricato');
-            return response()->json(['error' => 'No file uploaded'], 404);
-        }
-
-        try {
-
-            // Recupera il file da request
-            $file = $request->file('file') ?? null;
-
-            // Recupera il nome del file
-            $fileName = $file->getClientOriginalName();
-            Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: File da salvare nella cartella temp', ['filename' =>  $fileName]);
-
-            // Validazione del file
-            $this->validateFile($file);
-
-            // Configurazione della cartella temporanea
-            $bucketFolderTemp = config('app.bucket_temp_file_folder');
-            $fullPath = storage_path('app/' . $bucketFolderTemp);
-            Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Percorso temporaneo', ['bucketFolderTemp' => $bucketFolderTemp]);
-
-            // Verifica se la directory esiste, altrimenti prova a crearla
-            if (!file_exists($fullPath)) {
-                $this->createDirectory($fullPath);
-            }
-
-            // Tenta di salvare il file
-            $storedFilePath = $fullPath . '/' . $fileName;
-            Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Salvataggio del file', ['storedFilePath' => $storedFilePath]);
-
-            try {
-                $file->storeAs($bucketFolderTemp, $fileName);
-                Log::channel($this->channel)->info('File salvato con successo', ['fileName' => $fileName]);
-
-                // Verifica che il file sia stato creato correttamente e sia accessibile
-                if (!file_exists($storedFilePath)) {
-                    Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Il file non è stato salvato correttamente', ['storedFilePath' => $storedFilePath]);
-                    throw new Exception('File could not be saved.');
-                }
-
-                Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: File salvato temporaneamente con successo', ['fileName' => $fileName]);
-
-                return response()->json([
-                    'message' => 'File uploaded successfully',
-                    'fileName' => $fileName,
-                    'bucketFolderTemp' => $fullPath
-                ], 200);
-
-            } catch (Exception $e) {
-                Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Errore nel salvataggio del file. Tentativo di cambiare permessi e riprovare', ['error' => $e->getMessage()]);
-
-                // Tentativo di cambiare permessi della directory
-                if ($this->changePermissions($fullPath, 'directory')) {
-                    // Riprovare a salvare il file dopo aver cambiato i permessi
-                    try {
-                        $file->storeAs($bucketFolderTemp, $fileName);
-                        Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: File salvato con successo dopo aver cambiato i permessi della directory', ['fileName' => $fileName]);
-
-                        // Verifica che il file sia stato creato correttamente e sia accessibile
-                        if (!file_exists($storedFilePath)) {
-                            Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Il file non è stato salvato correttamente dopo il retry', ['storedFilePath' => $storedFilePath]);
-                            throw new Exception('File could not be saved after permission change.');
-                        }
-
-                        return response()->json([
-                            'message' => 'File uploaded successfully after permission change',
-                            'fileName' => $fileName,
-                            'bucketFolderTemp' => $fullPath
-                        ], 200);
-
-                    } catch (Exception $ex) {
-                        Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Errore nel salvataggio del file dopo aver cambiato i permessi della directory', ['error' => $ex->getMessage()]);
-
-                        // Prova a eliminare e ricreare la directory
-                        try {
-                            $this->handleDirectoryError($fullPath);
-                            // Riprovare a salvare il file dopo aver ricreato la directory
-                            $file->storeAs($bucketFolderTemp, $fileName);
-                            Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: File salvato con successo dopo aver ricreato la directory', ['fileName' => $fileName]);
-
-                            // Verifica che il file sia stato creato correttamente e sia accessibile
-                            if (!file_exists($storedFilePath)) {
-                                Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Il file non è stato salvato correttamente dopo aver ricreato la directory', ['storedFilePath' => $storedFilePath]);
-                                throw new Exception('File could not be saved after recreating the directory.');
-                            }
-
-                            return response()->json([
-                                'message' => 'File uploaded successfully after recreating the directory',
-                                'fileName' => $fileName,
-                                'bucketFolderTemp' => $fullPath
-                            ], 200);
-
-                        } catch (Exception $retryEx) {
-                            Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Errore nel salvataggio del file dopo aver ricreato la directory', ['error' => $retryEx->getMessage()]);
-                            throw new Exception('Impossibile salvare il file dopo aver ricreato la directory.');
-                        }
-                    }
-                } else {
-                    // Se non si riesce a cambiare i permessi, prova a eliminare e ricreare la directory
-                    try {
-                        $this->handleDirectoryError($fullPath);
-                        // Riprovare a salvare il file dopo aver ricreato la directory
-                        $file->storeAs($bucketFolderTemp, $fileName);
-                        Log::channel($this->channel)->info('Classe: UploadinFiles. Method: saveTemporaryFile. Action: File salvato con successo dopo aver ricreato la directory', ['fileName' => $fileName]);
-
-                        // Verifica che il file sia stato creato correttamente e sia accessibile
-                        if (!file_exists($storedFilePath)) {
-                            Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Il file non è stato salvato correttamente dopo aver ricreato la directory', ['storedFilePath' => $storedFilePath]);
-                            throw new Exception('File could not be saved after recreating the directory.');
-                        }
-
-                        return response()->json([
-                            'message' => 'File uploaded successfully after recreating the directory',
-                            'fileName' => $fileName,
-                            'bucketFolderTemp' => $fullPath
-                        ], 200);
-
-                    } catch (Exception $retryEx) {
-                        Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Action: Errore nel salvataggio del file dopo aver ricreato la directory', ['error' => $retryEx->getMessage()]);
-                        throw new Exception('Impossibile salvare il file dopo aver ricreato la directory.');
-                    }
-                }
-            }
-
-        } catch (Exception $e) {
-            Log::channel($this->channel)->error('Classe: UploadinFiles. Method: saveTemporaryFile. Error uploading file:', ['error' => $e->getMessage()]);
-            // Rilancia l'eccezione per gestire tramite ErrorDispatcher in app/Exceptions/Handler.php
-            throw $e;
-        }
-    }
-
-    protected function scanVirus(Request $request)
-    {
-        $channel ='upload';
-
-        // assegna il percorso tenmp del disco locale app/temp
-        $bucketFolderTemp =  storage_path('app/'.config('app.bucket_temp_file_folder'));
-        Log::channel($this->channel)->info('Classe: UploadinFiles. Method: scanVirus. Action: File da scansionare'. $bucketFolderTemp);
-
-        $file = $request->file('file');
-        $fileName = $file->getClientOriginalName();
-        Log::channel($this->channel)->info('Classe: UploadinFiles. Method: scanVirus. Action: Nome file', ['file' => $fileName]);
-
-        if ($request->input('bucketFolderTemp')!=='') {
-
-
-            $state = "virusScan";
-            $message = __("label.antivirus_scan_in_progress");
-
-            // Log della scansione antivirus
-            Log::channel($channel)->info("classe: ScanVirusJob. Method: handle. Action: Inizio scansione antivirus per il file: " . $fileName);
-
-            // Inviare un messaggio di stato tramite broadcasting
-            FileProcessingUpload::dispatch($message . ': ' . $fileName, $state, Auth::id(), 0);
-
-            $tempPathFileName = $bucketFolderTemp.'/'. $fileName; // Assicurati che ci sia una sola barra qui
-            Log::channel($channel)->info('Classe: UploadinFiles. Method: scanVirus. Action: File temporaneo', ['tempPathFileName' => $tempPathFileName]);
-
-            // Esegui la scansione con ClamAV
-            $process = new Process(['clamscan', '--no-summary', '--stdout', $tempPathFileName]);
-            $process->start();
-
-            $progress = 0;
-            while ($process->isRunning()) {
-
-                $progress += 10;
-                if ($progress > 100) {
-                    $progress = 100;
-                }elseif($progress == 100){
-                    $progress = 0;
-                }
-
-                FileProcessingUpload::dispatch("Scansione in corso: $fileName", 'virusScan', Auth::id(), $progress);
-                sleep(1); // Adjust the sleep duration as needed
-
-                Log::channel($channel)->info("classe: ScanVirusJob. Method: handle. Action: Scansione in corso per il file: $fileName", ['progress' => $progress]);
-
-            }
-
-            // Controlla se il processo è stato eseguito correttamente
-            if (!$process->isSuccessful()) {
-                Log::channel($channel)->error("classe: ScanVirusJob. Method: handle. Action: Errore durante la scansione antivirus per il file: $fileName", ['error' => $process->getErrorOutput()]);
-                return response()->json(['message' => __("label.error_during_file_upload")], 422);
-            }
-
-            // Risultato della scansione
-            $output = $process->getOutput();
-            Log::channel($channel)->info("classe: ScanVirusJob. Method: handle. Action: Risultato della scansione antivirus per il file: $fileName", ['output' => $output]);
-
-            if (strpos($output, 'FOUND') !== false) {
-                Log::channel($channel)->warning("classe: ScanVirusJob. Method: handle. Action: Il file caricato è stato rilevato come infetto: $fileName");
-                FileProcessingUpload::dispatch('File infetto: ' . $fileName, 'infected', Auth::id(), 100);
-                return response()->json(['message' => __("label.the_uploaded_file_was_detected_as_infected")], 422);
-            }
-
-            FileProcessingUpload::dispatch('Scan completato per: ' . $fileName, 'processingCompleted', Auth::id(), 100);
-            Log::channel($channel)->info("classe: ScanVirusJob. Method: handle. Action: Scansione completata per il file: $fileName");
-            return response()->json(['message' => __("label.file_uploaded_successfully", ['fileCaricato' => $fileName])], 200);
-
-        }else {
-
-            Log::channel($this->channel)->error('No file do virus scanned');
-            return response()->json(['message' => 'No file do virus scanned'], 400);
-
-        }
-
-    }
-
-    public function startVirusScan(Request $request)
-    {
-        $fileName = $request->input('fileName');
-        $index = $request->input('index');
-
-        $channel ='upload';
-
-        $encodedLogParams = json_encode([
-            'Class' => 'UploadingFiles',
-            'Method' => 'startVirusScan',
-        ]);
-
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Inizio scansione antivirus per il file:', 'fileName' => $fileName, 'index' => $index]);
-
-        // Convert the 'finished' input from a string to a boolean.
-        // This ensures that the value is correctly interpreted as a boolean,
-        // as FormData in JavaScript can send boolean values as strings.
-        $finished = filter_var($request->input('finished'), FILTER_VALIDATE_BOOLEAN);
-
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Finished', 'finished' => $finished]);
-
-        // La variabile someInfectedFiles risulterà maggiore di zero se almeno un file è risultato infetto
-        $someInfectedFiles = $request->input('someInfectedFiles');
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Some Infected Files', 'someInfectedFiles' => $someInfectedFiles]);
-
-        // Percorso del file temporaneo
-        $scanningIsRunning= __('label.antivirus_scan_in_progress');
-        $filePath = storage_path('app/'.config('app.bucket_temp_file_folder') .'/'. $fileName);
-        FileProcessingUpload::dispatch("$scanningIsRunning: $fileName", 'virusScan', Auth::id(), 0);
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Inizio scansione antivirus per il file:', 'filePath' => $filePath]);
-
-        // Simula un errore di file temporaneo non trovato
-        if (TestingConditionsManager::getInstance()->isTesting('TEMP_FILE_NOT_FOUND') && $index === '0') {
-            $fileName .= '1'; // Rinomina il file per simulare un errore
-        }
-
-        // Controllo se il file esiste
-        if (!$fileName || !file_exists($filePath)) {
-            Log::channel('upload')->info($encodedLogParams, ['Action' => 'File non trovato o nome file mancante', 'fileName' => $fileName, 'filePath' => $filePath]);
-            $scanningStopped = __('label.scanning_stopped');
-            FileProcessingUpload::dispatch("$scanningStopped: $fileName", 'endVirusScan', Auth::id(), 0);
-            throw new CustomException('FILE_NOT_FOUND');
-        }
-
-        try {
-            // Esegui la scansione con ClamAV
-            $process = new Process(['clamscan', '--no-summary', '--stdout', $filePath]);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                Log::channel('upload')->error($encodedLogParams, ['Action' => 'Errore durante la scansione antivirus per il file', 'fileName' => $fileName, 'error' => $process->getErrorOutput()]);
-                throw new CustomException('SCAN_ERROR');
-            }
-
-            if (TestingConditionsManager::getInstance()->isTesting('SCAN_ERROR') && $index === '0') {
-                Log::channel('upload')->error($encodedLogParams, ['Action' => 'Simulazione errore server']);
-                throw new CustomException('SCAN_ERROR');
-            }
-
-            // Risultato della scansione
-            $output = $process->getOutput();
-            Log::channel($channel)->info($encodedLogParams, ['Action' =>'Risultato della scansione antivirus per il file:', 'fileName' => $fileName, 'output' => $output]);
-
-            // ROUTINE DI TEST per simulare un file infetto
-            if (TestingConditionsManager::getInstance()->isTesting('VIRUS_FOUND') && $index === '0') {
-                Log::channel($channel)->error($encodedLogParams, ['Action' => 'SIMULAZIONE DI Errore virus_found', 'fileName' => $fileName, 'error' => $process->getErrorOutput(), 'Index'=>$index]);
-                throw new CustomException('VIRUS_FOUND');
-            }
-
-            if ($finished) {
-
-                // Ultimo file da scansionare (potrebbe anche essere l'unico)
-                if ($someInfectedFiles) {
-
-                    // Se c'è stato almeno un file infetto e siamo alla fine del processo di scansione
-                    $message = __("label.one_or_more_files_were_found_infected");
-
-                    // Comunico il messaggio ai piedi della pagina
-                    FileProcessingUpload::dispatch($message, 'allFileScannedSomeInfected', Auth::id(), 0);
-
-                    // Loggo il messaggio
-                    Log::channel('upload')->warning($encodedLogParams, ['Action' => 'One or more files were found infected', ['fileName' => $fileName]]);
-
-                    // Verifico se è il file corrente ad essere infetto
-                    // Nel caso il file contenga un virus, l'output di clamscan può essere una cosa del genere: Virus FOUND in file abc.txt
-                    // Quindi se la variabile $output contiene la parola FOUND (diverso da false), il file è infetto
-                    if (strpos($output, 'FOUND') !== false){
-                        // Il file risulta infetto
-                        throw new CustomException('VIRUS_FOUND');
-                    }else{
-                        // Il messaggio deve specificare che ci sono stati dei file infetti, ma non quello corrente
-                        $responseCode=200;
-                        $message = __("label.one_or_more_files_were_found_infected");
-                        FileProcessingUpload::dispatch($message, 'allFileScannedNotInfected', Auth::id(), 0);
-                        Log::channel('upload')->info($encodedLogParams, ['Action' => 'All files are scanned and one or more where found infeted', ['fileName' => $fileName]]);
-                        return response()->json([
-                            'userMessage' => $message,
-                            'state' => 'allFileScannedSomeInfected',
-                            'file' => $fileName,
-                            'virusFound' => false,
-                            'someInfectedFiles' => $someInfectedFiles,
-                        ], $responseCode);
-                    }
-
-                }else{
-
-                    // Se nessun file è risultato infetto e siamo alla fine del processo di scansione
-                    $responseCode=200;
-                    $message = __("label.all_files_were_scanned_no_infected_files");
-                    FileProcessingUpload::dispatch($message, 'allFileScannedNotInfected', Auth::id(), 0);
-                    Log::channel('upload')->info($encodedLogParams, ['Action' => 'All files are scanned and no infected files were found', ['fileName' => $fileName]]);
-                    return response()->json([
-                        'state' => 'allFileScannedNotInfected',
-                        'userMessage' => $message,
-                        'file' => $fileName,
-                        'virusFound' => false,
-                        'someInfectedFiles' => $someInfectedFiles,
-                    ], $responseCode);
-                }
-
-            }else{
-
-                // Non siamo alla fine del processo di scansione
-                // if ((strpos($output, 'OK') !== false) && ($index === 0 || $index === 2 || $index === 4)) { // SOLO PER DEBUG: simulo un file infetto
-
-                if ((strpos($output, 'FOUND') !== false)) {
-
-                    // Nel caso il file contenga un virus, l'output di clamscan può essere una cosa del genere: Virus FOUND in file abc.txt
-                    // Quindi se la variabile $output contiene la parola FOUND (diverso da false), il file è infetto
-                    $message = __("label.the_uploaded_file_was_detected_as_infected");
-                    $statusScan = 'infected';
-                    Log::channel('upload')->warning($encodedLogParams, ['Action' => 'Il file caricato è stato rilevato come infetto', ['fileName' => $fileName]]);
-                    FileProcessingUpload::dispatch($message, $statusScan, Auth::id(), 0);
-
-                    throw new CustomException('VIRUS_FOUND');
-
-                }else {
-
-                    // Se la stringa dell'output NON contiene la parola FOUND significa che il file è pulito, si procede con la scansione del file successivo
-                    $statusScan = 'virusScan';
-                    $message = __("label.file_scanned_successfully");
-                    $responseCode=200;
-                    Log::channel('upload')->info($encodedLogParams, ['Action' => 'Scansione completata con successo per il file', ['fileName' => $fileName]]);
-                    FileProcessingUpload::dispatch($message, $statusScan, Auth::id(), 0);
-                    return response()->json([
-                        'state' => $statusScan,
-                        'userMessage' => __("label.file_scanned_successfully", ['fileCaricato' => $fileName]),
-                        'file' => $fileName,
-                        'virusFound' => false,
-                        'someInfectedFiles' => $someInfectedFiles,
-                ], $responseCode);
-
-                }
-            }
-
-        } catch (VirusException $e) {
-
-            $response =   response()->json([
-                'userMessage' => $e->getMessage(),
-                'statusScan' => $e->getStatusScan(),
-                'codeError' => $e->getVirusFoundCode(),
-                'fileCaricato' => $fileName,
-                'virusFound' => $e->getVirusFound(),
-                'someInfectedFiles' => $someInfectedFiles,
-            ], $e->getResponseCode());
-
-            Log::channel('upload')->error($encodedLogParams, ['Action' => 'Errore durante la scansione del file', ['fileName' => $fileName, 'error' => $e->getMessage()]]);
-            return $response;
-
-        }
-    }
-
-
-    public function getPresignedUrl(Request $request)
-    {
-
-        // Verifica se l'utente ha il permesso di creare traits
-        if (!Auth::user()->can('create own EGI')) {
-            Log::channel($this->channel)->info('Unauthorized action attempt by user', ['user_id' => Auth::id()]);
-            abort(403, 'Unauthorized action.');
-        }
-
-        $fileName = $request->input('fileName');
-        $fileType = $request->input('fileType');
-        $index = $request->input('index');
-
-        $s3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => config('app.do_default_region'),
-            'endpoint' => config('app.do_endpoint'),
-            'credentials' => [
-                'key'    => config('app.do_access_key_id'),
-                'secret' => config('app.do_secret_access_key'),
-            ],
-        ]);
-
-        $bucket = config('app.do_bucket');
-        $key = config('app.bucket_temp_file_folder').'/'. $fileName; // Assicurati che ci sia una sola barra qui
-
-        Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: Generating presigned URL for file:', ['fileName' => $fileName, 'fileType' => $fileType]);
-        Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: Bucket Key:', ['key' => $key]);
-
-        try {
-            $cmd = $s3Client->getCommand('PutObject', [
-                'Bucket' => $bucket,
-                'Key'    => $key,
-                'ContentType' => $fileType,
-                'ACL'    => 'public-read',
-            ]);
-
-
-            if (TestingConditionsManager::getInstance()->isTesting('ERROR_GETTING_PRESIGNED_URL') && $index === '0') {
-                Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: Simulazione errore nella generazione dellla presigned URL');
-                throw new CustomException('ERROR_GETTING_PRESIGNED_URL');
-            }
-
-            $request = $s3Client->createPresignedRequest($cmd, '+60 minutes');
-            Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: Request:', ['request' => $request]);
-
-            $presignedUrl = (string) $request->getUri();
-            Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: Presigned URL: ' . $presignedUrl);
-
-            return response()->json([
-                'presignedUrl' => $presignedUrl,
-                'message' => __("label.im_uploading_the_file")
-                ],
-                200);
-
-        } catch (Exception $e) {
-
-            $state = "error";
-            $message = __('errors.error_getting_presigned_URL');
-            $errorCode = config('error_constants.ERROR_GETTING_PRESIGNED_URL'); // Qui $errorCode sarà il codice di errore restituito
-
-            Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: getPresignedUrl. Action: catch: ' . $errorCode );
-
-            // Invia un messaggio di stato tramite broadcasting
-            FileProcessingUpload::dispatch($message, $state, Auth::id());
-
-            throw new Exception ($message, $errorCode);
-
-
-        }
-    }
-
-    public function setFileACL(Request $request): mixed
-    {
-
-        $channel ='upload';
-
-        Log::channel($channel)->info('Class: UploadinFiles. Method: setFileACL. Action: Dentro a setFileACL');
-
-        // Leggo il nonme del file e il tipo di permesso
-        $fileName = $request->input('file');
-        $permit = $request->input('permit');
-
-        Log::channel($channel)->info("Class: UploadinFiles. Method: setFileACL. Action: Setting file visibility to private: $fileName");
-        $bucket = config('app.do_bucket');
-
-        $key = config('app.bucket_temp_file_folder').'/'. $fileName; // Assicurati che ci sia una sola barra qui
-        Log::channel($channel)->info("'Class: UploadinFiles. Method: setFileACL. Action: Bucket Key: $key");
-
-        $s3Client = new S3Client([
-            'version' => 'latest',
-            'region'  => config('app.do_default_region'),
-            'endpoint' => config('app.do_endpoint'),
-            'credentials' => [
-                'key'    => config('app.do_access_key_id'),
-                'secret' => config('app.do_secret_access_key'),
-            ],
-        ]);
-
-        try {
-            $result = $s3Client->putObjectAcl([
-                'Bucket' => $bucket,
-                'Key'    => $key,
-                'ACL'    => 'public-read',
-            ]);
-
-            Log::channel($channel)->info("Class: UploadinFiles. Method: setFileACL. Action: File visibility set to: $permit: " . $fileName);
-            return response()->json(['message' => 'File visibility set to private'], 200);
-
-        } catch (AwsException $e) {
-            Log::channel($channel)->error('Class: UploadinFiles. Method: setFileACL. Action: Error setting file visibility: ' . $e->getMessage());
-            throw new Exception ($e->getMessage(), $e->getCode());
-        }
-    }
-
     public function notifyUploadComplete(Request $request)
     {
         $fileName = $request->input('fileName');
@@ -836,7 +323,7 @@ class UploadingFiles extends Controller
     }
 
     /**
-     * Crea un nuovo record EcoNFT nel database.
+     * Crea un nuovo record EGI nel database.
      *
      * @param array $fileDetailsArray Dettagli del file
      * @param string $extension Estensione del file
@@ -1075,14 +562,26 @@ class UploadingFiles extends Controller
             'Method' => 'deleteTemporaryFileLocal',
         ]);
 
-        // Leggo il file dalla richiesta
-        $file = $request->file('file') ?? null;
+        if ($request->hasFile('file')) {
+            // Abbiamo un file caricato
+            $uploadedFile = $request->file('file');
+            $fileName = $uploadedFile->getClientOriginalName();
+        } else {
+            // Probabilmente abbiamo solo il nome del file
+            $fileName = $request->input('fileName', '');
 
-        // Trovo il nome del file
-        $file = $file->getClientOriginalName();
+            if (empty($fileName)) {
+                Log::channel($channel)->error($logParams, ['Action' => 'Nessun file o nome file fornito']);
+                return response()->json([
+                    'userMessage' => 'Nessun file specificato',
+                    'errorCode' => config('error_constants.ERROR_MISSING_FILE'),
+                    'state' => 'error',
+                ], 400);
+            }
+        }
 
         // Creo il percorso del file
-        $filePath = storage_path('app/temp/' . $file);
+        $filePath = storage_path('app/temp/' . $fileName);
 
         Log::channel($channel)->info($logParams ,  ['Action' => 'Tentativo di eliminazione del file', 'path' => $filePath]);
 
@@ -1115,7 +614,7 @@ class UploadingFiles extends Controller
                 return response()->json([
                     'userMessage' => $message,
                     'state' => $state,
-                    'file' => $file,
+                    'file' => $fileName,
                     'virusFound' => false,
                     'someInfectedFiles' => false,
                 ], 200);
@@ -1136,7 +635,7 @@ class UploadingFiles extends Controller
                     'userMessage' => $message,
                     'errorCode' => $errorCode,
                     'state' => $state,
-                    'file' => $file,
+                    'file' => $fileName,
                     'virusFound' => false,
                     'someInfectedFiles' => false,
                 ], 404); // Nel caso il file temp da eliminare non esista ritorno un 404. questo errore però non bloccherà il flusso di lavoro. Viene inviata una mail al devTeam attraverso il sistema di gestione errori centralizzato
