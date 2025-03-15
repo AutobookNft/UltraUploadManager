@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e31ce4aff092202fcd846a263fda2c3d",
+    "content-hash": "48c55c83e41e1b0f35be537925d55892",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -62,16 +62,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.342.5",
+            "version": "3.342.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "00523323c202121d2cc2e893a1bb7ff14928a5bb"
+                "reference": "2ad93ef447289da27892707efa683c1ae7ced85f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/00523323c202121d2cc2e893a1bb7ff14928a5bb",
-                "reference": "00523323c202121d2cc2e893a1bb7ff14928a5bb",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2ad93ef447289da27892707efa683c1ae7ced85f",
+                "reference": "2ad93ef447289da27892707efa683c1ae7ced85f",
                 "shasum": ""
             },
             "require": {
@@ -153,9 +153,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.5"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.6"
             },
-            "time": "2025-03-13T18:04:13+00:00"
+            "time": "2025-03-14T18:01:18+00:00"
         },
         {
             "name": "brick/math",
@@ -840,29 +840,31 @@
         },
         {
             "name": "fabiocherici/ultra-config-manager",
-            "version": "1.0.2",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/AutobookNft/UltraConfigManager.git",
-                "reference": "1685af4bf546a12fd85699c5845025733159923c"
+                "reference": "57a5800c1726baceaaec688f6bb6e39b9e7447c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/1685af4bf546a12fd85699c5845025733159923c",
-                "reference": "1685af4bf546a12fd85699c5845025733159923c",
+                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/57a5800c1726baceaaec688f6bb6e39b9e7447c6",
+                "reference": "57a5800c1726baceaaec688f6bb6e39b9e7447c6",
                 "shasum": ""
             },
             "require": {
                 "illuminate/support": "*",
-                "laravel/framework": "^12.0",
-                "monolog/monolog": "^3.7"
+                "laravel/framework": "^11.0",
+                "monolog/monolog": "^3.0",
+                "php": "^8.1|^8.2|^8.3"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Fabio\\UltraConfigManager\\Providers\\UltraConfigManagerServiceProvider",
-                        "Fabio\\UltraConfigManager\\Providers\\ValidationServiceProvider"
+                        "Fabio\\UltraConfigManager\\UltraConfigManagerServiceProvider",
+                        "Fabio\\UltraConfigManager\\ValidationServiceProvider"
                     ]
                 }
             },
@@ -882,37 +884,38 @@
             ],
             "description": "A configuration management library designed for Laravel to streamline handling configuration values with validation support.",
             "support": {
-                "source": "https://github.com/AutobookNft/UltraConfigManager/tree/1.0.2",
+                "source": "https://github.com/AutobookNft/UltraConfigManager/tree/main",
                 "issues": "https://github.com/AutobookNft/UltraConfigManager/issues"
             },
-            "time": "2025-03-08T10:42:08+00:00"
+            "time": "2025-03-15T00:48:59+00:00"
         },
         {
             "name": "fabiocherici/ultra-log-manager",
-            "version": "1.1.1",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/AutobookNft/UltraLogManager.git",
-                "reference": "27e90b82a1f67ca524ba5fa16268cf45a916a818"
+                "reference": "f33997b92279b91d76dcac669c1d05896a0a62f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/27e90b82a1f67ca524ba5fa16268cf45a916a818",
-                "reference": "27e90b82a1f67ca524ba5fa16268cf45a916a818",
+                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/f33997b92279b91d76dcac669c1d05896a0a62f5",
+                "reference": "f33997b92279b91d76dcac669c1d05896a0a62f5",
                 "shasum": ""
             },
             "require": {
-                "fabiocherici/ultra-config-manager": "^1.0.2",
+                "fabiocherici/ultra-config-manager": "dev-main",
                 "illuminate/support": "*",
-                "laravel/framework": "^12.0",
-                "monolog/monolog": "^3.7",
-                "php": ">=8.1"
+                "laravel/framework": "^11.0",
+                "monolog/monolog": "^3.0",
+                "php": "^8.1|^8.2|^8.3"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Fabio\\UltraLogManager\\Providers\\UltraLogManagerServiceProvider"
+                        "Fabio\\UltraLogManager\\UltraLogManagerServiceProvider"
                     ]
                 },
                 "aliases": {
@@ -935,10 +938,10 @@
             ],
             "description": "Ultra Log Manager is a library to standardize error and info logging for all Fabio's projects.",
             "support": {
-                "source": "https://github.com/AutobookNft/UltraLogManager/tree/1.1.1",
+                "source": "https://github.com/AutobookNft/UltraLogManager/tree/main",
                 "issues": "https://github.com/AutobookNft/UltraLogManager/issues"
             },
-            "time": "2025-03-09T20:02:51+00:00"
+            "time": "2025-03-15T00:48:10+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -1486,20 +1489,20 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v12.2.0",
+            "version": "v11.44.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "2fb06941bc69ea92f28b2888535ab144ee006889"
+                "reference": "f85216c82cbd38b66d67ebd20ea762cb3751a4b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/2fb06941bc69ea92f28b2888535ab144ee006889",
-                "reference": "2fb06941bc69ea92f28b2888535ab144ee006889",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/f85216c82cbd38b66d67ebd20ea762cb3751a4b4",
+                "reference": "f85216c82cbd38b66d67ebd20ea762cb3751a4b4",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.11|^0.12",
+                "brick/math": "^0.9.3|^0.10.2|^0.11|^0.12",
                 "composer-runtime-api": "^2.2",
                 "doctrine/inflector": "^2.0.5",
                 "dragonmantank/cron-expression": "^3.4",
@@ -1514,32 +1517,32 @@
                 "fruitcake/php-cors": "^1.3",
                 "guzzlehttp/guzzle": "^7.8.2",
                 "guzzlehttp/uri-template": "^1.0",
-                "laravel/prompts": "^0.3.0",
+                "laravel/prompts": "^0.1.18|^0.2.0|^0.3.0",
                 "laravel/serializable-closure": "^1.3|^2.0",
                 "league/commonmark": "^2.6",
                 "league/flysystem": "^3.25.1",
                 "league/flysystem-local": "^3.25.1",
                 "league/uri": "^7.5.1",
                 "monolog/monolog": "^3.0",
-                "nesbot/carbon": "^3.8.4",
+                "nesbot/carbon": "^2.72.6|^3.8.4",
                 "nunomaduro/termwind": "^2.0",
                 "php": "^8.2",
                 "psr/container": "^1.1.1|^2.0.1",
                 "psr/log": "^1.0|^2.0|^3.0",
                 "psr/simple-cache": "^1.0|^2.0|^3.0",
                 "ramsey/uuid": "^4.7",
-                "symfony/console": "^7.2.0",
-                "symfony/error-handler": "^7.2.0",
-                "symfony/finder": "^7.2.0",
+                "symfony/console": "^7.0.3",
+                "symfony/error-handler": "^7.0.3",
+                "symfony/finder": "^7.0.3",
                 "symfony/http-foundation": "^7.2.0",
-                "symfony/http-kernel": "^7.2.0",
-                "symfony/mailer": "^7.2.0",
-                "symfony/mime": "^7.2.0",
+                "symfony/http-kernel": "^7.0.3",
+                "symfony/mailer": "^7.0.3",
+                "symfony/mime": "^7.0.3",
                 "symfony/polyfill-php83": "^1.31",
-                "symfony/process": "^7.2.0",
-                "symfony/routing": "^7.2.0",
-                "symfony/uid": "^7.2.0",
-                "symfony/var-dumper": "^7.2.0",
+                "symfony/process": "^7.0.3",
+                "symfony/routing": "^7.0.3",
+                "symfony/uid": "^7.0.3",
+                "symfony/var-dumper": "^7.0.3",
                 "tijsverkoyen/css-to-inline-styles": "^2.2.5",
                 "vlucas/phpdotenv": "^5.6.1",
                 "voku/portable-ascii": "^2.0.2"
@@ -1603,17 +1606,17 @@
                 "league/flysystem-read-only": "^3.25.1",
                 "league/flysystem-sftp-v3": "^3.25.1",
                 "mockery/mockery": "^1.6.10",
-                "orchestra/testbench-core": "^10.0.0",
+                "orchestra/testbench-core": "^9.11.2",
                 "pda/pheanstalk": "^5.0.6",
                 "php-http/discovery": "^1.15",
                 "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^10.5.35|^11.5.3|^12.0.1",
+                "phpunit/phpunit": "^10.5.35|^11.3.6|^12.0.1",
                 "predis/predis": "^2.3",
                 "resend/resend-php": "^0.10.0",
-                "symfony/cache": "^7.2.0",
-                "symfony/http-client": "^7.2.0",
-                "symfony/psr-http-message-bridge": "^7.2.0",
-                "symfony/translation": "^7.2.0"
+                "symfony/cache": "^7.0.3",
+                "symfony/http-client": "^7.0.3",
+                "symfony/psr-http-message-bridge": "^7.0.3",
+                "symfony/translation": "^7.0.3"
             },
             "suggest": {
                 "ably/ably-php": "Required to use the Ably broadcast driver (^1.0).",
@@ -1639,22 +1642,22 @@
                 "mockery/mockery": "Required to use mocking (^1.6).",
                 "pda/pheanstalk": "Required to use the beanstalk queue driver (^5.0).",
                 "php-http/discovery": "Required to use PSR-7 bridging features (^1.15).",
-                "phpunit/phpunit": "Required to use assertions and run tests (^10.5.35|^11.5.3|^12.0.1).",
+                "phpunit/phpunit": "Required to use assertions and run tests (^10.5.35|^11.3.6|^12.0.1).",
                 "predis/predis": "Required to use the predis connector (^2.3).",
                 "psr/http-message": "Required to allow Storage::put to accept a StreamInterface (^1.0).",
                 "pusher/pusher-php-server": "Required to use the Pusher broadcast driver (^6.0|^7.0).",
                 "resend/resend-php": "Required to enable support for the Resend mail transport (^0.10.0).",
-                "symfony/cache": "Required to PSR-6 cache bridge (^7.2).",
-                "symfony/filesystem": "Required to enable support for relative symbolic links (^7.2).",
-                "symfony/http-client": "Required to enable support for the Symfony API mail transports (^7.2).",
-                "symfony/mailgun-mailer": "Required to enable support for the Mailgun mail transport (^7.2).",
-                "symfony/postmark-mailer": "Required to enable support for the Postmark mail transport (^7.2).",
-                "symfony/psr-http-message-bridge": "Required to use PSR-7 bridging features (^7.2)."
+                "symfony/cache": "Required to PSR-6 cache bridge (^7.0).",
+                "symfony/filesystem": "Required to enable support for relative symbolic links (^7.0).",
+                "symfony/http-client": "Required to enable support for the Symfony API mail transports (^7.0).",
+                "symfony/mailgun-mailer": "Required to enable support for the Mailgun mail transport (^7.0).",
+                "symfony/postmark-mailer": "Required to enable support for the Postmark mail transport (^7.0).",
+                "symfony/psr-http-message-bridge": "Required to use PSR-7 bridging features (^7.0)."
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "12.x-dev"
+                    "dev-master": "11.x-dev"
                 }
             },
             "autoload": {
@@ -1697,7 +1700,85 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2025-03-12T14:38:20+00:00"
+            "time": "2025-03-12T14:34:30+00:00"
+        },
+        {
+            "name": "laravel/pail",
+            "version": "v1.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pail.git",
+                "reference": "f31f4980f52be17c4667f3eafe034e6826787db2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pail/zipball/f31f4980f52be17c4667f3eafe034e6826787db2",
+                "reference": "f31f4980f52be17c4667f3eafe034e6826787db2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "illuminate/console": "^10.24|^11.0|^12.0",
+                "illuminate/contracts": "^10.24|^11.0|^12.0",
+                "illuminate/log": "^10.24|^11.0|^12.0",
+                "illuminate/process": "^10.24|^11.0|^12.0",
+                "illuminate/support": "^10.24|^11.0|^12.0",
+                "nunomaduro/termwind": "^1.15|^2.0",
+                "php": "^8.2",
+                "symfony/console": "^6.0|^7.0"
+            },
+            "require-dev": {
+                "laravel/framework": "^10.24|^11.0|^12.0",
+                "laravel/pint": "^1.13",
+                "orchestra/testbench-core": "^8.13|^9.0|^10.0",
+                "pestphp/pest": "^2.20|^3.0",
+                "pestphp/pest-plugin-type-coverage": "^2.3|^3.0",
+                "phpstan/phpstan": "^1.10",
+                "symfony/var-dumper": "^6.3|^7.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Laravel\\Pail\\PailServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laravel\\Pail\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                },
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "Easily delve into your Laravel application's log files directly from the command line.",
+            "homepage": "https://github.com/laravel/pail",
+            "keywords": [
+                "laravel",
+                "logs",
+                "php",
+                "tail"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel/pail/issues",
+                "source": "https://github.com/laravel/pail"
+            },
+            "time": "2025-01-28T15:15:15+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -6947,12 +7028,12 @@
             "dist": {
                 "type": "path",
                 "url": "packages/ultra/uploadmanager",
-                "reference": "e7144df27ea779d8b56f5bf7817a453087286036"
+                "reference": "c56f0c7126afd8891a3dde0f5f268aa4140b1c7a"
             },
             "require": {
-                "illuminate/support": "^12.0",
+                "illuminate/support": "*",
                 "league/flysystem-aws-s3-v3": "^3.0",
-                "php": "^8.3",
+                "php": "^8.1",
                 "pusher/pusher-php-server": "^7.2"
             },
             "type": "library",
@@ -6980,7 +7061,6 @@
             ],
             "description": "A modular upload manager for the Ultra ecosystem",
             "transport-options": {
-                "symlink": true,
                 "relative": true
             }
         },
@@ -7388,95 +7468,17 @@
             "time": "2020-07-09T08:09:16+00:00"
         },
         {
-            "name": "laravel/pail",
-            "version": "v1.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/pail.git",
-                "reference": "f31f4980f52be17c4667f3eafe034e6826787db2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pail/zipball/f31f4980f52be17c4667f3eafe034e6826787db2",
-                "reference": "f31f4980f52be17c4667f3eafe034e6826787db2",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "illuminate/console": "^10.24|^11.0|^12.0",
-                "illuminate/contracts": "^10.24|^11.0|^12.0",
-                "illuminate/log": "^10.24|^11.0|^12.0",
-                "illuminate/process": "^10.24|^11.0|^12.0",
-                "illuminate/support": "^10.24|^11.0|^12.0",
-                "nunomaduro/termwind": "^1.15|^2.0",
-                "php": "^8.2",
-                "symfony/console": "^6.0|^7.0"
-            },
-            "require-dev": {
-                "laravel/framework": "^10.24|^11.0|^12.0",
-                "laravel/pint": "^1.13",
-                "orchestra/testbench-core": "^8.13|^9.0|^10.0",
-                "pestphp/pest": "^2.20|^3.0",
-                "pestphp/pest-plugin-type-coverage": "^2.3|^3.0",
-                "phpstan/phpstan": "^1.10",
-                "symfony/var-dumper": "^6.3|^7.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Laravel\\Pail\\PailServiceProvider"
-                    ]
-                },
-                "branch-alias": {
-                    "dev-main": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Laravel\\Pail\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                },
-                {
-                    "name": "Nuno Maduro",
-                    "email": "enunomaduro@gmail.com"
-                }
-            ],
-            "description": "Easily delve into your Laravel application's log files directly from the command line.",
-            "homepage": "https://github.com/laravel/pail",
-            "keywords": [
-                "laravel",
-                "logs",
-                "php",
-                "tail"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/pail/issues",
-                "source": "https://github.com/laravel/pail"
-            },
-            "time": "2025-01-28T15:15:15+00:00"
-        },
-        {
             "name": "laravel/pint",
-            "version": "v1.21.1",
+            "version": "v1.21.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86"
+                "reference": "370772e7d9e9da087678a0edf2b11b6960e40558"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c44bffbb2334e90fba560933c45948fa4a3f3e86",
-                "reference": "c44bffbb2334e90fba560933c45948fa4a3f3e86",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/370772e7d9e9da087678a0edf2b11b6960e40558",
+                "reference": "370772e7d9e9da087678a0edf2b11b6960e40558",
                 "shasum": ""
             },
             "require": {
@@ -7487,9 +7489,9 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.70.2",
-                "illuminate/view": "^11.44.1",
-                "larastan/larastan": "^3.1.0",
+                "friendsofphp/php-cs-fixer": "^3.72.0",
+                "illuminate/view": "^11.44.2",
+                "larastan/larastan": "^3.2.0",
                 "laravel-zero/framework": "^11.36.1",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3",
@@ -7529,7 +7531,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-03-11T03:22:21+00:00"
+            "time": "2025-03-14T22:31:42+00:00"
         },
         {
             "name": "laravel/sail",
@@ -7739,20 +7741,20 @@
         },
         {
             "name": "nunomaduro/collision",
-            "version": "v8.6.1",
+            "version": "v8.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nunomaduro/collision.git",
-                "reference": "86f003c132143d5a2ab214e19933946409e0cae7"
+                "reference": "586cb8181a257a2152b6a855ca8d9598878a1a26"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/86f003c132143d5a2ab214e19933946409e0cae7",
-                "reference": "86f003c132143d5a2ab214e19933946409e0cae7",
+                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/586cb8181a257a2152b6a855ca8d9598878a1a26",
+                "reference": "586cb8181a257a2152b6a855ca8d9598878a1a26",
                 "shasum": ""
             },
             "require": {
-                "filp/whoops": "^2.16.0",
+                "filp/whoops": "^2.17.0",
                 "nunomaduro/termwind": "^2.3.0",
                 "php": "^8.2.0",
                 "symfony/console": "^7.2.1"
@@ -7762,14 +7764,14 @@
                 "phpunit/phpunit": "<11.5.3 || >=12.0.0"
             },
             "require-dev": {
-                "larastan/larastan": "^2.9.12",
-                "laravel/framework": "^11.39.1",
-                "laravel/pint": "^1.20.0",
-                "laravel/sail": "^1.40.0",
-                "laravel/sanctum": "^4.0.7",
-                "laravel/tinker": "^2.10.0",
-                "orchestra/testbench-core": "^9.9.2",
-                "pestphp/pest": "^3.7.3",
+                "larastan/larastan": "^2.10.0",
+                "laravel/framework": "^11.44.2",
+                "laravel/pint": "^1.21.2",
+                "laravel/sail": "^1.41.0",
+                "laravel/sanctum": "^4.0.8",
+                "laravel/tinker": "^2.10.1",
+                "orchestra/testbench-core": "^9.12.0",
+                "pestphp/pest": "^3.7.4",
                 "sebastian/environment": "^6.1.0 || ^7.2.0"
             },
             "type": "library",
@@ -7833,7 +7835,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2025-01-23T13:41:43+00:00"
+            "time": "2025-03-14T22:37:40+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -9481,12 +9483,14 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "ultra/uploadmanager": 20
+        "ultra/uploadmanager": 20,
+        "fabiocherici/ultra-config-manager": 20,
+        "fabiocherici/ultra-log-manager": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3"
+        "php": "^8.1|^8.2|^8.3"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"
