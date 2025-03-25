@@ -1,48 +1,76 @@
+/**
+ * Interface representing an error during file upload.
+ */
+interface UploadError {
+    message: string;
+    details?: string;
+    state?: string;
+    errorCode?: string;
+    blocking?: string;
+}
 
 /**
- * Funzione per caricare un file lato server.
- * @param formData - I dati del form contenenti il file da caricare.
- * @returns Un oggetto contenente l'esito dell'upload, la risposta e gli eventuali errori.
+ * Interface representing the result of a file upload operation.
+ */
+interface FileUploadResult {
+    error: UploadError | false; // Error details or false if no error
+    response: Response | false; // Fetch response or false if failed
+    success: boolean; // Indicates if the upload was successful
+}
+
+/**
+ * Function to upload a file server-side.
+ * @param formData - The form data containing the file to upload.
+ * @returns A promise resolving to an object containing the upload result, response, and any errors.
+ * @throws {Error} If the CSRF token is not defined.
  */
 export async function fileForUpload(formData: FormData): Promise<FileUploadResult> {
-    let errorData: any = null;
+    let errorData: UploadError | null = null;
     let success: boolean = true;
 
-    if ((window as any).envMode === 'local') {
+    // Check if CSRF token is defined
+    if (!window.csrfToken) {
+        throw new Error('CSRF token is not defined');
+    }
+
+    // Log for local environment
+    if (window.envMode === 'local') {
         console.log('dentro fileForUpload');
     }
 
-    if ((window as any).envMode === 'local') {
-        console.log('in fileForUpload: formData:', formData.get('file')?.name); // Log del Content-Type per verificare il tipo di risposta
+    // Log file name in local environment with improved typing
+    if (window.envMode === 'local') {
+        const file = formData.get('file') as File | null;
+        console.log('in fileForUpload: formData:', file?.name);
     }
 
     try {
         const response: Response = await fetch('/uploading-files', {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': (window as any).csrfToken,
+                'X-CSRF-TOKEN': window.csrfToken,
                 'Accept': 'application/json',
             },
             body: formData
         });
 
         const contentType = response.headers.get('content-type');
-        if ((window as any).envMode === 'local') {
-            console.log('Content-Type:', contentType); // Log del Content-Type per verificare il tipo di risposta
+        if (window.envMode === 'local') {
+            console.log('Content-Type:', contentType);
         }
 
         if (!response.ok) {
             if (contentType && contentType.includes('application/json')) {
-                errorData = await response.json(); // Ottieni la response dal server in formato JSON
+                errorData = await response.json() as UploadError; // Cast to UploadError assuming server returns compatible structure
                 success = false;
             } else {
-                const rawErrorData = await response.text(); // Se non è JSON, ottieni il testo (potrebbe essere HTML)
+                const rawErrorData = await response.text();
                 errorData = {
-                    message: 'Il server ha restituito una risposta non valida o inaspettata.',
-                    details: rawErrorData, // Mantiene il contenuto HTML o testo come dettaglio
+                    message: window.invalidServerResponse || 'The server returned an invalid or unexpected response.',
+                    details: rawErrorData,
                     state: 'unknown',
                     errorCode: 'unexpected_response',
-                    blocking: 'blocking', // Considera questo un errore bloccante di default
+                    blocking: 'blocking',
                 };
                 success = false;
             }
@@ -51,12 +79,16 @@ export async function fileForUpload(formData: FormData): Promise<FileUploadResul
         }
 
         return { error: false, response, success };
-
     } catch (error) {
-        if ((window as any).envMode === 'local') {
+        if (window.envMode === 'local') {
             console.error('Error in fileForUpload:', error);
         }
 
-        return { error, response: false, success: false }; // Restituiamo l'errore come parte dell'oggetto
+        // Convert the generic error to UploadError
+        const uploadError: UploadError = error instanceof Error
+            ? { message: error.message, errorCode: 'fetch_error' }
+            : { message: 'Unknown error occurred', errorCode: 'unknown' };
+
+        return { error: uploadError, response: false, success: false };
     }
 }

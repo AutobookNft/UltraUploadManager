@@ -3,12 +3,7 @@
 namespace Ultra\UploadManager\Controllers;
 
 use Ultra\UploadManager\Events\FileProcessingUpload;
-
-use Ultra\UploadManager\Exceptions\VirusException;
-use Ultra\UploadManager\Exceptions\CustomException;
-use Ultra\UploadManager\Services\TestingConditionsManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 use Symfony\Component\Process\Process;
@@ -16,178 +11,405 @@ use Illuminate\Routing\Controller;
 use Ultra\UploadManager\Traits\HasUtilitys;
 use Ultra\UploadManager\Traits\HasValidation;
 use Ultra\UploadManager\Traits\TestingTrait;
+use Ultra\ErrorManager\Facades\UltraError;
+use Ultra\ErrorManager\Facades\TestingConditions;
+use Ultra\UltraLogManager\Facades\UltraLog;
 
+/**
+ * Virus Scanning Controller
+ *
+ * Handles antivirus scanning of uploaded files using ClamAV.
+ * Provides real-time feedback through broadcasting events,
+ * helping users track scanning progress and results.
+ */
 class ScanVirusController extends Controller
 {
     use HasValidation, HasUtilitys, TestingTrait;
 
+    /**
+     * User ID for the current request
+     *
+     * @var int|null
+     */
     protected $user_id;
+
+    /**
+     * Current team of the authenticated user
+     *
+     * @var object|null
+     */
     protected $current_team;
+
+    /**
+     * Image path for storage
+     *
+     * @var string|null
+     */
     protected $path_image;
+
+    /**
+     * Floor price from the current team
+     *
+     * @var float|null
+     */
     protected $floorPrice;
+
+    /**
+     * Team ID of the current team
+     *
+     * @var int|null
+     */
     protected $team_id;
+
+    /**
+     * The logging channel name
+     *
+     * @var string
+     */
     protected $channel = 'upload';
 
+    /**
+     * Helper method to return a standardized "scan skipped" response.
+     * Used when scanning cannot be performed but the upload process should continue.
+     *
+     * @param string $fileName The name of the file that was not scanned
+     * @param int $someInfectedFiles Count of infected files found so far
+     * @return \Illuminate\Http\JsonResponse The standardized response
+     */
+    private function scanSkippedResponse(string $fileName, int $someInfectedFiles): \Illuminate\Http\JsonResponse
+    {
+        $message = trans('uploadmanager::uploadmanager.scan_skipped_but_upload_continues');
 
+        UltraLog::warning(
+            'ScanSkipped',
+            'Antivirus scan skipped but upload process continues',
+            [
+                'fileName' => $fileName,
+                'someInfectedFiles' => $someInfectedFiles
+            ],
+            $this->channel
+        );
+
+        FileProcessingUpload::dispatch("$message: $fileName", 'endVirusScan', Auth::id(), 0);
+        return response()->json([
+            'state' => 'endVirusScan',
+            'userMessage' => $message,
+            'file' => $fileName,
+            'virusFound' => false,
+            'someInfectedFiles' => $someInfectedFiles,
+        ], 200);
+    }
+
+    /**
+     * Initiates a virus scan on an uploaded file.
+     *
+     * This method performs a virus scan using ClamAV on the specified file.
+     * It dispatches events to update the client about the scanning progress.
+     *
+     * Process flow:
+     * 1. Locate the file to scan (either from system temp or standard location)
+     * 2. Run the ClamAV scan
+     * 3. Process the scan results
+     * 4. Return appropriate response based on scan results
+     *
+     * @param Request $request The request containing file information
+     * @return \Illuminate\Http\JsonResponse Response with scan results
+     */
     public function startVirusScan(Request $request)
     {
         $fileName = $request->input('fileName');
+        if (empty($fileName) || !is_string($fileName)) {
+            $exception = new Exception('Invalid or missing fileName in request');
+            return UltraError::handle('INVALID_INPUT', ['param' => 'fileName'], $exception);
+        }
+        $fileName = basename($fileName); // Sanitize fileName to prevent directory traversal
+
         $index = $request->input('index');
-        $customTempPath = $request->input('customTempPath'); // Nuovo parametro per il percorso alternativo
+        $customTempPath = $request->input('customTempPath'); // Parameter for the alternative path
 
-        $channel ='upload';
+        UltraLog::info(
+            'VirusScanStart',
+            'Starting antivirus scan process',
+            [
+                'fileName' => $fileName,
+                'index' => $index,
+                'customTempPath' => $customTempPath
+            ],
+            $this->channel
+        );
 
-        $encodedLogParams = json_encode([
-            'Class' => 'UploadingFiles',
-            'Method' => 'startVirusScan',
-        ]);
-
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Inizio scansione antivirus per il file:', 'fileName' => $fileName, 'index' => $index]);
-
-        // Convert the 'finished' input from a string to a boolean.
-        // This ensures that the value is correctly interpreted as a boolean,
-        // as FormData in JavaScript can send boolean values as strings.
+        // Convert 'finished' to boolean, ensuring correct interpretation from FormData
         $finished = filter_var($request->input('finished'), FILTER_VALIDATE_BOOLEAN);
 
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Finished', 'finished' => $finished]);
+        UltraLog::info(
+            'ScanParams',
+            'Scan process parameters',
+            [
+                'finished' => $finished
+            ],
+            $this->channel
+        );
 
-        // La variabile someInfectedFiles risulterà maggiore di zero se almeno un file è risultato infetto
-        $someInfectedFiles = $request->input('someInfectedFiles');
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Some Infected Files', 'someInfectedFiles' => $someInfectedFiles]);
+        // Validate and convert someInfectedFiles to an integer with a default of 0
+        $someInfectedFiles = (int) $request->input('someInfectedFiles', 0);
 
-        // Determina il percorso del file da scannerizzare
-        // Supporta sia il percorso standard che quello alternativo
+        UltraLog::info(
+            'InfectedFilesCount',
+            'Number of infected files so far',
+            [
+                'someInfectedFiles' => $someInfectedFiles
+            ],
+            $this->channel
+        );
+
+        // Determine the file path to scan
         if ($customTempPath && file_exists($customTempPath)) {
-            // Usa il percorso personalizzato fornito dal client (metodo alternativo)
             $filePath = $customTempPath;
-            Log::channel('upload')->info($encodedLogParams, ['Action' => 'Utilizzo percorso file temporaneo alternativo', 'filePath' => $filePath]);
+            UltraLog::info(
+                'CustomPathUsed',
+                'Using alternative temporary file path',
+                [
+                    'filePath' => $filePath
+                ],
+                $this->channel
+            );
         } else {
-            // Usa il percorso standard
-            $filePath = storage_path('app/'.config('app.bucket_temp_file_folder') .'/'. $fileName);
+            $filePath = get_temp_file_path($fileName);
+            UltraLog::info(
+                'StandardPathUsed',
+                'Using standard temporary file path',
+                [
+                    'filePath' => $filePath
+                ],
+                $this->channel
+            );
         }
 
-        $scanningIsRunning= __('label.antivirus_scan_in_progress');
+        $scanningIsRunning = trans('uploadmanager::uploadmanager.antivirus_scan_in_progress');
         FileProcessingUpload::dispatch("$scanningIsRunning: $fileName", 'virusScan', Auth::id(), 0);
-        Log::channel('upload')->info($encodedLogParams, ['Action' => 'Inizio scansione antivirus per il file:', 'filePath' => $filePath]);
 
-        //Simula un errore di file temporaneo non trovato
-        if (TestingConditionsManager::getInstance()->isTesting('TEMP_FILE_NOT_FOUND') && $index === '0') {
-            $filePath .= '1'; // Modifica il percorso per simulare un errore
-        }
-
-        // Controllo se il file esiste
+        // Check if the file exists
         if (!$fileName || !file_exists($filePath)) {
-            Log::channel('upload')->error($encodedLogParams, ['Action' => 'File non trovato per la scansione antivirus', 'fileName' => $fileName, 'error' => "$filePath: No such file or directory"]);
+            UltraLog::warning(
+                'FileNotFound',
+                'File not found for antivirus scan',
+                [
+                    'fileName' => $fileName,
+                    'filePath' => $filePath
+                ],
+                $this->channel
+            );
 
-            // Verifica se c'è un file caricato direttamente nella richiesta che possiamo usare
+            // Test scenario for FILE_NOT_FOUND
+            if (TestingConditions::isTesting('FILE_NOT_FOUND')) {
+                UltraLog::info(
+                    'TestSimulation',
+                    'Simulating FILE_NOT_FOUND error',
+                    [
+                        'test_condition' => 'FILE_NOT_FOUND'
+                    ],
+                    $this->channel
+                );
+
+                $simulatedException = new Exception("Simulated FILE_NOT_FOUND for testing");
+                return UltraError::handle('FILE_NOT_FOUND', [
+                    'fileName' => $fileName
+                ], $simulatedException);
+            }
+
+            // If the request contains the file, try to save it directly before scanning
             if ($request->hasFile('file')) {
                 try {
                     $uploadedFile = $request->file('file');
                     $tempDir = dirname($filePath);
 
-                    // Assicurati che la directory esista
+                    UltraLog::info(
+                        'DirectFileSave',
+                        'Attempting to save file directly before scanning',
+                        [
+                            'tempDir' => $tempDir,
+                            'fileName' => $fileName
+                        ],
+                        $this->channel
+                    );
+
                     if (!file_exists($tempDir)) {
-                        mkdir($tempDir, 0777, true);
+                        mkdir($tempDir, 0755, true);
+                        UltraLog::info(
+                            'DirectoryCreated',
+                            'Created temporary directory',
+                            [
+                                'tempDir' => $tempDir
+                            ],
+                            $this->channel
+                        );
                     }
 
-                    // Sposta il file al percorso desiderato
                     if ($uploadedFile->move($tempDir, basename($filePath))) {
-                        Log::channel('upload')->info($encodedLogParams, ['Action' => 'File salvato proprio prima della scansione', 'filePath' => $filePath]);
-
-                        // Ora il file esiste, possiamo continuare con la scansione
+                        UltraLog::info(
+                            'DirectFileSaveSuccess',
+                            'File saved successfully before scanning',
+                            [
+                                'filePath' => $filePath
+                            ],
+                            $this->channel
+                        );
                     } else {
-                        // Fallimento anche dopo il tentativo di salvataggio diretto
-                        Log::channel('upload')->error($encodedLogParams, ['Action' => 'Impossibile salvare il file prima della scansione', 'fileName' => $fileName]);
+                        UltraLog::error(
+                            'DirectFileSaveFailed',
+                            'Unable to save the file before scanning',
+                            [
+                                'fileName' => $fileName
+                            ],
+                            $this->channel
+                        );
 
-                        // Opzione consigliata per non bloccare il flusso: continua senza scansione
-                        return response()->json([
-                            'state' => 'scanSkipped',
-                            'userMessage' => __('label.scan_skipped_but_upload_continues'),
-                            'file' => $fileName,
-                            'virusFound' => false,
-                            'someInfectedFiles' => $someInfectedFiles,
-                        ], 200);
+                        $saveException = new Exception("Failed to move uploaded file to temporary directory");
+                        return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
+                            'fileName' => $fileName,
+                            'path' => $tempDir
+                        ], $saveException);
                     }
-                } catch (\Exception $e) {
-                    Log::channel('upload')->error($encodedLogParams, ['Action' => 'Eccezione durante il tentativo di salvataggio diretto', 'error' => $e->getMessage()]);
+                } catch (Exception $e) {
+                    UltraLog::error(
+                        'FilesystemException',
+                        'Exception during direct save attempt',
+                        [
+                            'error' => $e->getMessage()
+                        ],
+                        $this->channel
+                    );
 
-                    // Continua senza scansione
-                    return response()->json([
-                        'state' => 'scanSkipped',
-                        'userMessage' => __('label.scan_skipped_but_upload_continues'),
-                        'file' => $fileName,
-                        'virusFound' => false,
-                        'someInfectedFiles' => $someInfectedFiles,
-                    ], 200);
+                    return UltraError::handle('ERROR_DURING_FILE_UPLOAD', [
+                        'fileName' => $fileName,
+                        'error' => $e->getMessage()
+                    ], $e);
                 }
             } else {
-                // Se non c'è un file nella richiesta e non esiste nel percorso specificato, non possiamo procedere con la scansione
-                $scanningStopped = __('label.scanning_stopped');
-                FileProcessingUpload::dispatch("$scanningStopped: $fileName", 'endVirusScan', Auth::id(), 0);
-
-                // MODIFICA: invece di lanciare un'eccezione che interrompe il flusso,
-                // restituisci una risposta che permette di continuare
-                return response()->json([
-                    'state' => 'scanSkipped',
-                    'userMessage' => __('label.scan_skipped_but_upload_continues'),
-                    'file' => $fileName,
-                    'virusFound' => false,
-                    'someInfectedFiles' => $someInfectedFiles,
-                ], 200);
+                return $this->scanSkippedResponse($fileName, $someInfectedFiles);
             }
         }
 
         try {
-            // Esegui la scansione con ClamAV
-            $process = new Process(['clamscan', '--no-summary', '--stdout', $filePath]);
+            // Test scenario for SCAN_ERROR
+            if (TestingConditions::isTesting('SCAN_ERROR') && $index === '0') {
+                UltraLog::info(
+                    'TestSimulation',
+                    'Simulating SCAN_ERROR condition',
+                    [
+                        'test_condition' => 'SCAN_ERROR',
+                        'index' => $index
+                    ],
+                    $this->channel
+                );
+
+                $simulatedScanEx = new Exception("Simulated scan error for testing");
+                return UltraError::handle('SCAN_ERROR', [
+                    'fileName' => $fileName
+                ], $simulatedScanEx);
+            }
+
+            // Run ClamAV scan on the file
+            $binary = config('upload-manager.antivirus.binary', 'clamscan');
+            // Verifica se il binary esiste ed è eseguibile, altrimenti usa 'clamscan' nel PATH
+            $binaryPath = (file_exists($binary) && is_executable($binary)) ? $binary : 'clamscan';
+            UltraLog::info(
+                'ScanStart',
+                'Starting ClamAV scan process',
+                [
+                    'fileName' => $fileName,
+                    'filePath' => $filePath,
+                    'binary' => $binaryPath
+                ],
+                $this->channel
+            );
+
+            $process = new Process([$binaryPath, '--no-summary', '--stdout', $filePath]);
             $process->run();
 
             if (!$process->isSuccessful()) {
-                Log::channel('upload')->error($encodedLogParams, ['Action' => 'Errore durante la scansione antivirus per il file', 'fileName' => $fileName, 'error' => $process->getErrorOutput()]);
-                throw new CustomException('SCAN_ERROR');
+                UltraLog::error(
+                    'ScanProcessFailed',
+                    'Error during antivirus scan process',
+                    [
+                        'fileName' => $fileName,
+                        'error' => $process->getErrorOutput()
+                    ],
+                    $this->channel
+                );
+
+                $scanException = new Exception($process->getErrorOutput() ?: "ClamAV scan process failed");
+                return UltraError::handle('SCAN_ERROR', [
+                    'fileName' => $fileName,
+                    'error' => $process->getErrorOutput()
+                ], $scanException);
             }
 
-            if (TestingConditionsManager::getInstance()->isTesting('SCAN_ERROR') && $index === '0') {
-                Log::channel('upload')->error($encodedLogParams, ['Action' => 'Simulazione errore server']);
-                throw new CustomException('SCAN_ERROR');
-            }
-
-            // Risultato della scansione
             $output = $process->getOutput();
-            Log::channel($channel)->info($encodedLogParams, ['Action' =>'Risultato della scansione antivirus per il file:', 'fileName' => $fileName, 'output' => $output]);
+            UltraLog::info(
+                'ScanComplete',
+                'Antivirus scan completed',
+                [
+                    'fileName' => $fileName,
+                    'output' => $output
+                ],
+                $this->channel
+            );
 
-            // ROUTINE DI TEST per simulare un file infetto
-            if (TestingConditionsManager::getInstance()->isTesting('VIRUS_FOUND') && $index === '0') {
-                Log::channel($channel)->error($encodedLogParams, ['Action' => 'SIMULAZIONE DI Errore virus_found', 'fileName' => $fileName, 'error' => $process->getErrorOutput(), 'Index'=>$index]);
-                throw new CustomException('VIRUS_FOUND');
+            // Test scenario for VIRUS_FOUND
+            if (TestingConditions::isTesting('VIRUS_FOUND') && $index === '0') {
+                UltraLog::info(
+                    'TestSimulation',
+                    'Simulating VIRUS_FOUND condition',
+                    [
+                        'test_condition' => 'VIRUS_FOUND',
+                        'index' => $index
+                    ],
+                    $this->channel
+                );
+
+                $simulatedVirusEx = new Exception("Simulated virus detection for testing");
+                return UltraError::handle('VIRUS_FOUND', [
+                    'fileName' => $fileName
+                ], $simulatedVirusEx);
             }
 
+            // Process scan results with different logic for final file vs. intermediate file
             if ($finished) {
-
-                // Ultimo file da scansionare (potrebbe anche essere l'unico)
                 if ($someInfectedFiles) {
-
-                    // Se c'è stato almeno un file infetto e siamo alla fine del processo di scansione
-                    $message = __("label.one_or_more_files_were_found_infected");
-
-                    // Comunico il messaggio ai piedi della pagina
+                    // Some files were already found infected in previous scans
+                    $message = trans('uploadmanager::uploadmanager.one_or_more_files_were_found_infected');
                     FileProcessingUpload::dispatch($message, 'allFileScannedSomeInfected', Auth::id(), 0);
 
-                    // Loggo il messaggio
-                    Log::channel('upload')->warning($encodedLogParams, ['Action' => 'One or more files were found infected', ['fileName' => $fileName]]);
+                    UltraLog::warning(
+                        'InfectedFilesFound',
+                        'One or more files were found infected',
+                        [
+                            'fileName' => $fileName,
+                            'someInfectedFiles' => $someInfectedFiles
+                        ],
+                        $this->channel
+                    );
 
-                    // Verifico se è il file corrente ad essere infetto
-                    // Nel caso il file contenga un virus, l'output di clamscan può essere una cosa del genere: Virus FOUND in file abc.txt
-                    // Quindi se la variabile $output contiene la parola FOUND (diverso da false), il file è infetto
-                    if (strpos($output, 'FOUND') !== false){
-                        // Il file risulta infetto
-                        throw new CustomException('VIRUS_FOUND');
-                    }else{
-                        // Il messaggio deve specificare che ci sono stati dei file infetti, ma non quello corrente
-                        $responseCode=200;
-                        $message = __("label.one_or_more_files_were_found_infected");
-                        FileProcessingUpload::dispatch($message, 'allFileScannedNotInfected', Auth::id(), 0);
-                        Log::channel('upload')->info($encodedLogParams, ['Action' => 'All files are scanned and one or more where found infeted', ['fileName' => $fileName]]);
+                    if (strpos($output, 'FOUND') !== false) {
+                        $virusException = new Exception("Virus signature found in file: " . $fileName);
+                        return UltraError::handle('VIRUS_FOUND', [
+                            'fileName' => $fileName
+                        ], $virusException);
+                    } else {
+                        $responseCode = 200;
+                        $message = trans('uploadmanager::uploadmanager.one_or_more_files_were_found_infected');
+
+                        UltraLog::info(
+                            'ScanFinishedWithInfections',
+                            'All files are scanned and one or more were found infected',
+                            [
+                                'fileName' => $fileName,
+                                'someInfectedFiles' => $someInfectedFiles
+                            ],
+                            $this->channel
+                        );
+
                         return response()->json([
                             'userMessage' => $message,
                             'state' => 'allFileScannedSomeInfected',
@@ -196,14 +418,21 @@ class ScanVirusController extends Controller
                             'someInfectedFiles' => $someInfectedFiles,
                         ], $responseCode);
                     }
-
-                }else{
-
-                    // Se nessun file è risultato infetto e siamo alla fine del processo di scansione
-                    $responseCode=200;
-                    $message = __("label.all_files_were_scanned_no_infected_files");
+                } else {
+                    // No infected files found in any scan
+                    $responseCode = 200;
+                    $message = trans('uploadmanager::uploadmanager.all_files_were_scanned_no_infected_files');
                     FileProcessingUpload::dispatch($message, 'allFileScannedNotInfected', Auth::id(), 0);
-                    Log::channel('upload')->info($encodedLogParams, ['Action' => 'All files are scanned and no infected files were found', ['fileName' => $fileName]]);
+
+                    UltraLog::info(
+                        'ScanFinishedClean',
+                        'All files are scanned and no infected files were found',
+                        [
+                            'fileName' => $fileName
+                        ],
+                        $this->channel
+                    );
+
                     return response()->json([
                         'state' => 'allFileScannedNotInfected',
                         'userMessage' => $message,
@@ -212,75 +441,72 @@ class ScanVirusController extends Controller
                         'someInfectedFiles' => $someInfectedFiles,
                     ], $responseCode);
                 }
+            } else {
+                // Processing an individual file (not the final one)
+                if (strpos($output, 'FOUND') !== false) {
+                    // Current file is infected
+                    UltraLog::warning(
+                        'VirusFound',
+                        'The uploaded file was detected as infected',
+                        [
+                            'fileName' => $fileName
+                        ],
+                        $this->channel
+                    );
 
-            }else{
-
-                // Non siamo alla fine del processo di scansione
-                // if ((strpos($output, 'OK') !== false) && ($index === 0 || $index === 2 || $index === 4)) { // SOLO PER DEBUG: simulo un file infetto
-
-                if ((strpos($output, 'FOUND') !== false)) {
-
-                    // Nel caso il file contenga un virus, l'output di clamscan può essere una cosa del genere: Virus FOUND in file abc.txt
-                    // Quindi se la variabile $output contiene la parola FOUND (diverso da false), il file è infetto
-                    $message = __("label.the_uploaded_file_was_detected_as_infected");
+                    $message = trans('uploadmanager::uploadmanager.the_uploaded_file_was_detected_as_infected');
                     $statusScan = 'infected';
-                    Log::channel('upload')->warning($encodedLogParams, ['Action' => 'Il file caricato è stato rilevato come infetto', ['fileName' => $fileName]]);
                     FileProcessingUpload::dispatch($message, $statusScan, Auth::id(), 0);
 
-                    throw new CustomException('VIRUS_FOUND');
-
-                }else {
-
-                    // Se la stringa dell'output NON contiene la parola FOUND significa che il file è pulito, si procede con la scansione del file successivo
+                    $virusException = new Exception("Virus signature found in file: " . $fileName);
+                    return UltraError::handle('VIRUS_FOUND', [
+                        'fileName' => $fileName
+                    ], $virusException);
+                } else {
+                    // Current file is clean
                     $statusScan = 'virusScan';
-                    $message = __("label.file_scanned_successfully");
-                    $responseCode=200;
-                    Log::channel('upload')->info($encodedLogParams, ['Action' => 'Scansione completata con successo per il file', ['fileName' => $fileName]]);
+                    $message = trans('uploadmanager::uploadmanager.scanning_success', ['fileCaricato' => $fileName]);
+                    $responseCode = 200;
+
+                    UltraLog::info(
+                        'FileScanSuccess',
+                        'Scan completed successfully for the file',
+                        [
+                            'fileName' => $fileName
+                        ],
+                        $this->channel
+                    );
+
                     FileProcessingUpload::dispatch($message, $statusScan, Auth::id(), 0);
+
                     return response()->json([
                         'state' => $statusScan,
-                        'userMessage' => __("label.file_scanned_successfully", ['fileCaricato' => $fileName]),
+                        'userMessage' => $message,
                         'file' => $fileName,
                         'virusFound' => false,
                         'someInfectedFiles' => $someInfectedFiles,
                     ], $responseCode);
-
                 }
             }
+        } catch (Exception $e) {
+            UltraLog::error(
+                'UnexpectedError',
+                'Unexpected error during file scan',
+                [
+                    'fileName' => $fileName,
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ],
+                $this->channel
+            );
 
-        } catch (VirusException $e) {
-
-            $response =   response()->json([
-                'userMessage' => $e->getMessage(),
-                'statusScan' => $e->getStatusScan(),
-                'codeError' => $e->getVirusFoundCode(),
-                'fileCaricato' => $fileName,
-                'virusFound' => $e->getVirusFound(),
-                'someInfectedFiles' => $someInfectedFiles,
-            ], $e->getResponseCode());
-
-            Log::channel('upload')->error($encodedLogParams, ['Action' => 'Errore durante la scansione del file', ['fileName' => $fileName, 'error' => $e->getMessage()]]);
-            return $response;
-
-        } catch (CustomException $e) {
-            // Gestisci eccezione personalizzata in modo più flessibile
-            if ($e->getCode() === 'FILE_NOT_FOUND' || $e->getCode() === 'SCAN_ERROR') {
-                // Per questi errori, invece di bloccare, continuiamo il flusso
-                Log::channel('upload')->warning($encodedLogParams, ['Action' => 'Errore gestito, ma continuiamo il flusso', 'error' => $e->getMessage()]);
-
-                return response()->json([
-                    'state' => 'scanSkipped',
-                    'userMessage' => __('label.scan_skipped_but_upload_continues'),
-                    'file' => $fileName,
-                    'virusFound' => false,
-                    'someInfectedFiles' => $someInfectedFiles,
-                ], 200);
-            }
-
-            // Rilancia le altre eccezioni
-            throw $e;
+            // Handle with Ultra Error Manager
+            return UltraError::handle('UNEXPECTED_ERROR', [
+                'fileName' => $fileName,
+                'exceptionMessage' => $e->getMessage()
+            ], $e);
         }
     }
-
-
-    }
+}

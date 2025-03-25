@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
-use Ultra\UploadManager\Jobs\TempFilesCleaner;
-use Ultra\UploadManager\BroadcastingConfigServiceProvider;
+use Ultra\UploadManager\BroadcastServiceProvider;
 use Ultra\UploadManager\Console\CleanTempFilesCommand;
 use Ultra\UploadManager\Console\UltraSetupCommand;
 
@@ -15,31 +14,26 @@ class UploadManagerServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        Log::channel('upload')->info('classe: UploadManagerServiceProvider. Method: boot()');
-
         $this->loadRoutesFrom(__DIR__ . '/../routes/routes.php');
 
-        // Carica le rotte per la gestione dei file temporanei di sistema
-        // $this->loadRoutesFrom(__DIR__ . '/../routes/system_temp_routes.php');
-
-        // config(['broadcasting.default' => 'pusher']);
-
-        Log::channel('upload')->info('Boot iniziato nel UploadManagerServiceProvider');
-        Log::channel('upload')->info('Configurazione broadcasting', [
-            'driver' => config('broadcasting.default'),
-            'connections' => array_keys(config('broadcasting.connections')),
-            'pusher_config' => config('broadcasting.connections.pusher')
-        ]);
+        // Log::channel('upload')->info("Configurazione broadcasting:\n" .
+        //     "Driver: " . config('broadcasting.default') . "\n" .
+        //     "Connections: " . implode(', ', array_keys(config('broadcasting.connections'))) . "\n" .
+        //     "Pusher Config:\n" . json_encode(config('broadcasting.connections.pusher'), JSON_PRETTY_PRINT)
+        // );
 
         // Schedula la registrazione del canale dopo l'inizializzazione completa
         $this->app->booted(function () {
-            Log::channel('upload')->info('App booted, tentativo di registrare il canale upload');
+            // Log::channel('upload')->info('App booted, tentativo di registrare il canale upload');
             Broadcast::channel('upload', function () {
                 Log::channel('upload')->info('Qualcuno si è connesso al canale upload');
                 return true;
             });
-            Log::channel('upload')->info('Canale upload registrato dopo app booted');
+            // Log::channel('upload')->info('Canale upload registrato dopo app booted');
         });
+
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'uploadmanager');
+        // $this->loadTranslation();
 
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'uploadmanager');
         $this->publishConfig();
@@ -61,6 +55,15 @@ class UploadManagerServiceProvider extends ServiceProvider
                 // $schedule->job(new TempFilesCleaner(6))->everyFourHours();
             });
         }
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/uploadmanager'),
+        ], 'uploadmanager-views');
+
+        $this->publishes([
+            __DIR__.'/../resources/lang' => resource_path('lang/vendor/uploadmanager'),
+        ], 'uploadmanager-translations');
+
     }
 
     public function register()
@@ -72,7 +75,7 @@ class UploadManagerServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/AllowedFileType.php', 'AllowedFileType');
 
         // Registra il provider di configurazione broadcasting
-        $this->app->register(BroadcastingConfigServiceProvider::class);
+        $this->app->register(BroadcastServiceProvider::class);
     }
 
     protected function publishConfig()
@@ -87,5 +90,26 @@ class UploadManagerServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/logging.php' => config_path('logging-ultra-uploadmanager.php'),
         ], 'upload-manager-logging');
+    }
+
+    protected function loadTranslation(){
+        $path = __DIR__.'/../resources/lang';
+        Log::channel('upload')->info('Translations path', [
+            'path' => $path,
+            'exists' => file_exists($path),
+            'files' => file_exists($path) ? scandir($path) : 'directory non esiste'
+        ]);
+
+        // Verifichiamo anche il percorso delle lingue specifiche
+        $enPath = $path . '/en';
+        $itPath = $path . '/it';
+        Log::channel('upload')->info('Language paths', [
+            'en_path' => $enPath,
+            'en_exists' => file_exists($enPath),
+            'en_files' => file_exists($enPath) ? scandir($enPath) : 'directory non esiste',
+            'it_path' => $itPath,
+            'it_exists' => file_exists($itPath),
+            'it_files' => file_exists($itPath) ? scandir($itPath) : 'directory non esiste',
+        ]);
     }
 }

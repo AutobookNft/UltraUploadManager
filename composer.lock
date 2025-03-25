@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "48c55c83e41e1b0f35be537925d55892",
+    "content-hash": "65e6989339435b638666dfd97bf5406b",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -62,16 +62,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.342.6",
+            "version": "3.342.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "2ad93ef447289da27892707efa683c1ae7ced85f"
+                "reference": "e0afed3d0e2c89362f6c9b6bf8f278b04a4858b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2ad93ef447289da27892707efa683c1ae7ced85f",
-                "reference": "2ad93ef447289da27892707efa683c1ae7ced85f",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/e0afed3d0e2c89362f6c9b6bf8f278b04a4858b6",
+                "reference": "e0afed3d0e2c89362f6c9b6bf8f278b04a4858b6",
                 "shasum": ""
             },
             "require": {
@@ -153,9 +153,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.6"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.11"
             },
-            "time": "2025-03-14T18:01:18+00:00"
+            "time": "2025-03-21T18:11:10+00:00"
         },
         {
             "name": "brick/math",
@@ -726,16 +726,16 @@
         },
         {
             "name": "egulias/email-validator",
-            "version": "4.0.3",
+            "version": "4.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/egulias/EmailValidator.git",
-                "reference": "b115554301161fa21467629f1e1391c1936de517"
+                "reference": "d42c8731f0624ad6bdc8d3e5e9a4524f68801cfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/egulias/EmailValidator/zipball/b115554301161fa21467629f1e1391c1936de517",
-                "reference": "b115554301161fa21467629f1e1391c1936de517",
+                "url": "https://api.github.com/repos/egulias/EmailValidator/zipball/d42c8731f0624ad6bdc8d3e5e9a4524f68801cfa",
+                "reference": "d42c8731f0624ad6bdc8d3e5e9a4524f68801cfa",
                 "shasum": ""
             },
             "require": {
@@ -781,7 +781,7 @@
             ],
             "support": {
                 "issues": "https://github.com/egulias/EmailValidator/issues",
-                "source": "https://github.com/egulias/EmailValidator/tree/4.0.3"
+                "source": "https://github.com/egulias/EmailValidator/tree/4.0.4"
             },
             "funding": [
                 {
@@ -789,7 +789,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-12-27T00:36:43+00:00"
+            "time": "2025-03-06T22:45:56+00:00"
         },
         {
             "name": "evenement/evenement",
@@ -837,111 +837,6 @@
                 "source": "https://github.com/igorw/evenement/tree/v3.0.2"
             },
             "time": "2023-08-08T05:53:35+00:00"
-        },
-        {
-            "name": "fabiocherici/ultra-config-manager",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/AutobookNft/UltraConfigManager.git",
-                "reference": "57a5800c1726baceaaec688f6bb6e39b9e7447c6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/57a5800c1726baceaaec688f6bb6e39b9e7447c6",
-                "reference": "57a5800c1726baceaaec688f6bb6e39b9e7447c6",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/support": "*",
-                "laravel/framework": "^11.0",
-                "monolog/monolog": "^3.0",
-                "php": "^8.1|^8.2|^8.3"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Fabio\\UltraConfigManager\\UltraConfigManagerServiceProvider",
-                        "Fabio\\UltraConfigManager\\ValidationServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Fabio\\UltraConfigManager\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "fabio cherici",
-                    "email": "fabiocherici@gmail.com"
-                }
-            ],
-            "description": "A configuration management library designed for Laravel to streamline handling configuration values with validation support.",
-            "support": {
-                "source": "https://github.com/AutobookNft/UltraConfigManager/tree/main",
-                "issues": "https://github.com/AutobookNft/UltraConfigManager/issues"
-            },
-            "time": "2025-03-15T00:48:59+00:00"
-        },
-        {
-            "name": "fabiocherici/ultra-log-manager",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/AutobookNft/UltraLogManager.git",
-                "reference": "f33997b92279b91d76dcac669c1d05896a0a62f5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/f33997b92279b91d76dcac669c1d05896a0a62f5",
-                "reference": "f33997b92279b91d76dcac669c1d05896a0a62f5",
-                "shasum": ""
-            },
-            "require": {
-                "fabiocherici/ultra-config-manager": "dev-main",
-                "illuminate/support": "*",
-                "laravel/framework": "^11.0",
-                "monolog/monolog": "^3.0",
-                "php": "^8.1|^8.2|^8.3"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Fabio\\UltraLogManager\\UltraLogManagerServiceProvider"
-                    ]
-                },
-                "aliases": {
-                    "UltraLog": "Fabio\\UltraLogManager\\Facades\\UltraLog"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Fabio\\UltraLogManager\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "fabio cherici",
-                    "email": "fabio.cherici@gmail.com"
-                }
-            ],
-            "description": "Ultra Log Manager is a library to standardize error and info logging for all Fabio's projects.",
-            "support": {
-                "source": "https://github.com/AutobookNft/UltraLogManager/tree/main",
-                "issues": "https://github.com/AutobookNft/UltraLogManager/issues"
-            },
-            "time": "2025-03-15T00:48:10+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -1841,16 +1736,16 @@
         },
         {
             "name": "laravel/reverb",
-            "version": "v1.4.7",
+            "version": "v1.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/reverb.git",
-                "reference": "fc74de95c55e71b1ddbcf10d18d7c54226b7a535"
+                "reference": "b623bffaf47f9760064bf3476dc583d7953d4c72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/reverb/zipball/fc74de95c55e71b1ddbcf10d18d7c54226b7a535",
-                "reference": "fc74de95c55e71b1ddbcf10d18d7c54226b7a535",
+                "url": "https://api.github.com/repos/laravel/reverb/zipball/b623bffaf47f9760064bf3476dc583d7953d4c72",
+                "reference": "b623bffaf47f9760064bf3476dc583d7953d4c72",
                 "shasum": ""
             },
             "require": {
@@ -1917,9 +1812,9 @@
             ],
             "support": {
                 "issues": "https://github.com/laravel/reverb/issues",
-                "source": "https://github.com/laravel/reverb/tree/v1.4.7"
+                "source": "https://github.com/laravel/reverb/tree/v1.4.8"
             },
-            "time": "2025-03-06T14:39:07+00:00"
+            "time": "2025-03-16T23:57:34+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -3802,16 +3697,16 @@
         },
         {
             "name": "psy/psysh",
-            "version": "v0.12.7",
+            "version": "v0.12.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bobthecow/psysh.git",
-                "reference": "d73fa3c74918ef4522bb8a3bf9cab39161c4b57c"
+                "reference": "85057ceedee50c49d4f6ecaff73ee96adb3b3625"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/d73fa3c74918ef4522bb8a3bf9cab39161c4b57c",
-                "reference": "d73fa3c74918ef4522bb8a3bf9cab39161c4b57c",
+                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/85057ceedee50c49d4f6ecaff73ee96adb3b3625",
+                "reference": "85057ceedee50c49d4f6ecaff73ee96adb3b3625",
                 "shasum": ""
             },
             "require": {
@@ -3875,9 +3770,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bobthecow/psysh/issues",
-                "source": "https://github.com/bobthecow/psysh/tree/v0.12.7"
+                "source": "https://github.com/bobthecow/psysh/tree/v0.12.8"
             },
-            "time": "2024-12-10T01:58:33+00:00"
+            "time": "2025-03-16T03:05:19+00:00"
         },
         {
             "name": "pusher/pusher-php-server",
@@ -3986,16 +3881,16 @@
         },
         {
             "name": "ramsey/collection",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ramsey/collection.git",
-                "reference": "3c5990b8a5e0b79cd1cf11c2dc1229e58e93f109"
+                "reference": "344572933ad0181accbf4ba763e85a0306a8c5e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ramsey/collection/zipball/3c5990b8a5e0b79cd1cf11c2dc1229e58e93f109",
-                "reference": "3c5990b8a5e0b79cd1cf11c2dc1229e58e93f109",
+                "url": "https://api.github.com/repos/ramsey/collection/zipball/344572933ad0181accbf4ba763e85a0306a8c5e2",
+                "reference": "344572933ad0181accbf4ba763e85a0306a8c5e2",
                 "shasum": ""
             },
             "require": {
@@ -4056,9 +3951,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ramsey/collection/issues",
-                "source": "https://github.com/ramsey/collection/tree/2.1.0"
+                "source": "https://github.com/ramsey/collection/tree/2.1.1"
             },
-            "time": "2025-03-02T04:48:29+00:00"
+            "time": "2025-03-22T05:38:12+00:00"
         },
         {
             "name": "ramsey/uuid",
@@ -7023,25 +6918,186 @@
             "time": "2024-12-21T16:25:41+00:00"
         },
         {
-            "name": "ultra/uploadmanager",
+            "name": "ultra/errormanager",
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "packages/ultra/uploadmanager",
-                "reference": "c56f0c7126afd8891a3dde0f5f268aa4140b1c7a"
+                "url": "packages/ultra/errormanager",
+                "reference": "793244fb8eb7d745eb9bf314d992d7b7cfdf0490"
             },
             "require": {
-                "illuminate/support": "*",
-                "league/flysystem-aws-s3-v3": "^3.0",
-                "php": "^8.1",
-                "pusher/pusher-php-server": "^7.2"
+                "laravel/framework": "^11.0",
+                "php": "^8.1|^8.2|^8.3"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.6",
+                "orchestra/testbench": "^9.0",
+                "phpunit/phpunit": "^11.5.3"
             },
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Ultra\\UploadManager\\UploadManagerServiceProvider",
-                        "Ultra\\UploadManager\\BroadcastingConfigServiceProvider"
+                        "Ultra\\ErrorManager\\Providers\\UltraErrorManagerServiceProvider"
+                    ],
+                    "aliases": {
+                        "UltraError": "Ultra\\ErrorManager\\Facades\\UltraError"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ultra\\ErrorManager\\": "src/"
+                },
+                "files": [
+                    "src/Helpers/helpers.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Ultra\\ErrorManager\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabio Cherici",
+                    "email": "fabiocherici@gmail.com"
+                }
+            ],
+            "description": "Sistema avanzato di gestione errori di livello Enterprise per applicazioni Laravel",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
+            "name": "ultra/ultra-config-manager",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/AutobookNft/UltraConfigManager.git",
+                "reference": "1bcb9d6bdfd9da0df3d9fa194e48e9e08f7caa3f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/1bcb9d6bdfd9da0df3d9fa194e48e9e08f7caa3f",
+                "reference": "1bcb9d6bdfd9da0df3d9fa194e48e9e08f7caa3f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "*",
+                "laravel/framework": "^11.0",
+                "monolog/monolog": "^3.0",
+                "php": "^8.1|^8.2|^8.3"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ultra\\UltraConfigManager\\Providers\\UltraConfigManagerServiceProvider",
+                        "Ultra\\UltraConfigManager\\Providers\\ValidationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ultra\\UltraConfigManager\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "fabio cherici",
+                    "email": "fabiocherici@gmail.com"
+                }
+            ],
+            "description": "A configuration management library designed for Laravel to streamline handling configuration values with validation support.",
+            "support": {
+                "source": "https://github.com/AutobookNft/UltraConfigManager/tree/main",
+                "issues": "https://github.com/AutobookNft/UltraConfigManager/issues"
+            },
+            "time": "2025-03-15T00:55:59+00:00"
+        },
+        {
+            "name": "ultra/ultra-log-manager",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/AutobookNft/UltraLogManager.git",
+                "reference": "73a8a8f05b69c4bf0806e2a53f2241542470fc86"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/73a8a8f05b69c4bf0806e2a53f2241542470fc86",
+                "reference": "73a8a8f05b69c4bf0806e2a53f2241542470fc86",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "*",
+                "laravel/framework": "^11.0",
+                "monolog/monolog": "^3.0",
+                "php": "^8.1|^8.2|^8.3",
+                "ultra/ultra-config-manager": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ultra\\UltraLogManager\\Providers\\UltraLogManagerServiceProvider"
+                    ]
+                },
+                "aliases": {
+                    "UltraLog": "Ultra\\UltraLogManager\\Facades\\UltraLog"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ultra\\UltraLogManager\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "fabio cherici",
+                    "email": "fabio.cherici@gmail.com"
+                }
+            ],
+            "description": "Ultra Log Manager is a library to standardize error and info logging for all Fabio's projects.",
+            "support": {
+                "source": "https://github.com/AutobookNft/UltraLogManager/tree/main",
+                "issues": "https://github.com/AutobookNft/UltraLogManager/issues"
+            },
+            "time": "2025-03-15T01:13:56+00:00"
+        },
+        {
+            "name": "ultra/uploadmanager",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/ultra/uploadmanager",
+                "reference": "6424130f1c793051c2549050475f2d3af5ee7907"
+            },
+            "require": {
+                "illuminate/support": "*",
+                "league/flysystem-aws-s3-v3": "^3.0",
+                "php": "^8.1",
+                "pusher/pusher-php-server": "^7.2",
+                "ultra/ultra-config-manager": "dev-main",
+                "ultra/ultra-log-manager": "dev-main"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ultra\\UploadManager\\UploadManagerServiceProvider"
                     ]
                 }
             },
@@ -7055,7 +7111,7 @@
             ],
             "authors": [
                 {
-                    "name": "Fabio",
+                    "name": "Fabio Cherici",
                     "email": "fabiocherici@gmail.com"
                 }
             ],
@@ -7347,16 +7403,16 @@
         },
         {
             "name": "filp/whoops",
-            "version": "2.17.0",
+            "version": "2.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/filp/whoops.git",
-                "reference": "075bc0c26631110584175de6523ab3f1652eb28e"
+                "reference": "a7de6c3c6c3c022f5cfc337f8ede6a14460cf77e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/filp/whoops/zipball/075bc0c26631110584175de6523ab3f1652eb28e",
-                "reference": "075bc0c26631110584175de6523ab3f1652eb28e",
+                "url": "https://api.github.com/repos/filp/whoops/zipball/a7de6c3c6c3c022f5cfc337f8ede6a14460cf77e",
+                "reference": "a7de6c3c6c3c022f5cfc337f8ede6a14460cf77e",
                 "shasum": ""
             },
             "require": {
@@ -7406,7 +7462,7 @@
             ],
             "support": {
                 "issues": "https://github.com/filp/whoops/issues",
-                "source": "https://github.com/filp/whoops/tree/2.17.0"
+                "source": "https://github.com/filp/whoops/tree/2.18.0"
             },
             "funding": [
                 {
@@ -7414,7 +7470,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-25T12:00:00+00:00"
+            "time": "2025-03-15T12:00:00+00:00"
         },
         {
             "name": "hamcrest/hamcrest-php",
@@ -8280,16 +8336,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "11.5.12",
+            "version": "11.5.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "d42785840519401ed2113292263795eb4c0f95da"
+                "reference": "9d6046153c2893b521784069e6b5249ce7d2acae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d42785840519401ed2113292263795eb4c0f95da",
-                "reference": "d42785840519401ed2113292263795eb4c0f95da",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9d6046153c2893b521784069e6b5249ce7d2acae",
+                "reference": "9d6046153c2893b521784069e6b5249ce7d2acae",
                 "shasum": ""
             },
             "require": {
@@ -8309,14 +8365,14 @@
                 "phpunit/php-text-template": "^4.0.1",
                 "phpunit/php-timer": "^7.0.1",
                 "sebastian/cli-parser": "^3.0.2",
-                "sebastian/code-unit": "^3.0.2",
+                "sebastian/code-unit": "^3.0.3",
                 "sebastian/comparator": "^6.3.1",
                 "sebastian/diff": "^6.0.2",
                 "sebastian/environment": "^7.2.0",
                 "sebastian/exporter": "^6.3.0",
                 "sebastian/global-state": "^7.0.2",
                 "sebastian/object-enumerator": "^6.0.1",
-                "sebastian/type": "^5.1.0",
+                "sebastian/type": "^5.1.2",
                 "sebastian/version": "^5.0.2",
                 "staabm/side-effects-detector": "^1.0.5"
             },
@@ -8361,7 +8417,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.12"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.14"
             },
             "funding": [
                 {
@@ -8377,7 +8433,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-03-07T07:31:03+00:00"
+            "time": "2025-03-19T13:45:48+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -8438,16 +8494,16 @@
         },
         {
             "name": "sebastian/code-unit",
-            "version": "3.0.2",
+            "version": "3.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/code-unit.git",
-                "reference": "ee88b0cdbe74cf8dd3b54940ff17643c0d6543ca"
+                "reference": "54391c61e4af8078e5b276ab082b6d3c54c9ad64"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/code-unit/zipball/ee88b0cdbe74cf8dd3b54940ff17643c0d6543ca",
-                "reference": "ee88b0cdbe74cf8dd3b54940ff17643c0d6543ca",
+                "url": "https://api.github.com/repos/sebastianbergmann/code-unit/zipball/54391c61e4af8078e5b276ab082b6d3c54c9ad64",
+                "reference": "54391c61e4af8078e5b276ab082b6d3c54c9ad64",
                 "shasum": ""
             },
             "require": {
@@ -8483,7 +8539,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/code-unit/issues",
                 "security": "https://github.com/sebastianbergmann/code-unit/security/policy",
-                "source": "https://github.com/sebastianbergmann/code-unit/tree/3.0.2"
+                "source": "https://github.com/sebastianbergmann/code-unit/tree/3.0.3"
             },
             "funding": [
                 {
@@ -8491,7 +8547,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-12-12T09:59:06+00:00"
+            "time": "2025-03-19T07:56:08+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -9196,16 +9252,16 @@
         },
         {
             "name": "sebastian/type",
-            "version": "5.1.0",
+            "version": "5.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/type.git",
-                "reference": "461b9c5da241511a2a0e8f240814fb23ce5c0aac"
+                "reference": "a8a7e30534b0eb0c77cd9d07e82de1a114389f5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/461b9c5da241511a2a0e8f240814fb23ce5c0aac",
-                "reference": "461b9c5da241511a2a0e8f240814fb23ce5c0aac",
+                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/a8a7e30534b0eb0c77cd9d07e82de1a114389f5e",
+                "reference": "a8a7e30534b0eb0c77cd9d07e82de1a114389f5e",
                 "shasum": ""
             },
             "require": {
@@ -9241,7 +9297,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/type/issues",
                 "security": "https://github.com/sebastianbergmann/type/security/policy",
-                "source": "https://github.com/sebastianbergmann/type/tree/5.1.0"
+                "source": "https://github.com/sebastianbergmann/type/tree/5.1.2"
             },
             "funding": [
                 {
@@ -9249,7 +9305,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-09-17T13:12:04+00:00"
+            "time": "2025-03-18T13:35:50+00:00"
         },
         {
             "name": "sebastian/version",
@@ -9484,8 +9540,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "ultra/uploadmanager": 20,
-        "fabiocherici/ultra-config-manager": 20,
-        "fabiocherici/ultra-log-manager": 20
+        "ultra/errormanager": 20,
+        "ultra/ultra-log-manager": 20,
+        "ultra/ultra-config-manager": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

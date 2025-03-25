@@ -29,9 +29,11 @@ export async function showEmoji(type: EmojiType): Promise<void> {
 
     // Ensure global variables are loaded
     if (!(window as any).emogyHappy) {
+        console.error('Global configuration not loaded. Make sure JSON has been fetched.');
         throw new Error('Global configuration not loaded. Make sure JSON has been fetched.');
     }
 
+    console.log('Showing emoji:', type);
     // Map of Vite-imported images
     const imageMap: Record<EmojiType, string> = {
         success: GirlHappy,

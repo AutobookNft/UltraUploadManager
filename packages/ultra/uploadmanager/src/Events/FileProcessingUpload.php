@@ -55,7 +55,7 @@ class FileProcessingUpload implements ShouldBroadcastNow
      */
     public function broadcastOn(): Channel
     {
-        Log::channel('upload')->info('classe: FileProcessingUpdate. Method: broadcastOn. Action: dentro al metodo broadcastOn');
+        // Log::channel('upload')->info('classe: FileProcessingUpdate. Method: broadcastOn. Action: dentro al metodo broadcastOn');
         // return new PrivateChannel('upload');
         return new Channel('upload');
     }

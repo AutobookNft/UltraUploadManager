@@ -4,10 +4,10 @@ import {
     progressText,
     saveLocalTempFile,
     deleteTemporaryFileLocal,
-    updateStatusDiv
+    updateStatusDiv,
+    saveToSystemTempDir,
+    deleteSystemTempFile
 } from '../index';
-
-import { saveToSystemTempDir, deleteSystemTempFile } from './saveToSystemTempDir';
 
 declare const window: any;
 
@@ -21,7 +21,7 @@ declare const window: any;
  */
 export async function handleVirusScan(formData: FormData): Promise<boolean> {
     let usedFallbackMethod = false;
-    
+
     try {
         // Prova il metodo standard di salvataggio temporaneo
         await saveLocalTempFile(formData);
@@ -32,7 +32,7 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
         if (window.envMode === 'local') {
             console.error('Errore nel salvataggio primario del file temporaneo:', primaryError);
         }
-        
+
         try {
             // Metodo alternativo: proviamo a usare la directory di sistema temp
             await saveToSystemTempDir(formData);
@@ -54,7 +54,7 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
     try {
         // Scan del file e gestione della barra di progresso
         const { response, data } = await scanFileWithProgress(formData);
-        
+
         // Pulizia: elimina il file temporaneo in base al metodo usato
         try {
             if (usedFallbackMethod) {
@@ -96,7 +96,7 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
                 console.warn('Errore nella pulizia dopo errore di scansione:', cleanupError);
             }
         }
-        
+
         // Rilanciamo l'errore della scansione
         throw scanError;
     }
@@ -104,7 +104,7 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
 
 /**
  * Esegue una scansione virus su un file con feedback di progresso.
- * 
+ *
  * @param formData - I dati del form contenenti il file da scansionare
  * @returns Una promessa che restituisce la risposta e i dati dal server
  */
@@ -136,7 +136,7 @@ export async function scanFileWithProgress(formData: FormData): Promise<ScanFile
         if (formData.has('systemTempPath')) {
             formData.append('customTempPath', formData.get('systemTempPath') as string);
         }
-        
+
         const response = await fetch('/scan-virus', {
             method: 'POST',
             headers: {

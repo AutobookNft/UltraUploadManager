@@ -5,7 +5,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Fabio",
+            "name": "Fabio Cherici",
             "email": "fabiocherici@gmail.com"
         }
     ],
@@ -13,7 +13,9 @@
         "php": "^8.1",
         "illuminate/support": "*",
         "league/flysystem-aws-s3-v3": "^3.0",
-        "pusher/pusher-php-server": "^7.2"
+        "pusher/pusher-php-server": "^7.2",
+        "ultra/ultra-log-manager": "dev-main",
+        "ultra/ultra-config-manager": "dev-main"
     },
     "autoload": {
         "psr-4": {
@@ -23,8 +25,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Ultra\\UploadManager\\UploadManagerServiceProvider",
-                "Ultra\\UploadManager\\BroadcastingConfigServiceProvider"
+                "Ultra\\UploadManager\\UploadManagerServiceProvider"
             ]
         }
     },
@@ -32,6 +33,11 @@
         {
             "type": "vcs",
             "url": "https://github.com/AutobookNft/UltraLogManager"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/AutobookNft/UltraConfigManager"
         }
     ]
+
 }

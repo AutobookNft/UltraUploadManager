@@ -7,7 +7,7 @@ use Ultra\UploadManager\Events\FileProcessingUpload;
 use Ultra\UploadManager\Exceptions\VirusException;
 use Ultra\UploadManager\Exceptions\CustomException;
 use Ultra\UploadManager\Jobs\DeleteTempFolder;
-use App\Models\Teams_item;
+// use App\Models\Teams_item;
 use Ultra\UploadManager\Services\TestingConditionsManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -68,7 +68,7 @@ class UploadingFiles extends Controller
             'Method' => 'upload',
         ]);
 
-        UltraLog::log('info', 'INIZIO UPLOAD', "");
+        // UltraLog::log('info', 'INIZIO UPLOAD', "");
 
         // Verifica i permessi dell'utente
         // $this->validateUserPermissions();
@@ -94,7 +94,7 @@ class UploadingFiles extends Controller
 
                 $finished = filter_var($request->input('finished'), FILTER_VALIDATE_BOOLEAN);
 
-                UltraLog::log('info', 'Operation Finished', "finished: $finished");
+                // UltraLog::log('info', 'Operation Finished', "finished: $finished");
 
                 // Log::channel('upload')->info($encodedLogParams, ['Action' => 'finished', 'finished' => $finished]);
 
@@ -331,47 +331,47 @@ class UploadingFiles extends Controller
      */
     protected function createEGIRecord($fileDetailsArray, $extension)
     {
-        $EGI = new Teams_item();
-        $EGI->fill([
-            'user_id' => $this->user_id,
-            'owner_id' => $this->user_id,
-            'creator' => $this->current_team->creator,
-            'owner_wallet' => $this->current_team->creator,
-            'upload_id' => $this->generateUploadId(),
-            'extension' => $extension,
-            'file_hash' => $fileDetailsArray['hash_filename'],
-            'file_mime' => $fileDetailsArray['mimeType'],
-            'position' => $fileDetailsArray['num'],
-            'title' => $fileDetailsArray['default_name'],
-            'team_id' => $this->current_team->id,
-            'file_crypt' => $fileDetailsArray['crypt_filename'],
-            'type' => $fileDetailsArray['fileType'],
-            'bind' => 0,
-            'price' => $this->floorPrice,
-            'floorDropPrice' => $this->floorPrice,
-            'show' => true,
-        ]);
+        // $EGI = new Teams_item();
+        // $EGI->fill([
+        //     'user_id' => $this->user_id,
+        //     'owner_id' => $this->user_id,
+        //     'creator' => $this->current_team->creator,
+        //     'owner_wallet' => $this->current_team->creator,
+        //     'upload_id' => $this->generateUploadId(),
+        //     'extension' => $extension,
+        //     'file_hash' => $fileDetailsArray['hash_filename'],
+        //     'file_mime' => $fileDetailsArray['mimeType'],
+        //     'position' => $fileDetailsArray['num'],
+        //     'title' => $fileDetailsArray['default_name'],
+        //     'team_id' => $this->current_team->id,
+        //     'file_crypt' => $fileDetailsArray['crypt_filename'],
+        //     'type' => $fileDetailsArray['fileType'],
+        //     'bind' => 0,
+        //     'price' => $this->floorPrice,
+        //     'floorDropPrice' => $this->floorPrice,
+        //     'show' => true,
+        // ]);
 
-        $this->setFileDimensions($EGI, $fileDetailsArray['tempRealPath']);
-        $this->setFileSize($EGI, $fileDetailsArray['tempRealPath']);
-        $this->setFileMediaProperties($EGI);
+        // $this->setFileDimensions($EGI, $fileDetailsArray['tempRealPath']);
+        // $this->setFileSize($EGI, $fileDetailsArray['tempRealPath']);
+        // $this->setFileMediaProperties($EGI);
 
-        try {
+        // try {
 
-            $EGI->save();
+        //     $EGI->save();
 
-            if (TestingConditionsManager::getInstance()->isTesting('ERROR_DURING_CREATE_EGI_RECORD')) {
-                Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: createEGIRecord. Action: Simulazione errore durante salvataggio del record EGI');
-                throw new CustomException('ERROR_DURING_CREATE_EGI_RECORD');
-            }
+        //     if (TestingConditionsManager::getInstance()->isTesting('ERROR_DURING_CREATE_EGI_RECORD')) {
+        //         Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: createEGIRecord. Action: Simulazione errore durante salvataggio del record EGI');
+        //         throw new CustomException('ERROR_DURING_CREATE_EGI_RECORD');
+        //     }
 
-        } catch (\Exception $e) {
+        // } catch (\Exception $e) {
 
-            Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: createEGIRecord. Action: Errore durante il salvataggio del record EGI', ['error' => $e->getMessage()]);
-            throw new CustomException('ERROR_DURING_CREATE_EGI_RECORD');
-        }
+        //     Log::channel($this->channel)->info('Classe: UploadinfFiles. Method: createEGIRecord. Action: Errore durante il salvataggio del record EGI', ['error' => $e->getMessage()]);
+        //     throw new CustomException('ERROR_DURING_CREATE_EGI_RECORD');
+        // }
 
-        return $EGI;
+        // return $EGI;
     }
 
     /**
@@ -581,7 +581,7 @@ class UploadingFiles extends Controller
         }
 
         // Creo il percorso del file
-        $filePath = storage_path('app/temp/' . $fileName);
+        $filePath = get_temp_file_path($fileName);
 
         Log::channel($channel)->info($logParams ,  ['Action' => 'Tentativo di eliminazione del file', 'path' => $filePath]);
 

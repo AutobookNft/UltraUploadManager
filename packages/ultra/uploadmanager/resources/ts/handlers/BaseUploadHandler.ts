@@ -1,3 +1,5 @@
+import { csrfToken } from '../index';
+
 /**
  * Base Upload Handler
  *
@@ -8,7 +10,7 @@
  * @class BaseUploadHandler
  */
 export class BaseUploadHandler {
-    protected csrfToken: string;
+
     protected maxRetries: number = 3;
 
     /**
@@ -16,9 +18,7 @@ export class BaseUploadHandler {
      * @throws {Error} If CSRF token is not found in the DOM
      */
     constructor() {
-        const tokenElement = document.querySelector('meta[name="csrf-token"]');
-        if (!tokenElement) throw new Error("CSRF token not found in DOM");
-        this.csrfToken = tokenElement.getAttribute("content") || "";
+
     }
 
     /**
@@ -42,7 +42,7 @@ export class BaseUploadHandler {
             const response: Response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": this.csrfToken,
+                    "X-CSRF-TOKEN": csrfToken,
                     "Accept": "application/json",
                 },
                 body: formData,
@@ -56,7 +56,7 @@ export class BaseUploadHandler {
                 } else {
                     const rawErrorData = await response.text(); // Server responded with HTML/text
                     errorData = {
-                        message: "Server returned an invalid response",
+                        message: (window.uploadProcessingError || "Error processing the upload"),
                         details: rawErrorData,
                         state: "unknown",
                         errorCode: "unexpected_response",
@@ -79,7 +79,7 @@ export class BaseUploadHandler {
         } catch (error) {
             // Handle network or fetch errors
             errorData = {
-                message: "Error during upload request",
+                message: window.errorDuringUploadRequest || "Error during upload request",
                 details: error instanceof Error ? error.message : String(error),
                 state: "network",
                 errorCode: "fetch_error",
@@ -108,19 +108,28 @@ export class BaseUploadHandler {
     }
 
     /**
-     * Abstract method that must be implemented by specific handlers
+     * Method to handle file upload, updated to accept FormData directly
      *
-     * @param {File} file - The file to upload
+     * @param {File|FormData} fileOrFormData - The file to upload or a complete FormData object
      * @param {string} endpoint - The specific upload endpoint URL
      * @returns {Promise<{error: UploadError | null, response: Response | boolean, success: boolean}>}
      */
-    async handleUpload(file: File, endpoint: string): Promise<{
+    async handleUpload(fileOrFormData: File | FormData, endpoint: string): Promise<{
         error: UploadError | null;
         response: Response | boolean;
         success: boolean
     }> {
-        const formData = new FormData();
-        formData.append('file', file);
+        let formData: FormData;
+
+        if (fileOrFormData instanceof FormData) {
+            // Se è già un FormData, usalo direttamente
+            formData = fileOrFormData;
+        } else {
+            // Se è un File, crea un nuovo FormData
+            formData = new FormData();
+            formData.append('file', fileOrFormData);
+        }
+
         return this.performUpload(endpoint, formData);
     }
 

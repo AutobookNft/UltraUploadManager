@@ -130,7 +130,7 @@ return [
 
     'minting' => [
         'error_generating_token' => 'Errore durante la generazione del token',
-        'insufficient_wallet_balance' => 'Non hai fondi sufficenti per acquistare questo EcoNFT',
+        'insufficient_wallet_balance' => 'Non hai fondi sufficenti per acquistare questo EGI',
         'error_during_save_the_metadataFile' => 'Errore durante il salvataggio dei metadata nel file',
         'error_during_save_the_metadata_on_database' => 'Errore durante il salvataggio dei metadata nel database',
         'error_during_create_metadata_file' => 'Errore durante la creazione del file metadata',

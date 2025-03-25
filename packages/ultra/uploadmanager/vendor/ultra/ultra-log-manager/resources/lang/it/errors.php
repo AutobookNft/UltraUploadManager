@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'AUTHENTICATION_ERROR' => 'Accesso non autorizzato',
+    'SCAN_ERROR' => 'Errore di scansione',
+    'VIRUS_FOUND' => 'Virus trovato',
+    'INVALID_FILE_EXTENSION' => 'Estensione del file non valida',
+    'MAX_FILE_SIZE' => 'Il file non può superare :max byte.',
+    'INVALID_FILE_PDF' => 'File PDF non valido',
+    'MIME_TYPE_NOT_ALLOWED' => 'Il tipo di file non è consentito.',
+    'INVALID_IMAGE_STRUCTURE' => 'Struttura dell\'immagine non valida',
+    'INVALID_FILE_NAME' => 'Nome del file non valido',
+    'ERROR_GETTING_PRESIGNED_URL' => 'Errore durante il caricamento del file',
+    'ERROR_DURING_FILE_UPLOAD' => 'Errore durante il caricamento del file',
+    'UNABLE_TO_SAVE_BOT_FILE' => 'Impossibile salvare il file.',
+    'UNABLE_TO_CREATE_DIRECTORY' => 'Impossibile creare la cartella',
+    'UNABLE_TO_CHANGE_PERMISSIONS' => 'Impossibile cambiare i permessi della cartella',
+    'IMPOSSIBLE_SAVE_FILE' => 'Impossibile salvare il file',
+    'ERROR_DURING_CREATE_EGI_RECORD' => 'Problema interno, l\'assistenza è già allertata',
+    'ERROR_DURING_FILE_NAME_ENCRYPTION' => 'Errore durante la crittografia del nome del file',
+    'IMAGICK_NOT_AVAILABLE' => 'Problema interno, l\'assistenza è già allertata',
+    'JSON_ERROR_IN_DISPATCHER' => 'Errore JSON nel dispatcher',
+    'GENERIC_SERVER_ERROR' => 'Errore generico del server, il team tecnico è stato informato',
+    'FILE_NOT_FOUND' => 'File non trovato',
+    'UNEXPECTED_ERROR' => 'Problema interno, l\'assistenza è già allertata',
+    'ERROR_DELETING_LOCAL_TEMP_FILE' => 'Errore durante l\'eliminazione del file temporaneo locale',
+];

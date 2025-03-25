@@ -14,7 +14,7 @@ import {
     disableButtons,
     enableButtons,
     resetButtons,
-    removeEmojy,
+    removeEmoji,
     handleImage,
     updateStatusDiv,
     updateStatusMessage
@@ -43,7 +43,7 @@ export async function prepareFilesForUploadUI(files: FileList): Promise<void> {
 
     // Disable buttons during preparation
     disableButtons();
-    removeEmojy();
+    removeEmoji();
 
     try {
         // Process each file in the FileList

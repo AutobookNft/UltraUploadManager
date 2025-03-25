@@ -132,7 +132,7 @@ export function setupTempFileCleanup(): void {
             e.returnValue = '';
 
             // Clean up all temporary files
-            for (const file of files) {
+            for (const file of Array.from(files)) { // Converti FileList in array
                 try {
                     await deleteTemporaryFileLocal(file);
                 } catch (error) {

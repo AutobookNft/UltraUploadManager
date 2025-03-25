@@ -13,6 +13,14 @@ export { setupRealTimeUploadListener } from './utils/listener';
 // Aggiungi queste righe in index.ts
 export { saveToSystemTempDir, deleteSystemTempFile } from './utils/saveToSystemTemp';
 
+export {
+    initializeApp,
+    files,
+    handleFileSelect,
+    handleDrop,
+    cancelUpload,
+    redirectToCollection
+} from './core/file_upload_manager';
 
 export {
     csrfToken,
@@ -30,7 +38,11 @@ export {
     returnToCollectionBtn,
     cancelUploadBtn,
     circleLoader,
-    circleContainer
+    circleContainer,
+    emojiElements,
+    collection,
+    dropZone,
+    setupDomEventListeners,
 } from './utils/domElements';
 
 export { handleVirusScan } from './utils/scanFile';
@@ -40,15 +52,16 @@ export { showEmoji } from './utils/showEmoji';
 export {
     disableButtons,
     resetButtons,
-    removeEmojy,
     handleImage,
     enableButtons,
     updateStatusDiv,
     updateStatusMessage,
     highlightInfectedImages,
     removeFile,
-    removeImg
+    removeImg,
+    removeEmoji,
+    updateUploadLimitsDisplay,
+    validateFilesAgainstLimits,
+    formatSize,
 } from './utils/uploadUtils';
-
-
 

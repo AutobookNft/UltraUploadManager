@@ -36,7 +36,7 @@ export default defineConfig({
         },
         hmr: {
             host: 'localhost',
-            port: 5173, // Porto per il server di sviluppo
+            port: 5174, // Porto per il server di sviluppo
         },
     },
 });

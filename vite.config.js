@@ -1,52 +1,45 @@
 import { defineConfig } from 'vite';
-import laravel, { refreshPaths } from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
+import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     plugins: [
-        tailwindcss(),
         laravel({
             input: [
-                'resources/css/app.css',                           // Asset della sandbox
-                'resources/js/app.js',                             // Asset della sandbox
-                'packages/ultra/uploadmanager/resources/css/app.css',      // Asset del pacchetto
-                'packages/ultra/uploadmanager/resources/js/app.js',        // Asset del pacchetto
-                'packages/ultra/uploadmanager/resources/ts/core/file_upload_manager.ts' // Asset del pacchetto
+                'resources/css/app.css',
+                'resources/js/app.js',
+                // 'packages/ultra/uploadmanager/resources/css/app.css',
+                'packages/ultra/uploadmanager/resources/js/app.js',
+                'packages/ultra/uploadmanager/resources/ts/core/file_upload_manager.ts'
             ],
-            refresh: [
-                ...refreshPaths,
-                'resources/views/**',                              // Viste della sandbox
-                'packages/ultra/uploadmanager/resources/views/**', // Viste del pacchetto
-            ],
+            refresh: true,
         }),
     ],
     resolve: {
         alias: {
             '@': '/resources/js',
             '@ts': '/resources/ts',
-            // Aggiungi alias per il pacchetto se necessario
-            '@uploadmanager': '/packages/ultra/uploadmanager/resources',
             '@ultra-images': '/packages/ultra/uploadmanager/resources/ts/assets/images',
         },
+        preserveSymlinks: true,
     },
     build: {
-        outDir: 'public/build', // Genera nella root della sandbox
+        outDir: 'public/build',
         manifest: true,
-        sourcemap: true, // Opzionale, rimuovilo in production
+        sourcemap: true,
     },
     server: {
         watch: {
-            usePolling: true, // Per WSL2/Windows
+            usePolling: true,
         },
-        hmr: {
-            host: 'localhost',
-            port: 5173,
+        // hmr: {
+        //     host: 'localhost',
+        //     port: 5173,
+        // },
+        fs: {
+            allow: [
+                './resources',
+                './packages/ultra/uploadmanager/resources',
+            ],
         },
-    },
-    fs: {
-        allow: [
-            './resources',
-            './packages/ultra/uploadmanager/resources',
-        ],
     },
 });

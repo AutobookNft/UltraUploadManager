@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        /* Projects */
+        "incremental": true,                              /* Enable incremental compilation for faster builds */
+        "skipLibCheck": true,                             /* Skip type checking of declaration files for speed */
+
+        /* Language and Environment */
+        "target": "es2016",                               /* Generate JavaScript compatible with ES2016 */
+        "lib": ["es2017", "dom"],                         /* Include DOM and ES2016 library declarations */
+
+        /* Modules */
+        "module": "esnext",                               /* Use ES modules, compatible with Vite */
+        "moduleResolution": "node",                       /* Use Node.js module resolution, required for resolveJsonModule */
+        "esModuleInterop": true,                          /* Enable interop between CommonJS and ES Modules */
+        "forceConsistentCasingInFileNames": true,          /* Ensure consistent file name casing */
+
+        /* Emit */
+        "noEmit": true,                                   /* Disable emitting .js files, let Vite handle it */
+        "rootDir": "./resources/ts",                      /* Root directory for TypeScript files */
+        "sourceMap": true,                                /* Generate source maps for debugging (handled by Vite) */
+
+        /* Type Checking */
+        "strict": true,                                   /* Enable all strict type-checking options */
+
+        /* Completeness */
+        "resolveJsonModule": true                         /* Allow importing .json files, compatible with Node resolution */
+    },
+    "include": ["resources/ts/**/*.ts", "resources/ts/**/*.d.ts"],
+    "exclude": ["node_modules"]
+}

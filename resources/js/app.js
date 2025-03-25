@@ -11,6 +11,10 @@ import $ from 'jquery';
 import "./bootstrap";
 import 'whatwg-fetch';
 
+import { initializeApp } from '../../packages/ultra/uploadmanager/resources/ts/core/file_upload_manager.ts';
+document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
+
+
 // import { Tooltip } from 'tw-elements';
 
 // Importa il polyfill fetch
@@ -27,8 +31,9 @@ import 'whatwg-fetch';
 // per essere sicuri che il polyfill sia caricato una volta sola e sia disponibile
 // in tutto il nostro progetto JavaScript.
 //
-Documentazione: https://github.com/github/fetch
+Documentazione: https://github.com/github/fetch;
 //
+
 
 
 // @ts-ignore

@@ -2,72 +2,120 @@
 
 namespace Ultra\UploadManager\Traits;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Ultra\UploadManager\Exceptions\CustomException;
-use Ultra\UploadManager\Services\TestingConditionsManager;
+use Ultra\ErrorManager\Facades\UltraError;
+use Ultra\ErrorManager\Facades\TestingConditions;
+use Ultra\UltraLogManager\Facades\UltraLog;
+use Exception;
 
 /**
  * Trait HasValidation
  *
- * Questo trait fornisce una serie di metodi per la validazione dei file caricati,
- * tra cui controlli sulle estensioni, tipi MIME, dimensioni e struttura delle immagini.
- * È utilizzato per garantire che i file caricati rispettino i criteri di sicurezza e
- * validità richiesti dall'applicazione.
+ * This trait provides a set of methods for uploaded file validation,
+ * including checks on extensions, MIME types, sizes, and image structure.
+ * It is used to ensure that uploaded files meet the security and
+ * validity criteria required by the application.
  *
- * @package App\Traits
+ * @package Ultra\UploadManager\Traits
  */
 trait HasValidation
 {
-
     /**
-     * Valida un file caricato.
+     * Validates an uploaded file.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file caricato che deve essere validato.
-     * @throws \Exception Se la validazione fallisce.
+     * @param \Illuminate\Http\UploadedFile $file The uploaded file to be validated.
+     * @param string|int $index File index for test simulations.
+     * @throws \Exception If validation fails.
      */
     protected function validateFile($file, $index = 0)
     {
-        // Esegui la validazione di base del file
-        $this->baseValidation($file, $index);
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
 
-        // Se il file è un'immagine, valida la struttura dell'immagine
-        if ($this->isImageMimeType($file)) {
-            $this->validateImageStructure($file, $index);
-        }
+        UltraLog::info(
+            'FileValidationStart',
+            'Starting file validation process',
+            [
+                'fileName' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mimeType' => $file->getMimeType(),
+                'index' => $index
+            ],
+            $channel
+        );
 
-        // Valida il nome del file per garantire che rispetti le regole definite
-        $this->validateFileName($file);
+        try {
+            // Perform base file validation
+            $this->baseValidation($file, $index);
 
-        // Se il file è un PDF, valida il contenuto del PDF
-        // Oppure se è attivo il test per simulare un file PDF non valido
-        if ($this->isPdf($file)) {
-            $this->validatePdfContent($file);
+            // If the file is an image, validate the image structure
+            if ($this->isImageMimeType($file)) {
+                $this->validateImageStructure($file, $index);
+            }
+
+            // Validate the file name to ensure it meets defined rules
+            $this->validateFileName($file);
+
+            // If the file is a PDF, validate the PDF content
+            if ($this->isPdf($file)) {
+                $this->validatePdfContent($file);
+            }
+
+            UltraLog::info(
+                'FileValidationComplete',
+                'File validation completed successfully',
+                [
+                    'fileName' => $file->getClientOriginalName()
+                ],
+                $channel
+            );
+        } catch (Exception $e) {
+            UltraLog::error(
+                'FileValidationFailed',
+                'File validation failed',
+                [
+                    'fileName' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'exception' => get_class($e)
+                ],
+                $channel
+            );
+
+            // Rethrow the exception so it can be handled by the controller
+            throw $e;
         }
     }
 
-
     /**
-     * Esegue la validazione di base del file.
+     * Performs base validation of the file.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file da validare.
-     * @throws \Exception Se la validazione fallisce.
+     * @param \Illuminate\Http\UploadedFile $file The file to validate.
+     * @param string|int $index File index for test simulations.
+     * @throws \Exception If validation fails.
      */
     protected function baseValidation($file, $index)
     {
-        $channel = 'upload';
-        // Inizializzazione del log
-        $encodedLogParams = json_encode([
-            'Trait' => 'HasValidation',
-            'Method' => 'baseValidation',
-        ]);
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
 
-
-        // Recupera le estensioni consentite e la dimensione massima dal file di configurazione
+        // Get allowed extensions and maximum size from configuration
         $allowedTypes = config('AllowedFileType.collection.allowed_extensions');
         $maxSize = config('AllowedFileType.collection.max_size');
 
-        // Codici di errore
+        UltraLog::info(
+            'BaseValidationStart',
+            'Starting base file validation',
+            [
+                'fileName' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mimeType' => $file->getMimeType(),
+                'allowedTypes' => $allowedTypes,
+                'maxSize' => $maxSize
+            ],
+            $channel
+        );
+
+        // Error codes
         $errorCodes = [
             'file.mimes' => 'MIME_TYPE_NOT_ALLOWED',
             'file.max' => 'MAX_FILE_SIZE',
@@ -78,40 +126,54 @@ trait HasValidation
             'imagic_failed' => 'IMAGICK_NOT_AVAILABLE',
         ];
 
-        // Esegui la validazione di base utilizzando il validatore di Laravel
+        // Perform base validation using Laravel's validator
         $validator = Validator::make(
             ['file' => $file],
             ['file' => 'file|mimes:' . implode(',', $allowedTypes) . '|max:' . $maxSize],
             $errorCodes
         );
 
-        // Aggiungi eventuali errori di test simulati
+        // Add any simulated test errors
         $this->addTestingErrors($validator, $errorCodes, $index);
 
-        // Se la validazione fallisce, restituisce il validatore con errori
+        // If validation fails, throw an exception with the appropriate error code
         if ($validator->fails()) {
-             // Ottieni la chiave del primo errore
+            // Get the key of the first error
             $firstErrorKey = array_key_first($validator->errors()->getMessages());
-            // Log::channel($channel)->error('Trait: HasValidation. Method: baseValidation. Action: Validazione di base fallita', ['firstErrorKey' => $errorCodes[$firstErrorKey]]);
-
+            $errorCode = $errorCodes[$firstErrorKey];
             $message = $validator->errors()->first();
 
-            // Restituisci il codice di errore associato
-            throw new CustomException($errorCodes[$firstErrorKey]);
+            UltraLog::warning(
+                'BaseValidationFailed',
+                'Base validation failed',
+                [
+                    'fileName' => $file->getClientOriginalName(),
+                    'errorCode' => $errorCode,
+                    'errorMessage' => $message
+                ],
+                $channel
+            );
+
+            // Create an exception that will be handled by the controller with UltraError
+            $exception = new Exception("File validation failed: {$message}");
+            throw $exception;
         }
 
-        Log::channel($channel)->info('Trait: HasValidation. Method: baseValidation. Action: Validazione del file superata', [
-            'original_name' => $file->getClientOriginalName(),
-            'size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-        ]);
+        UltraLog::info(
+            'BaseValidationPassed',
+            'Base validation passed',
+            [
+                'fileName' => $file->getClientOriginalName()
+            ],
+            $channel
+        );
     }
 
     /**
-     * Controlla se il file è un'immagine.
+     * Checks if the file is an image.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file da controllare.
-     * @return bool True se è un'immagine, altrimenti False.
+     * @param \Illuminate\Http\UploadedFile $file The file to check.
+     * @return bool True if it's an image, otherwise False.
      */
     protected function isImageMimeType($file)
     {
@@ -120,24 +182,40 @@ trait HasValidation
     }
 
     /**
-     * Controlla se il file è un PDF.
+     * Checks if the file is a PDF.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file da controllare.
-     * @return bool True se è un PDF, altrimenti False.
+     * @param \Illuminate\Http\UploadedFile $file The file to check.
+     * @return bool True if it's a PDF, otherwise False.
      */
     protected function isPdf($file)
     {
         return $file->getMimeType() === 'application/pdf';
     }
 
+    /**
+     * Adds simulated test errors to the validator.
+     *
+     * @param \Illuminate\Validation\Validator $validator Laravel validator.
+     * @param array $errorCodes Array of error codes.
+     * @param string|int $index File index for test simulations.
+     */
     protected function addTestingErrors($validator, $errorCodes, $index)
     {
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
 
-        if ($index !== "0"){
+        // Check if the index is the one used for tests
+        if ($index !== "0") {
             return;
         }
 
-        $channel = 'upload';
+        UltraLog::info(
+            'TestingErrorsCheck',
+            'Checking test conditions for error simulation',
+            ['index' => $index],
+            $channel
+        );
+
         $testConditions = [
             'MAX_FILE_SIZE' => 'file.max',
             'INVALID_FILE_EXTENSION' => 'file.extension',
@@ -149,8 +227,18 @@ trait HasValidation
         ];
 
         foreach ($testConditions as $test => $errorKey) {
-            if (TestingConditionsManager::getInstance()->isTesting($test)) {
-                Log::channel($channel)->error("Trait: HasValidation. Method: addTestingErrors. Action: Simulazione errore di $test");
+            // Use the TestingConditions facade instead of TestingConditionsManager::getInstance()
+            if (TestingConditions::isTesting($test)) {
+                UltraLog::info(
+                    'TestErrorSimulation',
+                    'Test error simulation activated',
+                    [
+                        'test' => $test,
+                        'errorKey' => $errorKey
+                    ],
+                    $channel
+                );
+
                 $validator->after(function ($validator) use ($errorCodes, $errorKey) {
                     $validator->errors()->add($errorKey, $errorCodes[$errorKey]);
                 });
@@ -159,116 +247,220 @@ trait HasValidation
     }
 
     /**
-     * Valida la struttura di un'immagine.
+     * Validates the structure of an image.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file dell'immagine da validare.
-     * @throws \Exception Se la struttura dell'immagine non è valida.
+     * @param \Illuminate\Http\UploadedFile $file The image file to validate.
+     * @param string|int $index File index for test simulations.
+     * @throws \Exception If the image structure is invalid.
      */
     protected function validateImageStructure($file, $index)
     {
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
 
-        // Inizializzazione del log
-        $encodedLogParams = json_encode([
-            'Trait' => 'HasValidation',
-            'Method' => 'validateImageStructure',
-        ]);
+        UltraLog::info(
+            'ImageStructureValidationStart',
+            'Starting image structure validation',
+            [
+                'fileName' => $file->getClientOriginalName()
+            ],
+            $channel
+        );
 
-        // Controlla se Imagick è disponibile
+        // Check if Imagick is available
         if (!class_exists('Imagick')) {
-            Log::channel($this->channel)->error('Trait: HasValidation. Method: validateImageStructure. Action: Imagick non disponibile per la validazione delle immagini');
-            throw new CustomException('IMAGICK_NOT_AVAILABLE');
+            UltraLog::error(
+                'ImagickNotAvailable',
+                'Imagick is not available for image validation',
+                [
+                    'fileName' => $file->getClientOriginalName()
+                ],
+                $channel
+            );
+
+            $exception = new Exception("Imagick is not available for image validation");
+            throw $exception;
         }
 
-        // Ottiene il percorso temporaneo del file caricato
+        // Get the temporary path of the uploaded file
         $filePath = $file->getRealPath();
 
         try {
-            // Utilizza Imagick per verificare che l'immagine sia valida
+            // Verify file path exists before using Imagick
+            if (!file_exists($filePath)) {
+                UltraLog::error(
+                    'ImageFileNotFound',
+                    'Image file not found at specified path',
+                    [
+                        'fileName' => $file->getClientOriginalName(),
+                        'filePath' => $filePath
+                    ],
+                    $channel
+                );
+                throw new Exception("Image file not found at specified path");
+            }
+
+            // Use Imagick to verify that the image is valid
             $image = new \Imagick($filePath);
 
-            // Usa pingImage per una validazione leggera
+            // Use pingImage for lightweight validation
             $image->pingImage($filePath);
 
-            Log::channel($this->channel)->info('Trait: HasValidation. Method: validateImageStructure. Action: Struttura dell\'immagine valida', ['file' => $file->getClientOriginalName()]);
+            UltraLog::info(
+                'ImageStructureValidationPassed',
+                'Image structure is valid',
+                [
+                    'fileName' => $file->getClientOriginalName()
+                ],
+                $channel
+            );
 
         } catch (\ImagickException $e) {
-            Log::channel($this->channel)->error('Trait: HasValidation. Method: validateImageStructure. Action: La struttura dell\'immagine non è valida', [
-                'file' => $file->getClientOriginalName(),
-                'error' => $e->getMessage()
-            ]);
-            throw new CustomException('INVALID_IMAGE_STRUCTURE');
+            UltraLog::error(
+                'ImageStructureValidationFailed',
+                'Image structure validation failed',
+                [
+                    'fileName' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ],
+                $channel
+            );
+
+            throw new Exception("Invalid image structure: " . $e->getMessage());
         }
     }
 
     /**
-     * Valida il nome del file.
+     * Validates the file name.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file di cui validare il nome.
-     * @throws \Exception Se il nome del file non è valido.
+     * @param \Illuminate\Http\UploadedFile $file The file whose name to validate.
+     * @throws \Exception If the file name is invalid.
      */
     protected function validateFileName($file)
     {
-        // Recupera il nome del file originale
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
+
+        // Get the original file name
         $fileName = $file->getClientOriginalName();
-        // Log::channel($this->channel)->info('Trait: HasValidation. Method: validateFileName. Action: Validazione del nome del file', ['fileName' => $fileName]);
 
-        // Lunghezza minima e massima consentita per il nome del file
+        UltraLog::info(
+            'FileNameValidationStart',
+            'Starting file name validation',
+            [
+                'fileName' => $fileName
+            ],
+            $channel
+        );
+
+        // Minimum and maximum allowed lengths for the file name
         $maxLength = config('file_validation.images.max_name_length', 255);
-        // Log::channel($this->channel)->info('Trait: HasValidation. Method: validateFileName. Action: Parametri di validazione del nome del file', [
-        //     'maxLength' => $maxLength,
-        // ]);
-
         $minLength = config('file_validation.min_name_length', 1);
-        // log::channel($this->channel)->info('Trait: HasValidation. Method: validateFileName. Action: Parametri di validazione del nome del file', [
-        //     'minLength' => $minLength,
-        // ]);
         $allowedPattern = config('file_validation.allowed_name_pattern', '/^[\w\-. ]+$/');
-        // Log::channel($this->channel)->info('Trait: HasValidation. Method: validateFileName. Action: Parametri di validazione del nome del file', [
-        //     'allowedPattern' => $allowedPattern
-        // ]);
 
-        // Verifica che il nome del file abbia una lunghezza adeguata
+        // Verify that the file name has an appropriate length
         if (strlen($fileName) < $minLength || strlen($fileName) > $maxLength) {
-            Log::channel($this->channel)->error('Trait: HasValidation. Method: validateFileName. Action: Nome file troppo lungo o troppo corto', [
-                'fileName' => $fileName,
-                'length' => strlen($fileName)
-            ]);
-            throw new CustomException('INVALID_FILE_NAME');
+            UltraLog::error(
+                'FileNameLengthInvalid',
+                'File name is too long or too short',
+                [
+                    'fileName' => $fileName,
+                    'length' => strlen($fileName),
+                    'minLength' => $minLength,
+                    'maxLength' => $maxLength
+                ],
+                $channel
+            );
+
+            throw new Exception("Invalid file name: length not allowed");
         }
 
-        // Verifica che il nome del file non contenga caratteri non consentiti
-        // Aggiungi un controllo sui caratteri problematici
+        // Verify that the file name does not contain disallowed characters
         if (!preg_match($allowedPattern, $fileName)) {
-            Log::channel($this->channel)->error('Trait: HasValidation. Method: validateFileName. Action: Nome file contiene caratteri non consentiti', [
-                'fileName' => $fileName,
-                'pattern' => $allowedPattern
-            ]);
-            throw new CustomException('INVALID_FILE_NAME');
+            UltraLog::error(
+                'FileNamePatternInvalid',
+                'File name contains disallowed characters',
+                [
+                    'fileName' => $fileName,
+                    'pattern' => $allowedPattern
+                ],
+                $channel
+            );
+
+            throw new Exception("Invalid file name: disallowed characters");
         }
 
-        // Se arriva qui, il nome del file è valido
-        Log::channel('upload')->info('Trait: HasValidation. Method: validateFileName. Action: Nome file valido', ['fileName' => $fileName]);
+        UltraLog::info(
+            'FileNameValidationPassed',
+            'File name is valid',
+            [
+                'fileName' => $fileName
+            ],
+            $channel
+        );
     }
 
-
     /**
-     * Valida il contenuto di un file PDF.
+     * Validates the content of a PDF file.
      *
-     * @param \Illuminate\Http\UploadedFile $file Il file PDF da validare.
-     * @throws \Exception Se il contenuto del PDF non è valido.
+     * @param \Illuminate\Http\UploadedFile $file The PDF file to validate.
+     * @throws \Exception If the PDF content is invalid.
      */
     protected function validatePdfContent($file)
     {
+        // Initialize the logging channel
+        $channel = isset($this->channel) ? $this->channel : 'upload';
 
-        // Ottiene il percorso temporaneo del file PDF caricato
+        UltraLog::info(
+            'PdfContentValidationStart',
+            'Starting PDF content validation',
+            [
+                'fileName' => $file->getClientOriginalName()
+            ],
+            $channel
+        );
+
+        // Get the temporary path of the uploaded PDF file
         $filePath = $file->getRealPath();
 
-        // Verifica se il PDF è valido cercando le parole chiave comuni nei PDF
-        if (!strpos(file_get_contents($filePath), '%PDF')) {
-            Log::channel($this->channel)->error('Trait: HasValidation. Method: validatePdfContent. Action: Il file PDF non è valido', ['file' => $file->getClientOriginalName()]);
-            throw new CustomException('INVALID_FILE_PDF');
+        // Verify that the file exists
+        if (!file_exists($filePath)) {
+            UltraLog::error(
+                'PdfFileNotFound',
+                'PDF file not found at specified path',
+                [
+                    'fileName' => $file->getClientOriginalName(),
+                    'filePath' => $filePath
+                ],
+                $channel
+            );
+            throw new Exception("PDF file not found at specified path");
         }
-        Log::channel($this->channel)->info('Trait: HasValidation. Method: validatePdfContent. Action: Il contenuto del file PDF è valido', ['file' => $file->getClientOriginalName()]);
+
+        // Verify if the PDF is valid by looking for common keywords in PDFs
+        if (!strpos(file_get_contents($filePath), '%PDF')) {
+            UltraLog::error(
+                'PdfContentValidationFailed',
+                'PDF file content is invalid',
+                [
+                    'fileName' => $file->getClientOriginalName()
+                ],
+                $channel
+            );
+
+            throw new Exception("Invalid PDF file content");
+        }
+
+        UltraLog::info(
+            'PdfContentValidationPassed',
+            'PDF content is valid',
+            [
+                'fileName' => $file->getClientOriginalName()
+            ],
+            $channel
+        );
     }
 }
-

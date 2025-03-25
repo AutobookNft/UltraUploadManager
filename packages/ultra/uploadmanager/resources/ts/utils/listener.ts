@@ -1,7 +1,5 @@
-// Real-time listener for handling upload notifications via Laravel Echo.
-import { updateStatusMessage } from '../index';
-
-declare const window: any;
+import Pusher from 'pusher-js'; // Importa Pusher come default export
+import { updateStatusMessage, statusMessage } from '../index';
 
 /**
  * Interface for upload event data received from Laravel Echo.
@@ -9,62 +7,62 @@ declare const window: any;
 interface UploadEvent {
     state: string;
     message: string;
-    [key: string]: any; // For any additional properties that might be present
+    user_id?: number;
+    progress?: number;
+    [key: string]: any;
 }
 
 /**
- * Configura un listener in tempo reale usando Laravel Echo per gestire gli aggiornamenti di stato
- * durante il processo di upload e scansione.
+ * Sets up a real-time listener using Laravel Echo to handle status updates
+ * during the upload and scanning process.
+ * Listens to the 'upload' channel for events like virus scans and upload results.
  */
 export function setupRealTimeUploadListener(): void {
     if (!window.Echo) {
-        console.error('Laravel Echo non è inizializzato');
+        console.error('Laravel Echo is not initialized');
         return;
     }
 
-    // Aggiungi questo per debug
     window.Echo.connector.pusher.connection.bind('connected', () => {
-        console.log('✅ Pusher connesso correttamente!');
+        console.log('✅ Pusher connected successfully!');
         console.log('Socket ID:', window.Echo.socketId());
     });
 
-    window.Echo.connector.pusher.connection.bind('error', (err) => {
-        console.error('❌ Errore di connessione Pusher:', err);
+    window.Echo.connector.pusher.connection.bind('error', (err: Error) => {
+        console.error('❌ Pusher connection error:', err);
     });
 
-    console.info('Laravel Echo è in ascolto...');
+    console.info('Laravel Echo is listening...');
 
     window.Echo.channel('upload')
-        .listen('.TestUploadEvent12345', (e: { state: any; message: string; }) => {  // Nota il punto all'inizio
-        console.log('Evento ricevuto:', e);
+        .listen('.TestUploadEvent12345', (e: UploadEvent) => {
+            console.log('Event received:', e);
 
-        switch (e.state) {
-            case 'virusScan':
-                updateStatusMessage(e.message, 'info');
-                break;
-            case 'allFileScannedNotInfected':
-                updateStatusMessage(e.message, 'success');
-                break;
-            case 'uploadFailed':
-                updateStatusMessage(e.message, 'error');
-                break;
-            default:
-                updateStatusMessage(e.message, 'info');
-                break;
-        }
-    });
+            if (window.envMode === 'local') {
+                console.log(`setupRealTimeUploadListener Type: info`, e);
+            }
 
-    }
-
-/**
- * Logs events to the console if running in local environment mode.
- *
- * @param e The event object received from Laravel Echo.
- * @param type The type of the log (e.g., success, error, info).
- */
-function logEvent(e: UploadEvent, type: string): void {
-    if (window.envMode === 'local') {
-        console.log(`Event Type: ${type}`, e);
-        console.log(`Message: ${e.message}`);
-    }
+            switch (e.state) {
+                case 'virusScan':
+                    updateStatusMessage(e.message, 'info'); // Durante la scansione -> animazione
+                    break;
+                case 'allFileScannedNotInfected':
+                    updateStatusMessage(e.message, 'success'); // Scansione completata senza virus -> nessuna animazione
+                    break;
+                case 'allFileScannedSomeInfected':
+                    updateStatusMessage(e.message, 'warning'); // Scansione completata con alcuni virus -> nessuna animazione
+                    break;
+                case 'endVirusScan':
+                    updateStatusMessage(e.message, 'warning'); // Scansione terminata per errore -> nessuna animazione
+                    break;
+                case 'uploadFailed':
+                    updateStatusMessage(e.message, 'error'); // Upload fallito -> nessuna animazione
+                    break;
+                default:
+                    // Per sicurezza, qualsiasi stato sconosciuto non dovrebbe avere l'animazione
+                    updateStatusMessage(e.message, 'info');
+                    statusMessage.classList.remove('animate-pulse'); // Rimuovi esplicitamente l'animazione
+                    break;
+            }
+        });
 }

@@ -31,7 +31,7 @@
     //     return $verify;
     // });
 
-    Log::channel('upload')->info('File channels.php principale caricato');
+    // Log::channel('upload')->info('File channels.php principale caricato');
 
     Broadcast::channel('upload', function () {
         Log::channel('upload')->info('Qualcuno si è connesso al canale upload dal file channels.php principale');

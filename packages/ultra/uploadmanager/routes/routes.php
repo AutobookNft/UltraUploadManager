@@ -6,11 +6,12 @@ use Ultra\UploadManager\Controllers\ErrorEmailController;
 use Ultra\UploadManager\Controllers\ErrorReportingController;
 use Ultra\UploadManager\Controllers\FileController;
 use Ultra\UploadManager\Controllers\Handlers\BaseUploadController;
-use Ultra\UploadManager\Controllers\ItemsEdit;
+// use Ultra\UploadManager\Controllers\ItemsEdit;
 use Ultra\UploadManager\Controllers\NonBlockingErrorController;
 use Ultra\UploadManager\Controllers\SaveTemporaryFiles;
 use Ultra\UploadManager\Controllers\ScanVirusController;
 use Ultra\UploadManager\Controllers\SystemTempFileController;
+use Ultra\UploadManager\Controllers\TestTransaltionController;
 use Ultra\UploadManager\Controllers\UploadingFiles;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -52,8 +53,11 @@ Route::get('/get-non-blocking-error-constant/{code}', [NonBlockingErrorControlle
 Route::middleware(['throttle:50,1'])
     ->group(function () {
         Route::redirect('/', '/marketplace');
+
         Route::post('/upload-temp', [SaveTemporaryFiles::class, 'saveTemporaryFile']);
+
         Route::post('/uploading-files', [UploadingFiles::class, 'upload']);
+
         Route::post('/scanvirus', [UploadingFiles::class, 'scanVirus']);
         // Route::post('/scan-virus', [UploadingFiles::class, 'startVirusScan']);
         Route::post('/get-presigned-url', [UploadingFiles::class, 'getPresignedUrl']);
@@ -64,14 +68,14 @@ Route::middleware(['throttle:50,1'])
         Route::post('/notify-upload-complete', [UploadingFiles::class, 'notifyUploadComplete']);
         Route::post('/finalize-upload', [UploadingFiles::class, 'finalizeUpload']);
         Route::post('/save-file', [FileController::class, 'store']);
-        Route::post('/save-image-id', [ItemsEdit::class, 'bind'])->name('save-image-id');
-        Route::post('/unpair-cover', [ItemsEdit::class, 'unpair'])->name('unpair-cover');
+        // Route::post('/save-image-id', [ItemsEdit::class, 'bind'])->name('save-image-id');
+        // Route::post('/unpair-cover', [ItemsEdit::class, 'unpair'])->name('unpair-cover');
         Route::post('/send-error-email', [ErrorEmailController::class, 'send']);
         Route::post('/report-js-error', [ErrorReportingController::class, 'reportJsError']);
 
         Route::get('/uploading', [UploadingFiles::class, 'show'])->name('uploading');
 
-        Route::post('/uploading/default', [BaseUploadController::class, 'hendler'])->name('uploading.hendler');
+        Route::post('/uploading/default', [BaseUploadController::class, 'handler'])->name('uploading.hendler');
 
         Route::get('/config/global-config', [ConfigController::class, 'getGlobalConfig'])->name('global.config');
 
@@ -86,4 +90,6 @@ Route::middleware(['throttle:50,1'])
 
     });
 
+
+    Route::get('/trans-test', [TestTransaltionController::class, 'testTranslations']);
 

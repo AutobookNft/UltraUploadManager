@@ -9,10 +9,6 @@ import {
     deleteSystemTempFile
 } from '../index';
 
-
-
-declare const window: any;
-
 /**
  * Performs a virus scan on a file with a progress feedback simulation.
  *
@@ -48,7 +44,7 @@ export async function scanFileWithProgress(formData: FormData): Promise<ScanFile
     }
 
     try {
-        // Se il form contiene un percorso temporaneo personalizzato, aggiungiamolo alla richiesta
+        // If the form contains a custom temporary path, add it to the request
         if (formData.has('systemTempPath')) {
             formData.append('customTempPath', formData.get('systemTempPath') as string);
         }
@@ -103,38 +99,38 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
     let usedFallbackMethod = false;
 
     try {
-        // Prova il metodo standard di salvataggio temporaneo
+        // Try the standard method for temporary file saving
         await saveLocalTempFile(formData);
         if (window.envMode === 'local') {
-            console.log('File salvato temporaneamente con metodo standard');
+            console.log('File saved temporarily using standard method');
         }
     } catch (primaryError) {
         if (window.envMode === 'local') {
-            console.error('Errore nel salvataggio primario del file temporaneo:', primaryError);
+            console.error('Error in primary temporary file saving:', primaryError);
         }
 
         try {
-            // Metodo alternativo: proviamo a usare la directory di sistema temp
+            // Alternative method: try using the system temp directory
             await saveToSystemTempDir(formData);
             usedFallbackMethod = true;
             if (window.envMode === 'local') {
-                console.log('File salvato temporaneamente con metodo fallback');
+                console.log('File saved temporarily using fallback method');
             }
         } catch (backupError) {
-            // Se falliscono entrambi i metodi, proviamo comunque ma con un avviso
+            // If both methods fail, we still try but with a warning
             if (window.envMode === 'local') {
-                console.error('Errore anche nel metodo alternativo:', backupError);
+                console.error('Error in alternative method too:', backupError);
             }
-            updateStatusDiv('Avviso: possibili problemi durante la scansione virus', 'warning');
-            // Continuiamo comunque con la scansione
+            updateStatusDiv(window.possibleScanningIssues || 'Warning: possible issues during virus scan', 'warning');
+            // Continue with scanning anyway
         }
     }
 
     try {
-        // Scan del file e gestione della barra di progresso
+        // Scan the file and handle progress bar
         const { response, data } = await scanFileWithProgress(formData);
 
-        // Pulizia: elimina il file temporaneo in base al metodo usato
+        // Cleanup: delete temporary file based on the method used
         try {
             if (usedFallbackMethod) {
                 await deleteSystemTempFile(formData);
@@ -142,40 +138,40 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
                 await deleteTemporaryFileLocal(formData.get('file') as File);
             }
         } catch (deleteError) {
-            // Log dell'errore ma continuiamo (il file è già stato scansionato)
+            // Log the error but continue (file has already been scanned)
             if (window.envMode === 'local') {
-                console.warn('Errore nell\'eliminazione del file temporaneo:', deleteError);
+                console.warn('Error deleting temporary file:', deleteError);
             }
         }
 
         if (!response.ok) {
-            // Il file è infetto
+            // File is infected
             if (response.status === 422) {
                 updateStatusDiv(data.userMessage, 'error');
-                return true; // Virus trovato
+                return true; // Virus found
             }
 
-            // Altro tipo di errore nella risposta
+            // Other type of error in response
             throw data;
         }
 
-        // File non infetto
+        // File not infected
         return false;
     } catch (scanError: any) {
-        // Gestione speciale per l'errore "No such file or directory"
+        // Special handling for "No such file or directory" error
         if (scanError.message && typeof scanError.message === 'string' &&
             (scanError.message.includes('No such file or directory') ||
              scanError.message.includes('file non trovato'))) {
 
             if (window.envMode === 'local') {
-                console.warn('File temporaneo non trovato durante la scansione. Procediamo comunque:', scanError);
+                console.warn('Temporary file not found during scanning. Proceeding anyway:', scanError);
             }
 
-            updateStatusDiv('Avviso: Impossibile completare la scansione virus, ma procediamo comunque', 'warning');
-            return false; // Consideriamo il file non infetto per continuare
+            updateStatusDiv(window.unableToCompleteScanContinuing || 'Warning: Unable to complete virus scan, but continuing anyway', 'warning');
+            return false; // Consider file not infected to continue
         }
 
-        // Se c'è un errore nella scansione, dobbiamo comunque assicurarci di pulire
+        // If there's an error in scanning, we still need to make sure to clean up
         try {
             if (usedFallbackMethod) {
                 await deleteSystemTempFile(formData);
@@ -183,13 +179,13 @@ export async function handleVirusScan(formData: FormData): Promise<boolean> {
                 await deleteTemporaryFileLocal(formData.get('file') as File);
             }
         } catch (cleanupError) {
-            // Log dell'errore di pulizia, ma l'errore principale è quello della scansione
+            // Log cleanup error, but the main error is the scanning error
             if (window.envMode === 'local') {
-                console.warn('Errore nella pulizia dopo errore di scansione:', cleanupError);
+                console.warn('Error in cleanup after scanning error:', cleanupError);
             }
         }
 
-        // Rilanciamo l'errore della scansione per altri tipi di errore
+        // Rethrow the scanning error for other types of errors
         throw scanError;
     }
 }

@@ -1,4 +1,5 @@
 import { BaseUploadHandler } from "./BaseUploadHandler";
+import { csrfToken } from '../index';
 
 export class EGIUploadHandler extends BaseUploadHandler {
     private maxAttempts: number = 3;
@@ -10,7 +11,7 @@ export class EGIUploadHandler extends BaseUploadHandler {
     async handleUpload(file: File, endpoint: string): Promise<{ error: UploadError | null; response: Response | boolean; success: boolean }> {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("_token", this.csrfToken);
+        formData.append("_token", csrfToken);
         formData.append("uploadType", "egi");
 
         let attempt = 0;
