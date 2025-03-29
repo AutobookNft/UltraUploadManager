@@ -11,7 +11,8 @@
         "ultra/uploadmanager": "dev-main",
         "ultra/errormanager": "dev-main",
         "ultra/ultra-log-manager": "dev-main",
-        "ultra/ultra-config-manager": "dev-main"
+        "ultra/ultra-config-manager": "dev-main",
+        "ultra/translationmanager": "dev-main"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -27,16 +28,16 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        },
+        ,
         "files": [
             "packages/ultra/uploadmanager/src/Helpers/HostingHelper.php",
             "packages/ultra/uploadmanager/src/Helpers/helpers.php"
         ]
-
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
     },
     "repositories": [
         {
@@ -54,6 +55,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/AutobookNft/UltraConfigManager"
+        },
+        {
+            "type": "path",
+            "url": "packages/ultra/translationmanager"
         }
 
     ],
@@ -74,7 +79,13 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [],
+            "aliases": {
+                "UltraLog": "Ultra\\UltraLogManager\\Facades\\UltraLog",
+                "UltraConfig": "Ultra\\UltraConfigManager\\Facades\\UltraConfig",
+                "UltraTrans": "Ultra\\TranslationManager\\Facades\\UltraTrans",
+                "UltraError": "Ultra\\ErrorManager\\Facades\\UltraError"      
+            }
         }
     },
     "config": {

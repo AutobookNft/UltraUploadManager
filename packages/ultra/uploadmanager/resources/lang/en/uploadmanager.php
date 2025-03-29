@@ -25,7 +25,41 @@ return [
         'max_file_size_error' => 'The file ":name" exceeds the maximum allowed size (:size).',
         'max_total_size_error' => 'The total size of the files (:size) exceeds the allowed limit (:limit).',
     ],
-    
+
+    // Enterprise feature badges (Point 4)
+    'storage_space_unit' => 'GB',
+    'secure_storage' => 'Secure Storage',
+    'secure_storage_tooltip' => 'Your files are saved with redundancy to protect your assets',
+    'virus_scan_feature' => 'Virus Scan',
+    'virus_scan_tooltip' => 'Each file is scanned for potential threats before storage',
+    'advanced_validation' => 'Advanced Validation',
+    'advanced_validation_tooltip' => 'Format validation and file integrity checks',
+    'storage_space' => 'Space: :used/:total GB',
+    'storage_space_tooltip' => 'Available storage space for your EGI assets',
+    'toggle_virus_scan' => 'Toggle virus scanning on/off',
+
+    // EGI Metadata (Point 3)
+    'quick_egi_metadata' => 'Quick EGI Metadata',
+    'egi_title' => 'EGI Title',
+    'egi_title_placeholder' => 'E.g. Pixel Dragon #123',
+    'egi_collection' => 'Collection',
+    'select_collection' => 'Select collection',
+    'existing_collections' => 'Existing collections',
+    'create_new_collection' => 'Create new collection',
+    'egi_description' => 'Description',
+    'egi_description_placeholder' => 'Brief description of your work...',
+    'metadata_notice' => 'These metadata will be associated with your EGI, but you can edit them later.',
+
+    // Accessibility (Point 5)
+    'select_files_aria' => 'Select files for upload',
+    'select_files_tooltip' => 'Select one or more files from your device',
+    'save_aria' => 'Save selected files',
+    'save_tooltip' => 'Upload selected files to the server',
+    'cancel_aria' => 'Cancel current upload',
+    'cancel_tooltip' => 'Cancel the operation and remove the selected files',
+    'return_aria' => 'Return to collection',
+    'return_tooltip' => 'Return to the collection view without saving',
+
     // Generale
     'file_saved_successfully' => 'File :fileCaricato saved successfully',
     'file_deleted_successfully' => 'File deleted successfully',

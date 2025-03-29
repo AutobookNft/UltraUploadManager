@@ -32,10 +32,8 @@ class SaveTemporaryFiles extends Controller
     /**
      * Saves a temporary file with robust permissions handling.
      *
-     * This method attempts to save an uploaded file to a temporary storage location.
-     * If the initial save attempt fails, it tries multiple fallback strategies:
-     * 1. Change directory permissions and retry
-     * 2. Recreate the directory and retry
+     * This method attempts to save an uploaded file to a temporary storage location
+     * using multiple fallback strategies if the initial attempt fails.
      *
      * @param Request $request The request containing the file to save
      * @return \Illuminate\Http\JsonResponse Response with status of the save operation
@@ -61,9 +59,7 @@ class SaveTemporaryFiles extends Controller
         if (!$file) {
             UltraLog::error('NoFileProvided', 'File object is null', [], $this->channel);
             $exception = new Exception('File object is null after request');
-            return UltraError::handle('INVALID_FILE', [
-                'fileName' => 'unknown'
-            ], $exception);
+            return UltraError::handle('INVALID_FILE', ['fileName' => 'unknown' ], $exception);
         }
 
         try {
@@ -90,7 +86,7 @@ class SaveTemporaryFiles extends Controller
             // Validate the file
             try {
                 $this->validateFile($file);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 UltraLog::warning('ValidationFailure', 'File validation failed', [
                     'exception' => get_class($e),
                     'message' => $e->getMessage()
@@ -102,7 +98,7 @@ class SaveTemporaryFiles extends Controller
             }
 
             // Get the temp folder config value
-            $tempFolderPath = config('app.bucket_temp_file_folder', 'app/private/temp');
+            $tempFolderPath = config('upload-manager.temp_path', 'app/private/temp');
             $fullPath = strpos($tempFolderPath, '/') === 0 ? $tempFolderPath : storage_path($tempFolderPath);
 
             UltraLog::info('TemporaryPathDetails', 'Temporary path configuration', [
@@ -117,7 +113,7 @@ class SaveTemporaryFiles extends Controller
                 ], $this->channel);
                 try {
                     $this->createDirectory($fullPath);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     UltraLog::error('DirectoryCreationFailed', 'Failed to create temporary directory', [
                         'directory' => $fullPath,
                         'exception' => get_class($e),
@@ -136,143 +132,9 @@ class SaveTemporaryFiles extends Controller
                 'storedFilePath' => $storedFilePath
             ], $this->channel);
 
-            $diskName = 'local'; // Default disk for local storage
-            $relativePath = $this->getRelativePath($tempFolderPath);
+            // Tentativo in ordine di priorità: diretto, dopo cambio permessi, dopo ricreazione directory
+            return $this->attemptSaveWithFallbacks($file, $fullPath, $fileName, $storedFilePath);
 
-            try {
-                // Primary save attempt
-                if ($file->move($fullPath, $fileName)) {
-                    UltraLog::info('FileSavedSuccessfully', 'File saved successfully using direct move', [
-                        'fileName' => $fileName,
-                        'fullPath' => $storedFilePath
-                    ], $this->channel);
-                } else {
-                    throw new Exception('Failed to move file directly');
-                }
-
-                // Verify file was saved
-                if (!file_exists($storedFilePath)) {
-                    UltraLog::error('FileVerificationFailed', 'File was not saved correctly', [
-                        'storedFilePath' => $storedFilePath
-                    ], $this->channel);
-                    $verifyException = new Exception("File moved but not accessible at {$storedFilePath}");
-                    return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
-                        'fileName' => $fileName,
-                        'path' => $fullPath
-                    ], $verifyException);
-                }
-
-                UltraLog::info('TemporaryFileUploadComplete', 'File saved temporarily with success', [
-                    'fileName' => $fileName,
-                    'path' => $fullPath
-                ], $this->channel);
-
-                return response()->json([
-                    'message' => trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $fileName]),
-                    'fileName' => $fileName,
-                    'bucketFolderTemp' => $fullPath
-                ], 200);
-
-            } catch (Exception $e) {
-                UltraLog::warning('PrimarySaveAttemptFailed', 'Error saving file. Attempting to change permissions and retry', [
-                    'error' => $e->getMessage(),
-                    'fileName' => $fileName
-                ], $this->channel);
-
-                // Fallback 1: Change permissions
-                try {
-                    if (!$this->changePermissions($fullPath, 'directory')) {
-                        UltraLog::warning('PermissionChangeFailed', 'Failed to change directory permissions', [
-                            'directory' => $fullPath
-                        ], $this->channel);
-                        $permException = new Exception("Failed to change permissions on directory {$fullPath}");
-                        return UltraError::handle('UNABLE_TO_CHANGE_PERMISSIONS', [
-                            'directory' => $fullPath,
-                            'fileName' => $fileName
-                        ], $permException);
-                    }
-
-                    UltraLog::info('PermissionsChanged', 'Directory permissions changed successfully', [
-                        'directory' => $fullPath
-                    ], $this->channel);
-
-                    if ($file->move($fullPath, $fileName)) {
-                        UltraLog::info('FileSavedAfterPermissionsChange', 'File saved successfully after changing directory permissions', [
-                            'fileName' => $fileName
-                        ], $this->channel);
-                    } else {
-                        throw new Exception('Failed to move file after changing permissions');
-                    }
-
-                    if (!file_exists($storedFilePath)) {
-                        UltraLog::error('FileVerificationFailedAfterPermissionChange', 'File was not saved correctly after permission change', [
-                            'storedFilePath' => $storedFilePath
-                        ], $this->channel);
-                        $verifyPermEx = new Exception("File moved but not accessible after permission change");
-                        return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
-                            'fileName' => $fileName,
-                            'path' => $fullPath,
-                            'stage' => 'after_permission_change'
-                        ], $verifyPermEx);
-                    }
-
-                    return response()->json([
-                        'message' => trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $fileName]),
-                        'fileName' => $fileName,
-                        'bucketFolderTemp' => $fullPath
-                    ], 200);
-
-                } catch (Exception $permEx) {
-                    UltraLog::warning('FallbackPermissionChangeFailed', 'Error after changing permissions. Attempting to recreate directory', [
-                        'error' => $permEx->getMessage()
-                    ], $this->channel);
-
-                    // Fallback 2: Recreate directory
-                    try {
-                        $this->handleDirectoryError($fullPath);
-                        UltraLog::info('DirectoryRecreated', 'Temporary directory recreated successfully', [
-                            'directory' => $fullPath
-                        ], $this->channel);
-
-                        if ($file->move($fullPath, $fileName)) {
-                            UltraLog::info('FileSavedAfterDirectoryRecreation', 'File saved successfully after recreating directory', [
-                                'fileName' => $fileName
-                            ], $this->channel);
-                        } else {
-                            throw new Exception('Failed to move file after recreating directory');
-                        }
-
-                        if (!file_exists($storedFilePath)) {
-                            UltraLog::error('FileVerificationFailedAfterDirectoryRecreation', 'File was not saved correctly after recreating directory', [
-                                'storedFilePath' => $storedFilePath
-                            ], $this->channel);
-                            $verifyRecreateEx = new Exception("File moved but not accessible after directory recreation");
-                            return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
-                                'fileName' => $fileName,
-                                'path' => $fullPath,
-                                'stage' => 'after_recreate'
-                            ], $verifyRecreateEx);
-                        }
-
-                        return response()->json([
-                            'message' => trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $fileName]),
-                            'fileName' => $fileName,
-                            'bucketFolderTemp' => $fullPath
-                        ], 200);
-
-                    } catch (Exception $dirEx) {
-                        UltraLog::error('AllFallbacksFailed', 'All file saving attempts failed', [
-                            'error' => $dirEx->getMessage(),
-                            'fileName' => $fileName
-                        ], $this->channel);
-                        return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
-                            'fileName' => $fileName,
-                            'path' => $fullPath,
-                            'finalError' => $dirEx->getMessage()
-                        ], $dirEx);
-                    }
-                }
-            }
         } catch (Exception $e) {
             UltraLog::error('UnexpectedError', 'Unexpected error during file upload', [
                 'exception' => get_class($e),
@@ -285,6 +147,153 @@ class SaveTemporaryFiles extends Controller
                 'exceptionMessage' => $e->getMessage()
             ], $e);
         }
+    }
+
+    /**
+     * Attempts to save a file using multiple fallback methods
+     *
+     * @param \Illuminate\Http\UploadedFile $file The file to save
+     * @param string $fullPath The directory path where to save the file
+     * @param string $fileName The name of the file
+     * @param string $storedFilePath The complete path where the file will be stored
+     * @return \Illuminate\Http\JsonResponse Response with operation status
+     */
+    protected function attemptSaveWithFallbacks($file, $fullPath, $fileName, $storedFilePath)
+    {
+        $diskName = 'local'; // Default disk for local storage
+        $relativePath = $this->getRelativePath($fullPath);
+
+        // Attempt 1: Direct save
+        try {
+            if ($file->move($fullPath, $fileName)) {
+                UltraLog::info('FileSavedSuccessfully', 'File saved successfully using direct move', [
+                    'fileName' => $fileName,
+                    'fullPath' => $storedFilePath
+                ], $this->channel);
+
+                if ($this->verifyFileExists($storedFilePath, $fileName, $fullPath)) {
+                    return $this->createSuccessResponse($fileName, $fullPath);
+                }
+                // If verification fails without throwing exception
+                throw new Exception('File verification failed after direct move');
+            } else {
+                throw new Exception('Failed to move file directly');
+            }
+        } catch (Exception $e) {
+            UltraLog::warning('PrimarySaveAttemptFailed', 'Error saving file. Attempting to change permissions and retry', [
+                'error' => $e->getMessage(),
+                'fileName' => $fileName
+            ], $this->channel);
+
+            // Attempt 2: Change permissions and retry
+            try {
+                if (!$this->changePermissions($fullPath, 'directory')) {
+                    UltraLog::warning('PermissionChangeFailed', 'Failed to change directory permissions', [
+                        'directory' => $fullPath
+                    ], $this->channel);
+                    $permException = new Exception("Failed to change permissions on directory {$fullPath}");
+                    return UltraError::handle('UNABLE_TO_CHANGE_PERMISSIONS', [
+                        'directory' => $fullPath,
+                        'fileName' => $fileName
+                    ], $permException);
+                }
+
+                UltraLog::info('PermissionsChanged', 'Directory permissions changed successfully', [
+                    'directory' => $fullPath
+                ], $this->channel);
+
+                if ($file->move($fullPath, $fileName)) {
+                    UltraLog::info('FileSavedAfterPermissionsChange', 'File saved successfully after changing directory permissions', [
+                        'fileName' => $fileName
+                    ], $this->channel);
+
+                    if ($this->verifyFileExists($storedFilePath, $fileName, $fullPath, 'after_permission_change')) {
+                        return $this->createSuccessResponse($fileName, $fullPath);
+                    }
+                    // If verification fails without throwing exception
+                    throw new Exception('File verification failed after permission change');
+                } else {
+                    throw new Exception('Failed to move file after changing permissions');
+                }
+            } catch (Exception $permEx) {
+                UltraLog::warning('FallbackPermissionChangeFailed', 'Error after changing permissions. Attempting to recreate directory', [
+                    'error' => $permEx->getMessage()
+                ], $this->channel);
+
+                // Attempt 3: Recreate directory and retry (final attempt)
+                $this->handleDirectoryError($fullPath);
+                UltraLog::info('DirectoryRecreated', 'Temporary directory recreated successfully', [
+                    'directory' => $fullPath
+                ], $this->channel);
+
+                if ($file->move($fullPath, $fileName)) {
+                    UltraLog::info('FileSavedAfterDirectoryRecreation', 'File saved successfully after recreating directory', [
+                        'fileName' => $fileName
+                    ], $this->channel);
+
+                    if ($this->verifyFileExists($storedFilePath, $fileName, $fullPath, 'after_recreate')) {
+                        return $this->createSuccessResponse($fileName, $fullPath);
+                    }
+                }
+
+                // If we reach here, all attempts have failed
+                UltraLog::error('AllFallbacksFailed', 'All file saving attempts failed', [
+                    'fileName' => $fileName
+                ], $this->channel);
+
+                return UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
+                    'fileName' => $fileName,
+                    'path' => $fullPath,
+                    'finalError' => 'Failed after all save attempts'
+                ], new Exception('Failed after all save attempts'));
+            }
+        }
+    }
+
+    /**
+     * Verifies that a file exists after being saved
+     *
+     * @param string $storedFilePath The full path to the stored file
+     * @param string $fileName The name of the file
+     * @param string $fullPath The directory path
+     * @param string|null $stage Optional stage identifier for debugging
+     * @return bool True if file exists, false otherwise
+     */
+    protected function verifyFileExists($storedFilePath, $fileName, $fullPath, $stage = null)
+    {
+        if (!file_exists($storedFilePath)) {
+            UltraLog::error('FileVerificationFailed' . ($stage ? "After{$stage}" : ''), 'File was not saved correctly', [
+                'storedFilePath' => $storedFilePath,
+                'stage' => $stage
+            ], $this->channel);
+
+            $stageInfo = $stage ? ", stage: {$stage}" : '';
+            $verifyException = new Exception("File moved but not accessible at {$storedFilePath}{$stageInfo}");
+            UltraError::handle('IMPOSSIBLE_SAVE_FILE', [
+                'fileName' => $fileName,
+                'path' => $fullPath,
+                'stage' => $stage
+            ], $verifyException);
+
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Creates a success response for file saving
+     *
+     * @param string $fileName The name of the saved file
+     * @param string $fullPath The path where the file was saved
+     * @return \Illuminate\Http\JsonResponse Response with success status
+     */
+    protected function createSuccessResponse($fileName, $fullPath)
+    {
+        return response()->json([
+            'message' => trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $fileName]),
+            'fileName' => $fileName,
+            'bucketFolderTemp' => $fullPath
+        ], 200);
     }
 
     /**

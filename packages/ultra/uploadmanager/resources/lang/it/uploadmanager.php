@@ -16,6 +16,50 @@ return [
         'server_limits_restrictive' => '',
         // ... altri messaggi
     ],
+
+    'upload' => [
+        'max_files' => 'Massimo :count file',
+        'max_file_size' => 'Massimo :size per file',
+        'max_total_size' => 'Massimo :size totale',
+        'max_files_error' => 'Puoi caricare un massimo di :count file alla volta.',
+        'max_file_size_error' => 'Il file ":name" supera la dimensione massima consentita (:size).',
+        'max_total_size_error' => 'La dimensione totale dei file (:size) supera il limite consentito (:limit).',
+    ],
+
+    // Badge funzionalità enterprise (Punto 4)
+    'storage_space_unit' => 'GB',
+    'secure_storage' => 'Archiviazione Sicura',
+    'secure_storage_tooltip' => 'I tuoi file vengono salvati con ridondanza per proteggere i tuoi asset',
+    'virus_scan_feature' => 'Scansione Virus',
+    'virus_scan_tooltip' => 'Ogni file viene scansionato per rilevare potenziali minacce prima dell\'archiviazione',
+    'advanced_validation' => 'Validazione Avanzata',
+    'advanced_validation_tooltip' => 'Validazione del formato e integrità dei file',
+    'storage_space' => 'Spazio: :used/:total GB',
+    'storage_space_tooltip' => 'Spazio di archiviazione disponibile per i tuoi EGI',
+    'toggle_virus_scan' => 'Attiva/disattiva la scansione virus',
+
+    // Metadata EGI (Punto 3)
+    'quick_egi_metadata' => 'Metadata EGI rapidi',
+    'egi_title' => 'Titolo EGI',
+    'egi_title_placeholder' => 'Es. Pixel Dragon #123',
+    'egi_collection' => 'Collezione',
+    'select_collection' => 'Seleziona collezione',
+    'existing_collections' => 'Collezioni esistenti',
+    'create_new_collection' => 'Crea nuova collezione',
+    'egi_description' => 'Descrizione',
+    'egi_description_placeholder' => 'Breve descrizione dell\'opera...',
+    'metadata_notice' => 'Questi metadata saranno associati al tuo EGI, ma potrai modificarli in seguito.',
+
+    // Accessibilità (Punto 5)
+    'select_files_aria' => 'Seleziona file per l\'upload',
+    'select_files_tooltip' => 'Seleziona uno o più file dal tuo dispositivo',
+    'save_aria' => 'Salva i file selezionati',
+    'save_tooltip' => 'Carica i file selezionati sul server',
+    'cancel_aria' => 'Annulla l\'upload corrente',
+    'cancel_tooltip' => 'Annulla l\'operazione e rimuovi i file selezionati',
+    'return_aria' => 'Torna alla collezione',
+    'return_tooltip' => 'Torna alla vista della collezione senza salvare',
+
     // Generale
     'file_saved_successfully' => 'File :fileCaricato salvato con successo',
     'file_deleted_successfully' => 'File eliminato con successo',

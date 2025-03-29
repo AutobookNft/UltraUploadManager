@@ -67,13 +67,7 @@ class SystemTempFileController extends Controller
 
         // Check if a file was uploaded
         if (!$request->hasFile('file')) {
-            UltraLog::error(
-                'NoFileUploaded',
-                'No file in request for system temp save',
-                [],
-                $this->channel
-            );
-
+            UltraLog::error('NoFileUploaded','No file in request for system temp save', [], $this->channel);
             $exception = new Exception("No file uploaded to system temp");
             return UltraError::handle('INVALID_FILE', [
                 'fileName' => 'unknown'
@@ -84,12 +78,7 @@ class SystemTempFileController extends Controller
             // Get file from request with explicit null check
             $file = $request->file('file');
             if (!$file) {
-                UltraLog::error(
-                    'NoFileProvided',
-                    'File object is null',
-                    [],
-                    $this->channel
-                );
+                UltraLog::error('NoFileProvided', 'File object is null', [], $this->channel);
                 $exception = new Exception("File object is null after request");
                 return UltraError::handle('INVALID_FILE', ['fileName' => 'unknown'], $exception);
             }

@@ -1,0 +1,1952 @@
+######## Ultra Error Manager (UEM) - Codice Client - Generato il Sat Mar 29 17:04:28 CET 2025 ########
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/ErrorManager.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/ErrorManager.ts
+*
+* Ultra Error Manager - Core Manager Class
+*
+* This is the main class for handling errors in the client-side application,
+* working as a counterpart to the server-side UEM (Ultra Error Manager).
+* It implements a centralized error management system with configurable handlers,
+* error types, and display modes.
+*
+* The class follows enterprise patterns including:
+* - Singleton pattern for centralized access
+* - Handler pattern for extensible error processing
+* - Strategy pattern for different error display modes
+* - Observer pattern for error notifications
+*
+* Security features:
+* - Safe error handling with no leakage of sensitive information
+* - Proper escaping of displayed messages
+* - Validation of error configurations
+* - Secure communication with server
+*
+* @module UltraErrorManager
+* @version 1.0.0
+*/
+
+import {
+    ErrorHandler,
+    ErrorConfig,
+    ErrorContext,
+    ServerErrorResponse
+ } from './interfaces/ErrorTypes';
+ import { ErrorDisplayHandler } from './handlers/ErrorDisplayHandler';
+ import { errorConfig } from './utils/ErrorConfigLoader';
+
+ /**
+ * Main ErrorManager class
+ */
+ export class ErrorManager {
+    private static instance: ErrorManager;
+    private handlers: ErrorHandler[] = [];
+    private initialized: boolean = false;
+    private defaultDisplayMode: string = 'div';
+
+    /**
+     * Private constructor to enforce singleton pattern
+     * Cannot be instantiated directly from outside
+     */
+    private constructor() {
+        // Register the default display handler
+        this.registerHandler(new ErrorDisplayHandler());
+    }
+
+    /**
+     * Get the singleton instance of ErrorManager
+     * Creates a new instance if one doesn't exist yet
+     *
+     * @returns {ErrorManager} The singleton instance
+     */
+    public static getInstance(): ErrorManager {
+        if (!ErrorManager.instance) {
+            ErrorManager.instance = new ErrorManager();
+        }
+        return ErrorManager.instance;
+    }
+
+    /**
+     * Initialize the error manager by loading necessary configurations
+     * This should be called early in the application lifecycle
+     *
+     * @param {Object} options - Initialization options
+     * @param {boolean} options.loadConfig - Whether to load error configurations
+     * @param {string} options.defaultDisplayMode - Default display mode for errors
+     * @returns {Promise<void>} A promise that resolves when initialization is complete
+     */
+    public async initialize(options: {
+        loadConfig?: boolean,
+        defaultDisplayMode?: string
+    } = {}): Promise<void> {
+        if (this.initialized) {
+            console.warn('ErrorManager already initialized');
+            return Promise.resolve();
+        }
+
+        // Set default display mode if provided
+        if (options.defaultDisplayMode) {
+            this.defaultDisplayMode = options.defaultDisplayMode;
+        }
+
+        // Load configurations if needed
+        if (options.loadConfig !== false) {
+            try {
+                await errorConfig.loadConfig();
+            } catch (error) {
+                console.error('Failed to load error configurations:', error);
+                // Continue initialization even if config loading fails
+                // We'll use fallback configurations
+            }
+        }
+
+        this.initialized = true;
+        return Promise.resolve();
+    }
+
+    /**
+     * Register a new error handler
+     *
+     * @param {ErrorHandler} handler - The handler to register
+     * @returns {ErrorManager} The error manager instance for chaining
+     */
+    public registerHandler(handler: ErrorHandler): ErrorManager {
+        this.handlers.push(handler);
+        return this;
+    }
+
+    /**
+     * Handle a server error response
+     *
+     * @param {ServerErrorResponse} response - The error response from server
+     * @param {ErrorContext} context - Additional context for the error
+     */
+    public handleServerError(response: ServerErrorResponse, context: ErrorContext = {}): void {
+        if (!this.initialized) {
+            console.warn('ErrorManager not initialized, initializing now...');
+            this.initialize().then(() => {
+                this.handleServerError(response, context);
+            });
+            return;
+        }
+
+        // Get additional configuration if available
+        const config = errorConfig.getErrorConfig(response.error);
+
+        // Format the user message with context variables
+        const userMessage = this.formatMessage(response.message, context);
+
+        // Process through each handler
+        for (const handler of this.handlers) {
+            if (handler.shouldHandle(response.error, config)) {
+                handler.handle(
+                    response.error,
+                    userMessage,
+                    response.display_mode || (config?.msg_to || this.defaultDisplayMode),
+                    response.blocking || (config?.blocking || 'not'),
+                    context
+                );
+            }
+        }
+
+        // Dispatch an error event for other parts of the application
+        this.dispatchErrorEvent(response.error, userMessage, response.blocking, context);
+
+        // If this is a blocking error, additional action might be needed
+        if (response.blocking === 'blocking' && (config?.type === 'critical')) {
+            this.handleCriticalBlockingError(response.error, userMessage, context);
+        }
+    }
+
+    /**
+     * Handle a client-side error
+     *
+     * @param {string} errorCode - The error code
+     * @param {ErrorContext} context - Additional context for the error
+     * @param {Error} originalError - The original error object if available
+     */
+    public handleClientError(errorCode: string, context: ErrorContext = {}, originalError?: Error): void {
+        if (!this.initialized) {
+            console.warn('ErrorManager not initialized, initializing now...');
+            this.initialize().then(() => {
+                this.handleClientError(errorCode, context, originalError);
+            });
+            return;
+        }
+
+        // Get error configuration if available
+        const config = errorConfig.getErrorConfig(errorCode);
+
+        if (!config) {
+            console.error(`Error code not defined: ${errorCode}`, context, originalError);
+            // Fall back to UNEXPECTED_ERROR
+            this.handleClientError('UNEXPECTED_ERROR', {
+                originalCode: errorCode,
+                originalContext: JSON.stringify(context),
+                originalError: originalError?.message || 'Unknown error'
+            }, originalError);
+            return;
+        }
+
+        // Get the user message from translations or config
+        const userMessage = this.getUserMessage(errorCode, config, context);
+
+        // Process through each handler
+        for (const handler of this.handlers) {
+            if (handler.shouldHandle(errorCode, config)) {
+                handler.handle(
+                    errorCode,
+                    userMessage,
+                    config.msg_to || this.defaultDisplayMode,
+                    config.blocking || 'not',
+                    context,
+                    originalError
+                );
+            }
+        }
+
+        // Dispatch an error event for other parts of the application
+        this.dispatchErrorEvent(errorCode, userMessage, config.blocking, context, originalError);
+
+        // If this is a blocking error, additional action might be needed
+        if (config.blocking === 'blocking' && config.type === 'critical') {
+            this.handleCriticalBlockingError(errorCode, userMessage, context, originalError);
+        }
+    }
+
+    /**
+     * Get a translated user message for an error
+     *
+     * @param {string} errorCode - The error code
+     * @param {ErrorConfig} config - The error configuration
+     * @param {ErrorContext} context - Context data for placeholders
+     * @returns {string} The formatted user message
+     */
+    private getUserMessage(errorCode: string, config: ErrorConfig, context: ErrorContext): string {
+        // Try to get from window.translations first (highest priority)
+        if (typeof window !== 'undefined' &&
+            window.translations &&
+            window.translations.js &&
+            window.translations.js[errorCode]) {
+            return this.formatMessage(window.translations.js[errorCode], context);
+        }
+
+        // Try to use user_message_key if available
+        if (config.user_message_key) {
+            // Check if window.translations contains this key
+            const parts = config.user_message_key.split('.');
+            let translation: any = window.translations;
+
+            if (translation) {
+                for (const part of parts) {
+                    if (translation && translation[part]) {
+                        translation = translation[part];
+                    } else {
+                        translation = null;
+                        break;
+                    }
+                }
+
+                if (typeof translation === 'string') {
+                    return this.formatMessage(translation, context);
+                }
+            }
+        }
+
+        // Fallback to direct message or dev_message
+        return this.formatMessage(
+            config.message ||
+            config.dev_message ||
+            `An error occurred (${errorCode})`,
+            context
+        );
+    }
+
+    /**
+     * Format a message by replacing placeholders with context values
+     *
+     * @param {string} message - The message with placeholders
+     * @param {ErrorContext} context - Context data for placeholders
+     * @returns {string} The formatted message
+     */
+    private formatMessage(message: string, context: ErrorContext): string {
+        let formattedMessage = message;
+
+        // Replace :key placeholders with context values
+        for (const key in context) {
+            if (Object.prototype.hasOwnProperty.call(context, key) &&
+                (typeof context[key] === 'string' || typeof context[key] === 'number')) {
+                const regex = new RegExp(`:${key}`, 'g');
+                formattedMessage = formattedMessage.replace(regex, String(context[key]));
+            }
+        }
+
+        return formattedMessage;
+    }
+
+    /**
+     * Handle a critical blocking error
+     * This method can be extended to implement additional actions for critical errors
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {ErrorContext} context - Error context
+     * @param {Error} originalError - The original error if available
+     */
+    private handleCriticalBlockingError(
+        errorCode: string,
+        message: string,
+        context: ErrorContext,
+        originalError?: Error
+    ): void {
+        // Log detailed information for critical errors
+        console.error('CRITICAL ERROR', {
+            errorCode,
+            message,
+            context,
+            originalError
+        });
+
+        // In production, we might want to:
+        // 1. Disable the UI
+        // 2. Force a reload after a delay
+        // 3. Send detailed telemetry to the server
+        // 4. Show a full-page error overlay
+
+        // These actions would depend on specific application requirements
+    }
+
+    /**
+     * Dispatch a custom event for the error
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} blocking - The blocking level
+     * @param {ErrorContext} context - Error context
+     * @param {Error} originalError - The original error if available
+     */
+    private dispatchErrorEvent(
+        errorCode: string,
+        message: string,
+        blocking: string,
+        context: ErrorContext,
+        originalError?: Error
+    ): void {
+        try {
+            // Create a custom event with error details
+            const errorEvent = new CustomEvent('ultraError', {
+                detail: {
+                    errorCode,
+                    message,
+                    blocking,
+                    context,
+                    originalError: originalError ? {
+                        message: originalError.message,
+                        name: originalError.name
+                    } : undefined,
+                    timestamp: new Date().toISOString()
+                },
+                bubbles: true,
+                cancelable: true
+            });
+
+            // Dispatch the event for other components to listen
+            document.dispatchEvent(errorEvent);
+        } catch (e) {
+            console.warn('Failed to dispatch error event:', e);
+        }
+    }
+ }
+
+ // Export a singleton instance for easier usage
+ export const ultraError = ErrorManager.getInstance();
+
+ // Add to window interface for type safety
+ declare global {
+    interface Window {
+        translations?: {
+            js?: Record<string, any>;
+        };
+    }
+ }
+
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/handlers/ErrorDisplayHandler.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/handlers/ErrorDisplayHandler.ts
+*
+* Ultra Error Manager - Error Display Handler
+*
+* This handler is responsible for displaying errors to the user through various UI mechanisms.
+* It implements the ErrorHandler interface and supports multiple display modes including:
+* - div (DOM elements)
+* - sweet-alert (SweetAlert2 modals)
+* - toast (Toast notifications)
+* - log-only (Console logging only)
+*
+* The handler uses the Strategy pattern to select the appropriate display method based on
+* the error configuration and context. It ensures consistent presentation of errors
+* throughout the application while respecting the server-side display preferences.
+*
+* Security considerations:
+* - All output is properly escaped to prevent XSS attacks
+* - Error messages are sanitized before display
+* - No sensitive information is leaked to the user interface
+*
+* @module UltraErrorManager/Handlers
+* @version 1.0.0
+*/
+
+import {
+    ErrorHandler,
+    ErrorConfig,
+    ErrorContext,
+    DisplayMode,
+    BlockingLevel
+ } from '../interfaces/ErrorTypes';
+
+ /**
+ * Implements the ErrorHandler interface for displaying errors to the user
+ */
+ export class ErrorDisplayHandler implements ErrorHandler {
+    private domErrorContainer: HTMLElement | null = null;
+    private statusMessageElement: HTMLElement | null = null;
+
+    /**
+     * Constructor sets up the DOM error containers if available
+     */
+    constructor() {
+        // Try to find the standard error containers in the DOM
+        this.domErrorContainer = document.getElementById('status') ||
+                                 document.getElementById('error-container');
+        this.statusMessageElement = document.getElementById('status-message') ||
+                                    document.getElementById('error-message');
+    }
+
+    /**
+     * Determines if this handler should process the given error
+     *
+     * @param {string} errorCode - The error code
+     * @param {ErrorConfig|null} config - The error configuration if available
+     * @returns {boolean} True if this handler should process the error
+     */
+    shouldHandle(errorCode: string, config: ErrorConfig | null): boolean {
+        // This handler should process all errors except those with msg_to: 'log-only'
+        // or those that explicitly opt out of display
+        return !(config && config.msg_to === DisplayMode.LOG_ONLY);
+    }
+
+    /**
+     * Handles displaying the error to the user
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} displayMode - How to display the error
+     * @param {string} blocking - The blocking level
+     * @param {ErrorContext} context - Additional context for the error
+     * @param {Error} [originalError] - The original error object if available
+     */
+    handle(
+        errorCode: string,
+        message: string,
+        displayMode: string,
+        blocking: string,
+        context: ErrorContext,
+        originalError?: Error
+    ): void {
+        // Always log the error to the console for debugging
+        this.logErrorToConsole(errorCode, message, displayMode, blocking, context, originalError);
+
+        // Display the error based on the specified mode
+        switch (displayMode) {
+            case DisplayMode.SWEET_ALERT:
+                this.displayWithSweetAlert(errorCode, message, blocking);
+                break;
+
+            case DisplayMode.TOAST:
+                this.displayWithToast(errorCode, message, blocking);
+                break;
+
+            case DisplayMode.DIV:
+                this.displayInDomElement(errorCode, message, blocking);
+                break;
+
+            case DisplayMode.LOG_ONLY:
+                // Already logged to console above
+                break;
+
+            default:
+                // Default to DOM display
+                this.displayInDomElement(errorCode, message, blocking);
+                break;
+        }
+    }
+
+    /**
+     * Logs the error to the console for debugging purposes
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} displayMode - How the error is being displayed
+     * @param {string} blocking - The blocking level
+     * @param {ErrorContext} context - Additional context for the error
+     * @param {Error} [originalError] - The original error object if available
+     */
+    private logErrorToConsole(
+        errorCode: string,
+        message: string,
+        displayMode: string,
+        blocking: string,
+        context: ErrorContext,
+        originalError?: Error
+    ): void {
+        const logLevel = blocking === BlockingLevel.BLOCKING ? 'error' :
+                        (blocking === BlockingLevel.SEMI_BLOCKING ? 'warn' : 'info');
+
+        const logMessage = `[${errorCode}] ${message}`;
+        const logData = {
+            displayMode,
+            blocking,
+            context,
+            timestamp: new Date().toISOString()
+        };
+
+        if (originalError) {
+            logData['originalError'] = {
+                message: originalError.message,
+                name: originalError.name,
+                stack: originalError.stack
+            };
+        }
+
+        // Use the appropriate console method based on the log level
+        switch (logLevel) {
+            case 'error':
+                console.error(logMessage, logData);
+                break;
+            case 'warn':
+                console.warn(logMessage, logData);
+                break;
+            default:
+                console.info(logMessage, logData);
+                break;
+        }
+    }
+
+    /**
+     * Displays the error using SweetAlert2
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} blocking - The blocking level
+     */
+    private displayWithSweetAlert(errorCode: string, message: string, blocking: string): void {
+        // Dynamically import SweetAlert2 to avoid unnecessary loading if not used
+        import('sweetalert2').then(Swal => {
+            const iconType = blocking === BlockingLevel.BLOCKING ? 'error' :
+                            (blocking === BlockingLevel.SEMI_BLOCKING ? 'warning' : 'info');
+
+            // Get appropriate title from translations or use defaults
+            const title = this.getTranslatedTitle(errorCode, blocking) ||
+                        (blocking === BlockingLevel.BLOCKING ? 'Error' :
+                        (blocking === BlockingLevel.SEMI_BLOCKING ? 'Warning' : 'Notice'));
+
+            // Get button text from translations or use default
+            const confirmButtonText = window.translations?.js?.ok_button || 'OK';
+
+            // Show the alert
+            Swal.default.fire({
+                title: this.escapeHtml(title),
+                text: this.escapeHtml(message),
+                icon: iconType,
+                confirmButtonText: this.escapeHtml(confirmButtonText)
+            });
+        }).catch(err => {
+            console.error('Failed to load SweetAlert2:', err);
+            // Fallback to DOM display if SweetAlert fails to load
+            this.displayInDomElement(errorCode, message, blocking);
+        });
+    }
+
+    /**
+     * Displays the error using a toast notification
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} blocking - The blocking level
+     */
+    private displayWithToast(errorCode: string, message: string, blocking: string): void {
+        // Check if a toast function is available in the window object
+        if (typeof window.showToast === 'function') {
+            const type = blocking === BlockingLevel.BLOCKING ? 'error' :
+                       (blocking === BlockingLevel.SEMI_BLOCKING ? 'warning' : 'info');
+
+            window.showToast(message, type);
+        } else {
+            // Fallback to SweetAlert with toast configuration
+            import('sweetalert2').then(Swal => {
+                const Toast = Swal.default.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: blocking === BlockingLevel.BLOCKING ? 0 : 5000,
+                    timerProgressBar: blocking !== BlockingLevel.BLOCKING
+                });
+
+                const iconType = blocking === BlockingLevel.BLOCKING ? 'error' :
+                               (blocking === BlockingLevel.SEMI_BLOCKING ? 'warning' : 'info');
+
+                Toast.fire({
+                    icon: iconType,
+                    title: this.escapeHtml(message)
+                });
+            }).catch(err => {
+                console.error('Failed to load SweetAlert2 for toast:', err);
+                // Fallback to DOM display
+                this.displayInDomElement(errorCode, message, blocking);
+            });
+        }
+    }
+
+    /**
+     * Displays the error in a DOM element
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} blocking - The blocking level
+     */
+    private displayInDomElement(errorCode: string, message: string, blocking: string): void {
+        // Update the status message element if available
+        if (this.statusMessageElement) {
+            this.statusMessageElement.innerText = message;
+
+            // Set appropriate classes based on blocking level
+            this.statusMessageElement.className = this.getStatusMessageClasses(blocking);
+
+            // Remove animation class if present
+            this.statusMessageElement.classList.remove('animate-pulse');
+        }
+
+        // Add the error to the status/error container if available
+        if (this.domErrorContainer) {
+            const colorClass = this.getColorClassForError(blocking);
+            const bgClass = this.getBackgroundClassForError(blocking);
+
+            const errorElement = document.createElement('p');
+            errorElement.className = `font-bold ${colorClass} ${bgClass} px-4 py-2 rounded-lg shadow-md mt-2`;
+            errorElement.innerText = message;
+
+            // Add a data attribute for the error code (useful for testing/debugging)
+            errorElement.dataset.errorCode = errorCode;
+
+            this.domErrorContainer.appendChild(errorElement);
+
+            // Scroll the container to show the new error
+            this.domErrorContainer.scrollTop = this.domErrorContainer.scrollHeight;
+        }
+    }
+
+    /**
+     * Gets the title for an error from translations
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} blocking - The blocking level
+     * @returns {string|null} The translated title or null if not found
+     */
+    private getTranslatedTitle(errorCode: string, blocking: string): string | null {
+        // Try to get a specific title for this error code
+        if (window.translations?.js?.errors?.titles?.[errorCode]) {
+            return window.translations.js.errors.titles[errorCode];
+        }
+
+        // Fall back to generic titles based on blocking level
+        if (blocking === BlockingLevel.BLOCKING && window.translations?.js?.errors?.error_title) {
+            return window.translations.js.errors.error_title;
+        }
+
+        if (blocking === BlockingLevel.SEMI_BLOCKING && window.translations?.js?.errors?.warning_title) {
+            return window.translations.js.errors.warning_title;
+        }
+
+        if (window.translations?.js?.errors?.notice_title) {
+            return window.translations.js.errors.notice_title;
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the CSS classes for the status message based on blocking level
+     *
+     * @param {string} blocking - The blocking level
+     * @returns {string} The CSS classes
+     */
+    private getStatusMessageClasses(blocking: string): string {
+        switch (blocking) {
+            case BlockingLevel.BLOCKING:
+                return 'font-bold text-red-700';
+            case BlockingLevel.SEMI_BLOCKING:
+                return 'font-bold text-yellow-700';
+            default:
+                return 'font-bold text-blue-700';
+        }
+    }
+
+    /**
+     * Gets the text color CSS class based on blocking level
+     *
+     * @param {string} blocking - The blocking level
+     * @returns {string} The CSS class
+     */
+    private getColorClassForError(blocking: string): string {
+        switch (blocking) {
+            case BlockingLevel.BLOCKING:
+                return 'text-red-700';
+            case BlockingLevel.SEMI_BLOCKING:
+                return 'text-yellow-700';
+            default:
+                return 'text-blue-700';
+        }
+    }
+
+    /**
+     * Gets the background color CSS class based on blocking level
+     *
+     * @param {string} blocking - The blocking level
+     * @returns {string} The CSS class
+     */
+    private getBackgroundClassForError(blocking: string): string {
+        switch (blocking) {
+            case BlockingLevel.BLOCKING:
+                return 'bg-red-200';
+            case BlockingLevel.SEMI_BLOCKING:
+                return 'bg-yellow-200';
+            default:
+                return 'bg-blue-200';
+        }
+    }
+
+    /**
+     * Escapes HTML special characters to prevent XSS attacks
+     *
+     * @param {string} html - The string to escape
+     * @returns {string} The escaped string
+     */
+    private escapeHtml(html: string): string {
+        const div = document.createElement('div');
+        div.textContent = html;
+        return div.innerHTML;
+    }
+ }
+
+ // Add to window interface for type safety
+ declare global {
+    interface Window {
+        showToast?: (message: string, type: string) => void;
+        translations?: {
+            js?: {
+                errors?: {
+                    titles?: Record<string, string>;
+                    error_title?: string;
+                    warning_title?: string;
+                    notice_title?: string;
+                };
+                ok_button?: string;
+            };
+        };
+    }
+ }
+
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/index.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/index.ts
+*
+* Ultra Error Manager - Main Entry Point
+*
+* This file serves as the main entry point for the Ultra Error Manager client-side package.
+* It exports all the components and utilities needed to integrate UEM into client applications.
+*
+* The exported components include:
+* - ErrorManager: The main class for handling errors
+* - ErrorDisplayHandler: The handler for displaying errors
+* - ErrorConfigLoader: Utility for loading error configurations
+* - Types and interfaces for type safety
+*
+* This module follows the facade pattern to provide a simplified interface
+* to the complex error management subsystem.
+*
+* @module UltraErrorManager
+* @version 1.0.0
+*/
+
+// Export the main ErrorManager class and singleton instance
+import { ErrorManager, ultraError } from './ErrorManager';
+export { ErrorManager, ultraError };
+
+// Export the ErrorDisplayHandler
+import { ErrorDisplayHandler } from './handlers/ErrorDisplayHandler';
+export { ErrorDisplayHandler };
+
+// Export the ErrorConfigLoader and singleton instance
+import { ErrorConfigLoader, errorConfig } from './utils/ErrorConfigLoader';
+export { ErrorConfigLoader, errorConfig };
+
+// Export all types and interfaces
+export * from './interfaces/ErrorTypes';
+
+/**
+* Initialize the Ultra Error Manager
+* This is a convenience function to setup UEM in one call
+*
+* @param {Object} options - Initialization options
+* @param {boolean} options.loadConfig - Whether to load error configurations
+* @param {string} options.defaultDisplayMode - Default display mode for errors
+* @returns {Promise<void>} A promise that resolves when initialization is complete
+*/
+export async function initializeUEM(options: {
+   loadConfig?: boolean,
+   defaultDisplayMode?: string
+} = {}): Promise<void> {
+   return ultraError.initialize(options);
+}
+
+/**
+* Handle a client-side error
+* This is a convenience function that delegates to ultraError.handleClientError
+*
+* @param {string} errorCode - The error code
+* @param {Object} context - Additional context for the error
+* @param {Error} originalError - The original error object if available
+*/
+export function handleClientError(
+   errorCode: string,
+   context: Record<string, any> = {},
+   originalError?: Error
+): void {
+   ultraError.handleClientError(errorCode, context, originalError);
+}
+
+/**
+* Handle a server error response
+* This is a convenience function that delegates to ultraError.handleServerError
+*
+* @param {Object} response - The error response from server
+* @param {Object} context - Additional context for the error
+*/
+export function handleServerError(
+   response: {
+       error: string;
+       message: string;
+       blocking: string;
+       display_mode: string;
+       details?: any;
+   },
+   context: Record<string, any> = {}
+): void {
+   ultraError.handleServerError(response, context);
+}
+
+/**
+* Create a wrapped fetch function that automatically handles errors
+*
+* @param {RequestInfo} input - The request URL or Request object
+* @param {RequestInit} init - The request init options
+* @returns {Promise<Response>} The fetch response
+*/
+export async function safeFetch(
+   input: RequestInfo,
+   init?: RequestInit
+): Promise<Response> {
+   try {
+       const response = await fetch(input, init);
+
+       if (!response.ok) {
+           const contentType = response.headers.get('content-type');
+
+           if (contentType && contentType.includes('application/json')) {
+               try {
+                   const errorData = await response.json();
+
+                   if (errorData.error) {
+                       // This looks like a UEM error response
+                       ultraError.handleServerError(errorData);
+                   } else {
+                       // This is some other kind of JSON error
+                       ultraError.handleClientError('UNEXPECTED_ERROR', {
+                           status: response.status,
+                           statusText: response.statusText,
+                           errorData: errorData
+                       });
+                   }
+               } catch (jsonError) {
+                   // Failed to parse JSON
+                   ultraError.handleClientError('JSON_ERROR', {
+                       status: response.status,
+                       statusText: response.statusText,
+                       url: typeof input === 'string' ? input : input.url
+                   });
+               }
+           } else {
+               // Not a JSON response
+               ultraError.handleClientError('SERVER_ERROR', {
+                   status: response.status,
+                   statusText: response.statusText,
+                   url: typeof input === 'string' ? input : input.url
+               });
+           }
+       }
+
+       return response;
+   } catch (error) {
+       // Network or other fetch error
+       ultraError.handleClientError('NETWORK_ERROR', {
+           url: typeof input === 'string' ? input : input.url
+       }, error instanceof Error ? error : undefined);
+
+       throw error; // Re-throw to allow caller to handle it
+   }
+}
+
+// Add event listener setup function for convenience
+export function onUltraError(
+   callback: (event: CustomEvent) => void
+): () => void {
+   const handler = (event: Event) => {
+       callback(event as CustomEvent);
+   };
+
+   document.addEventListener('ultraError', handler);
+
+   // Return a function to remove the listener
+   return () => {
+       document.removeEventListener('ultraError', handler);
+   };
+}
+
+// Export a simplified API object for convenience
+export const UEM = {
+   initialize: initializeUEM,
+   handleClientError,
+   handleServerError,
+   safeFetch,
+   onError: onUltraError,
+   getErrorConfig: (errorCode: string) => errorConfig.getErrorConfig(errorCode),
+   getAllErrorCodes: () => errorConfig.getAllErrorCodes(),
+};
+
+// Default export for ESM compatibility
+export default UEM;
+
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/interfaces/ErrorTypes.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/interfaces/ErrorTypes.ts
+*
+* Ultra Error Manager - Error Type Definitions
+*
+* This file defines the TypeScript interfaces used throughout the Ultra Error Manager system.
+* It provides type safety and documentation for error handling components and ensures
+* consistency across the client-side error management infrastructure.
+*
+* The interfaces defined here correspond to the server-side error configurations and
+* provide a strongly-typed foundation for error handling on the client.
+*
+* @module UltraErrorManager/Interfaces
+* @version 1.0.0
+*/
+
+/**
+* Defines the structure of an error configuration
+* This mirrors the server-side error configuration structure
+*/
+export interface ErrorConfig {
+    /** The error type (critical, error, warning, notice) */
+    type: string;
+
+    /** The blocking level (blocking, semi-blocking, not) */
+    blocking: string;
+
+    /** Translation key for developer message */
+    dev_message_key?: string;
+
+    /** Translation key for user-facing message */
+    user_message_key?: string;
+
+    /** HTTP status code associated with this error */
+    http_status_code: number;
+
+    /** Whether the development team should be notified */
+    devTeam_email_need: boolean;
+
+    /** How to display the error (div, sweet-alert, toast, log-only) */
+    msg_to: string;
+
+    /** Optional action to attempt automatic recovery */
+    recovery_action?: string;
+
+    /**  */
+    message?: string;
+
+    /**  */
+    dev_message?: string;
+ }
+
+ /**
+ * Defines the structure of an error type configuration
+ * Corresponds to the server-side error_types configuration
+ */
+ export interface ErrorTypeConfig {
+    /** The log level to use for this error type */
+    log_level: string;
+
+    /** Whether to notify the team for errors of this type */
+    notify_team: boolean;
+
+    /** The default HTTP status for this error type */
+    http_status: number;
+ }
+
+ /**
+ * Defines the structure of a blocking level configuration
+ * Corresponds to the server-side blocking_levels configuration
+ */
+ export interface BlockingLevelConfig {
+    /** Whether to terminate the current request/operation */
+    terminate_request: boolean;
+
+    /** Whether to clear the session */
+    clear_session?: boolean;
+
+    /** Whether to flash the error message to the session */
+    flash_session?: boolean;
+ }
+
+ /**
+ * Interface for server error responses
+ * Defines the expected structure of error responses from the server
+ */
+ export interface ServerErrorResponse {
+    /** The error code (e.g., "VALIDATION_ERROR") */
+    error: string;
+
+    /** The user-facing error message */
+    message: string;
+
+    /** The blocking level of the error */
+    blocking: string;
+
+    /** How the error should be displayed to the user */
+    display_mode: string;
+
+    /** Additional error details */
+    details?: any;
+ }
+
+ /**
+ * Context data for an error
+ * Used to provide additional information about the error
+ */
+ export interface ErrorContext {
+    /** Any contextual data for the error */
+    [key: string]: any;
+ }
+
+ /**
+ * Interface that all error handlers must implement
+ * Follows the Handler pattern for extensible error processing
+ */
+ export interface ErrorHandler {
+    /**
+     * Determines if this handler should process the given error
+     *
+     * @param {string} errorCode - The error code
+     * @param {ErrorConfig|null} config - The error configuration if available
+     * @returns {boolean} True if this handler should process the error
+     */
+    shouldHandle(errorCode: string, config: ErrorConfig | null): boolean;
+
+    /**
+     * Handles the error
+     *
+     * @param {string} errorCode - The error code
+     * @param {string} message - The error message
+     * @param {string} displayMode - How to display the error
+     * @param {string} blocking - The blocking level
+     * @param {ErrorContext} context - Additional context for the error
+     * @param {Error} [originalError] - The original error object if available
+     */
+    handle(
+        errorCode: string,
+        message: string,
+        displayMode: string,
+        blocking: string,
+        context: ErrorContext,
+        originalError?: Error
+    ): void;
+ }
+
+ /**
+ * Interface for error events dispatched by the ErrorManager
+ */
+ export interface UltraErrorEvent extends CustomEvent {
+    detail: {
+        /** The error code */
+        errorCode: string;
+
+        /** The error message */
+        message: string;
+
+        /** The blocking level */
+        blocking: string;
+
+        /** Additional context */
+        context: ErrorContext;
+
+        /** The original error if available */
+        originalError?: {
+            message: string;
+            name: string;
+            stack?: string;
+        };
+
+        /** Timestamp of when the error occurred */
+        timestamp: string;
+    };
+ }
+
+ /**
+ * Types of recovery actions that can be attempted
+ */
+ export enum RecoveryActionType {
+    RETRY_UPLOAD = 'retry_upload',
+    RETRY_SCAN = 'retry_scan',
+    RETRY_PRESIGNED = 'retry_presigned',
+    CREATE_TEMP_DIRECTORY = 'create_temp_directory',
+    SCHEDULE_CLEANUP = 'schedule_cleanup',
+    RETRY_METADATA_SAVE = 'retry_metadata_save'
+ }
+
+ /**
+ * Error severity levels
+ */
+ export enum ErrorSeverity {
+    CRITICAL = 'critical',
+    ERROR = 'error',
+    WARNING = 'warning',
+    NOTICE = 'notice'
+ }
+
+ /**
+ * Error blocking levels
+ */
+ export enum BlockingLevel {
+    BLOCKING = 'blocking',
+    SEMI_BLOCKING = 'semi-blocking',
+    NOT_BLOCKING = 'not'
+ }
+
+ /**
+ * Error display modes
+ */
+ export enum DisplayMode {
+    DIV = 'div',
+    SWEET_ALERT = 'sweet-alert',
+    TOAST = 'toast',
+    LOG_ONLY = 'log-only'
+ }
+
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/utils/ErrorConfigLoader.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/utils/ErrorConfigLoader.ts
+*
+* Ultra Error Manager - Error Configuration Loader
+*
+* This module is responsible for loading and managing error configurations from the server.
+* It fetches error definitions, error types, and blocking levels, then provides an interface
+* for accessing these configurations throughout the application.
+*
+* The module implements the Singleton pattern to ensure a single source of truth for
+* error configurations and uses caching to minimize network requests.
+*
+* Key features:
+* - Lazy loading of configurations
+* - Proper error handling and fallbacks
+* - Type-safe access to configurations
+* - Event-based notification when configs are loaded
+* - Graceful handling of configuration failures
+*
+* @module UltraErrorManager/Utils
+* @version 1.0.0
+*/
+
+import {
+    ErrorConfig,
+    ErrorTypeConfig,
+    BlockingLevelConfig
+ } from '../interfaces/ErrorTypes';
+
+ /**
+ * Interface for error configuration response from the server
+ */
+ interface ErrorConfigResponse {
+    errors: Record<string, ErrorConfig>;
+    types: Record<string, ErrorTypeConfig>;
+    blocking_levels: Record<string, BlockingLevelConfig>;
+ }
+
+ /**
+ * Handles fetching and caching error configurations from the server
+ */
+ export class ErrorConfigLoader {
+    private static instance: ErrorConfigLoader;
+    private errorDefinitions: Record<string, ErrorConfig> = {};
+    private errorTypes: Record<string, ErrorTypeConfig> = {};
+    private blockingLevels: Record<string, BlockingLevelConfig> = {};
+    private isLoaded: boolean = false;
+    private loadPromise: Promise<void> | null = null;
+    private failedAttempts: number = 0;
+    private readonly MAX_RETRY_ATTEMPTS = 3;
+
+    /**
+     * Private constructor for singleton pattern implementation
+     * Prevents direct construction calls with 'new' operator
+     */
+    private constructor() {}
+
+    /**
+     * Get the singleton instance of ErrorConfigLoader
+     * Creates a new instance if one doesn't exist yet
+     *
+     * @returns {ErrorConfigLoader} The singleton instance
+     */
+    public static getInstance(): ErrorConfigLoader {
+        if (!ErrorConfigLoader.instance) {
+            ErrorConfigLoader.instance = new ErrorConfigLoader();
+        }
+        return ErrorConfigLoader.instance;
+    }
+
+    /**
+     * Load error configurations from the server
+     * Implements caching and retry logic
+     *
+     * @param {boolean} forceReload - Whether to force reload even if already loaded
+     * @returns {Promise<void>} A promise that resolves when loading is complete
+     */
+    public loadConfig(forceReload: boolean = false): Promise<void> {
+        // If already loaded and not forced to reload, return immediately
+        if (this.isLoaded && !forceReload) {
+            return Promise.resolve();
+        }
+
+        // If loading is in progress and not forced, return the existing promise
+        if (this.loadPromise && !forceReload) {
+            return this.loadPromise;
+        }
+
+        // Reset loaded state if forcing reload
+        if (forceReload) {
+            this.isLoaded = false;
+            this.failedAttempts = 0;
+        }
+
+        // Start a new loading process
+        this.loadPromise = new Promise<void>((resolve, reject) => {
+            this.fetchErrorConfigurations()
+                .then(data => {
+                    this.errorDefinitions = data.errors || {};
+                    this.errorTypes = data.types || {};
+                    this.blockingLevels = data.blocking_levels || {};
+                    this.isLoaded = true;
+                    this.failedAttempts = 0;
+
+                    // Trigger event to notify that configuration has been loaded
+                    this.dispatchConfigLoadedEvent();
+
+                    if (typeof window !== 'undefined' && (window as any).envMode === 'local') {
+                        console.log('Error configurations loaded:', {
+                            definitions: this.errorDefinitions,
+                            types: this.errorTypes,
+                            blockingLevels: this.blockingLevels
+                        });
+                    }
+
+                    resolve();
+                })
+                .catch(error => {
+                    console.error('Error loading error configurations:', error);
+                    this.loadPromise = null;
+                    this.failedAttempts++;
+
+                    // If we haven't exceeded max retry attempts, try again with exponential backoff
+                    if (this.failedAttempts < this.MAX_RETRY_ATTEMPTS) {
+                        const retryDelay = Math.pow(2, this.failedAttempts) * 1000; // Exponential backoff
+                        console.log(`Retrying error config load in ${retryDelay}ms (attempt ${this.failedAttempts + 1}/${this.MAX_RETRY_ATTEMPTS})`);
+
+                        setTimeout(() => {
+                            this.loadConfig()
+                                .then(resolve)
+                                .catch(reject);
+                        }, retryDelay);
+                    } else {
+                        // After max retries, load fallback configurations and resolve anyway
+                        console.warn('Max retry attempts reached. Using fallback error configurations.');
+                        this.loadFallbackConfigurations();
+                        this.isLoaded = true; // Mark as loaded even though we're using fallbacks
+                        this.dispatchConfigLoadedEvent();
+                        resolve(); // Resolve successfully even with fallbacks
+                    }
+                });
+        });
+
+        return this.loadPromise;
+    }
+
+    /**
+     * Fetches error configurations from the server
+     *
+     * @returns {Promise<ErrorConfigResponse>} A promise that resolves to the error configurations
+     */
+    private fetchErrorConfigurations(): Promise<ErrorConfigResponse> {
+        return new Promise<ErrorConfigResponse>((resolve, reject) => {
+            fetch('/api/error-definitions', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin' // Include cookies for authentication
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load error configurations: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => resolve(data))
+            .catch(error => reject(error));
+        });
+    }
+
+    /**
+     * Loads fallback configurations to use when server fetch fails
+     * Provides a minimal set of critical error definitions
+     */
+    private loadFallbackConfigurations(): void {
+        // Fallback error types
+        this.errorTypes = {
+            'critical': {
+                log_level: 'critical',
+                notify_team: true,
+                http_status: 500
+            },
+            'error': {
+                log_level: 'error',
+                notify_team: false,
+                http_status: 400
+            },
+            'warning': {
+                log_level: 'warning',
+                notify_team: false,
+                http_status: 400
+            },
+            'notice': {
+                log_level: 'notice',
+                notify_team: false,
+                http_status: 200
+            }
+        };
+
+        // Fallback blocking levels
+        this.blockingLevels = {
+            'blocking': {
+                terminate_request: true,
+                clear_session: false
+            },
+            'semi-blocking': {
+                terminate_request: false,
+                flash_session: true
+            },
+            'not': {
+                terminate_request: false,
+                flash_session: true
+            }
+        };
+
+        // Fallback error definitions for critical errors
+        this.errorDefinitions = {
+            'UNEXPECTED_ERROR': {
+                type: 'critical',
+                blocking: 'semi-blocking',
+                http_status_code: 500,
+                devTeam_email_need: true,
+                msg_to: 'sweet-alert'
+            },
+            'NETWORK_ERROR': {
+                type: 'error',
+                blocking: 'semi-blocking',
+                http_status_code: 503,
+                devTeam_email_need: false,
+                msg_to: 'sweet-alert'
+            },
+            'VALIDATION_ERROR': {
+                type: 'warning',
+                blocking: 'semi-blocking',
+                http_status_code: 400,
+                devTeam_email_need: false,
+                msg_to: 'div'
+            }
+        };
+    }
+
+    /**
+     * Get configuration for a specific error code
+     *
+     * @param {string} errorCode - The error code to get configuration for
+     * @returns {ErrorConfig|null} The error configuration or null if not found
+     */
+    public getErrorConfig(errorCode: string): ErrorConfig | null {
+        if (!this.isLoaded) {
+            console.warn(`Attempted to access error configuration before loading: ${errorCode}`);
+            return null;
+        }
+
+        return this.errorDefinitions[errorCode] || null;
+    }
+
+    /**
+     * Get configuration for a specific error type
+     *
+     * @param {string} type - The error type to get configuration for (critical, error, warning, notice)
+     * @returns {ErrorTypeConfig|null} The error type configuration or null if not found
+     */
+    public getErrorTypeConfig(type: string): ErrorTypeConfig | null {
+        if (!this.isLoaded) {
+            console.warn(`Attempted to access error type configuration before loading: ${type}`);
+            return null;
+        }
+
+        return this.errorTypes[type] || null;
+    }
+
+    /**
+     * Get configuration for a specific blocking level
+     *
+     * @param {string} level - The blocking level to get configuration for (blocking, semi-blocking, not)
+     * @returns {BlockingLevelConfig|null} The blocking level configuration or null if not found
+     */
+    public getBlockingLevelConfig(level: string): BlockingLevelConfig | null {
+        if (!this.isLoaded) {
+            console.warn(`Attempted to access blocking level configuration before loading: ${level}`);
+            return null;
+        }
+
+        return this.blockingLevels[level] || null;
+    }
+
+    /**
+     * Check if configurations have been loaded
+     *
+     * @returns {boolean} True if configurations have been loaded, false otherwise
+     */
+    public isConfigLoaded(): boolean {
+        return this.isLoaded;
+    }
+
+    /**
+     * Get all available error codes
+     *
+     * @returns {string[]} Array of all error codes
+     */
+    public getAllErrorCodes(): string[] {
+        return Object.keys(this.errorDefinitions);
+    }
+
+    /**
+     * Get all error definitions grouped by their type
+     * Useful for generating error documentation or UI
+     *
+     * @returns {Record<string, ErrorConfig[]>} Object with error type as key and array of errors as value
+     */
+    public getErrorsByType(): Record<string, ErrorConfig[]> {
+        const result: Record<string, ErrorConfig[]> = {};
+
+        for (const [code, config] of Object.entries(this.errorDefinitions)) {
+            const type = config.type;
+            if (!result[type]) {
+                result[type] = [];
+            }
+
+            // Add the code to the config object for reference
+            const configWithCode = { ...config, code };
+            result[type].push(configWithCode as ErrorConfig);
+        }
+
+        return result;
+    }
+
+    /**
+     * Dispatches a custom event when configurations are loaded
+     */
+    private dispatchConfigLoadedEvent(): void {
+        if (typeof document !== 'undefined') {
+            try {
+                const event = new CustomEvent('errorConfigLoaded', {
+                    detail: {
+                        timestamp: new Date().toISOString(),
+                        errorCount: Object.keys(this.errorDefinitions).length
+                    },
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                document.dispatchEvent(event);
+            } catch (e) {
+                console.warn('Failed to dispatch errorConfigLoaded event:', e);
+            }
+        }
+    }
+
+    /**
+     * Gets the CSRF token from the meta tag or window object
+     *
+     * @returns {string} The CSRF token
+     */
+    private getCsrfToken(): string {
+        // Try to get from window object
+        if (typeof window !== 'undefined' && (window as any).csrfToken) {
+            return (window as any).csrfToken;
+        }
+
+        // Try to get from meta tag
+        if (typeof document !== 'undefined') {
+            const metaEl = document.querySelector('meta[name="csrf-token"]');
+            if (metaEl) {
+                return metaEl.getAttribute('content') || '';
+            }
+        }
+
+        console.warn('CSRF token not found');
+        return '';
+    }
+ }
+
+ // Export a singleton instance for easier usage across the application
+ export const errorConfig = ErrorConfigLoader.getInstance();
+
+
+
+######## File: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/utils/ErrorHandler.ts ########
+
+/**
+* /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/ErrorManager.ts
+*
+* Ultra Error Manager - Client Side Implementation
+*
+* This is the main class for handling errors in the client-side application,
+* working as a counterpart to the server-side UEM (Ultra Error Manager).
+* It implements a centralized error management system with configurable handlers,
+* error types, and display modes.
+*
+* The class follows enterprise patterns including:
+* - Singleton pattern for centralized access
+* - Handler pattern for extensible error processing
+* - Strategy pattern for different error display modes
+* - Observer pattern for error notifications
+*
+* Security features:
+* - Safe error handling with no leakage of sensitive information
+* - Proper escaping of displayed messages
+* - Validation of error configurations
+* - Secure communication with server
+*
+* @module UltraErrorManager
+* @version 1.0.0
+*/
+
+import { ErrorHandler } from '../interfaces/ErrorTypes';
+import { ErrorDisplayHandler } from '../handlers/ErrorDisplayHandler';
+import { errorConfig } from '../utils/ErrorConfigLoader';
+
+/**
+* Defines the structure of an error configuration
+*/
+export interface ErrorConfig {
+   type: string;             // Error type (critical, error, warning, notice)
+   blocking: string;         // Blocking level (blocking, semi-blocking, not)
+   dev_message_key?: string; // Translation key for developer message
+   user_message_key?: string; // Translation key for user message
+   user_message?: string;    // Direct user message
+   dev_message?: string;     // Direct developer message
+   http_status_code: number; // HTTP status code for the error
+   devTeam_email_need: boolean; // Whether to notify the dev team
+   msg_to: string;           // Display mode (div, sweet-alert, etc.)
+   recovery_action?: string; // Optional action to attempt recovery
+}
+
+/**
+* Defines the structure of an error response from the server
+*/
+export interface ServerErrorResponse {
+   error: string;            // Error code
+   message: string;          // Error message
+   blocking: string;         // Blocking level
+   display_mode: string;     // Display mode
+   details?: any;            // Additional error details
+}
+
+/**
+* Context data for an error
+*/
+export interface ErrorContext {
+   [key: string]: any;       // Any contextual data for the error
+}
+
+/**
+* Main ErrorManager class
+*/
+export class ErrorManager {
+   private static instance: ErrorManager;
+   private handlers: ErrorHandler[] = [];
+   private initialized: boolean = false;
+   private defaultDisplayMode: string = 'div';
+   private translationsLoaded: boolean = false;
+
+   /**
+    * Private constructor to enforce singleton pattern
+    * Cannot be instantiated directly from outside
+    */
+   private constructor() {
+       // Register the default display handler
+       this.registerHandler(new ErrorDisplayHandler());
+   }
+
+   /**
+    * Get the singleton instance of ErrorManager
+    * Creates a new instance if one doesn't exist yet
+    *
+    * @returns {ErrorManager} The singleton instance
+    */
+   public static getInstance(): ErrorManager {
+       if (!ErrorManager.instance) {
+           ErrorManager.instance = new ErrorManager();
+       }
+       return ErrorManager.instance;
+   }
+
+   /**
+    * Initialize the error manager by loading necessary configurations
+    * This should be called early in the application lifecycle
+    *
+    * @param {Object} options - Initialization options
+    * @param {boolean} options.loadConfig - Whether to load error configurations
+    * @param {string} options.defaultDisplayMode - Default display mode for errors
+    * @returns {Promise<void>} A promise that resolves when initialization is complete
+    */
+   public async initialize(options: {
+       loadConfig?: boolean,
+       defaultDisplayMode?: string
+   } = {}): Promise<void> {
+       if (this.initialized) {
+           console.warn('ErrorManager already initialized');
+           return Promise.resolve();
+       }
+
+       // Set default display mode if provided
+       if (options.defaultDisplayMode) {
+           this.defaultDisplayMode = options.defaultDisplayMode;
+       }
+
+       // Load configurations if needed
+       if (options.loadConfig !== false) {
+           try {
+               await errorConfig.loadConfig();
+           } catch (error) {
+               console.error('Failed to load error configurations:', error);
+               // Continue initialization even if config loading fails
+               // We'll use fallback configurations
+           }
+       }
+
+       // Check if translations are available
+       this.translationsLoaded = !!(
+           typeof window !== 'undefined' &&
+           window.translations &&
+           window.translations.js &&
+           window.translations.js.errors
+       );
+
+       this.initialized = true;
+       return Promise.resolve();
+   }
+
+   /**
+    * Register a new error handler
+    *
+    * @param {ErrorHandler} handler - The handler to register
+    * @returns {ErrorManager} The error manager instance for chaining
+    */
+   public registerHandler(handler: ErrorHandler): ErrorManager {
+       this.handlers.push(handler);
+       return this;
+   }
+
+   /**
+    * Handle a server error response
+    *
+    * @param {ServerErrorResponse} response - The error response from server
+    * @param {ErrorContext} context - Additional context for the error
+    */
+   public handleServerError(response: ServerErrorResponse, context: ErrorContext = {}): void {
+       if (!this.initialized) {
+           console.warn('ErrorManager not initialized, initializing now...');
+           this.initialize().then(() => {
+               this.handleServerError(response, context);
+           });
+           return;
+       }
+
+       // Get additional configuration if available
+       const config = errorConfig.getErrorConfig(response.error);
+
+       // Format the user message with context variables
+       const userMessage = this.formatMessage(response.message, context);
+
+       // Process through each handler
+       for (const handler of this.handlers) {
+           if (handler.shouldHandle(response.error, config)) {
+               handler.handle(
+                   response.error,
+                   userMessage,
+                   response.display_mode || (config?.msg_to || this.defaultDisplayMode),
+                   response.blocking || (config?.blocking || 'not'),
+                   context
+               );
+           }
+       }
+
+       // Dispatch an error event for other parts of the application
+       this.dispatchErrorEvent(response.error, userMessage, response.blocking, context);
+
+       // If this is a blocking error, additional action might be needed
+       if (response.blocking === 'blocking' && (config?.type === 'critical')) {
+           this.handleCriticalBlockingError(response.error, userMessage, context);
+       }
+   }
+
+   /**
+    * Handle a client-side error
+    *
+    * @param {string} errorCode - The error code
+    * @param {ErrorContext} context - Additional context for the error
+    * @param {Error} originalError - The original error object if available
+    */
+   public handleClientError(errorCode: string, context: ErrorContext = {}, originalError?: Error): void {
+       if (!this.initialized) {
+           console.warn('ErrorManager not initialized, initializing now...');
+           this.initialize().then(() => {
+               this.handleClientError(errorCode, context, originalError);
+           });
+           return;
+       }
+
+       // Get error configuration if available
+       const config = errorConfig.getErrorConfig(errorCode);
+
+       if (!config) {
+           console.error(`Error code not defined: ${errorCode}`, context, originalError);
+           // Fall back to UNEXPECTED_ERROR
+           this.handleClientError('UNEXPECTED_ERROR', {
+               originalCode: errorCode,
+               originalContext: JSON.stringify(context),
+               originalError: originalError?.message || 'Unknown error'
+           }, originalError);
+           return;
+       }
+
+       // Get the user message from translations or config
+       const userMessage = this.getUserMessage(errorCode, config, context);
+
+       // Process through each handler
+       for (const handler of this.handlers) {
+           if (handler.shouldHandle(errorCode, config)) {
+               handler.handle(
+                   errorCode,
+                   userMessage,
+                   config.msg_to || this.defaultDisplayMode,
+                   config.blocking || 'not',
+                   context,
+                   originalError
+               );
+           }
+       }
+
+       // Dispatch an error event for other parts of the application
+       this.dispatchErrorEvent(errorCode, userMessage, config.blocking, context, originalError);
+
+       // If this is a blocking error, additional action might be needed
+       if (config.blocking === 'blocking' && config.type === 'critical') {
+           this.handleCriticalBlockingError(errorCode, userMessage, context, originalError);
+       }
+   }
+
+   /**
+ * Get a translated user message for an error
+ *
+ * @param {string} errorCode - The error code
+ * @param {ErrorConfig} config - The error configuration
+ * @param {ErrorContext} context - Context data for placeholders
+ * @returns {string} The formatted user message
+ */
+private getUserMessage(errorCode: string, config: ErrorConfig, context: ErrorContext): string {
+    // Try to get from window.translations first (highest priority)
+    if (typeof window !== 'undefined' &&
+        window.translations &&
+        window.translations.js &&
+        window.translations.js[errorCode]) {
+        return this.formatMessage(window.translations.js[errorCode], context);
+    }
+
+    // Try to use user_message_key if available
+    if (config.user_message_key) {
+        // Check if window.translations contains this key
+        const parts = config.user_message_key.split('.');
+        let translation: any = window.translations;
+
+        for (const part of parts) {
+            if (translation && translation[part]) {
+                translation = translation[part];
+            } else {
+                translation = null;
+                break;
+            }
+        }
+
+        if (typeof translation === 'string') {
+            return this.formatMessage(translation, context);
+        }
+    }
+
+    // Fallback to direct user_message or dev_message
+    return this.formatMessage(
+        config.user_message ||
+        config.dev_message ||
+        `An error occurred (${errorCode})`,
+        context
+    );
+}
+
+   /**
+    * Format a message by replacing placeholders with context values
+    *
+    * @param {string} message - The message with placeholders
+    * @param {ErrorContext} context - Context data for placeholders
+    * @returns {string} The formatted message
+    */
+   private formatMessage(message: string, context: ErrorContext): string {
+       let formattedMessage = message;
+
+       // Replace :key placeholders with context values
+       for (const key in context) {
+           if (Object.prototype.hasOwnProperty.call(context, key) &&
+               (typeof context[key] === 'string' || typeof context[key] === 'number')) {
+               const regex = new RegExp(`:${key}`, 'g');
+               formattedMessage = formattedMessage.replace(regex, String(context[key]));
+           }
+       }
+
+       return formattedMessage;
+   }
+
+   /**
+    * Handle a critical blocking error
+    * This method can be extended to implement additional actions for critical errors
+    *
+    * @param {string} errorCode - The error code
+    * @param {string} message - The error message
+    * @param {ErrorContext} context - Error context
+    * @param {Error} originalError - The original error if available
+    */
+   private handleCriticalBlockingError(
+       errorCode: string,
+       message: string,
+       context: ErrorContext,
+       originalError?: Error
+   ): void {
+       // Log detailed information for critical errors
+       console.error('CRITICAL ERROR', {
+           errorCode,
+           message,
+           context,
+           originalError
+       });
+
+       // In production, we might want to:
+       // 1. Disable the UI
+       // 2. Force a reload after a delay
+       // 3. Send detailed telemetry to the server
+       // 4. Show a full-page error overlay
+
+       // These actions would depend on specific application requirements
+   }
+
+   /**
+    * Dispatch a custom event for the error
+    *
+    * @param {string} errorCode - The error code
+    * @param {string} message - The error message
+    * @param {string} blocking - The blocking level
+    * @param {ErrorContext} context - Error context
+    * @param {Error} originalError - The original error if available
+    */
+   private dispatchErrorEvent(
+       errorCode: string,
+       message: string,
+       blocking: string,
+       context: ErrorContext,
+       originalError?: Error
+   ): void {
+       try {
+           // Create a custom event with error details
+           const errorEvent = new CustomEvent('ultraError', {
+               detail: {
+                   errorCode,
+                   message,
+                   blocking,
+                   context,
+                   originalError: originalError ? {
+                       message: originalError.message,
+                       name: originalError.name
+                   } : undefined,
+                   timestamp: new Date().toISOString()
+               },
+               bubbles: true,
+               cancelable: true
+           });
+
+           // Dispatch the event for other components to listen
+           document.dispatchEvent(errorEvent);
+       } catch (e) {
+           console.warn('Failed to dispatch error event:', e);
+       }
+   }
+}
+
+// Export a singleton instance for easier usage
+export const ultraError = ErrorManager.getInstance();
+
+

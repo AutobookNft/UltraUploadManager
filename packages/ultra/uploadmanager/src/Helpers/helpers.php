@@ -9,6 +9,6 @@ if (!function_exists('get_temp_file_path')) {
      */
     function get_temp_file_path(string $filename): string
     {
-        return storage_path(config('app.bucket_temp_file_folder') . '/' . $filename);
+        return storage_path(config('upload-manager.temp_path') . DIRECTORY_SEPARATOR . $filename);
     }
 }

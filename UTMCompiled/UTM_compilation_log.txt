@@ -1,0 +1,16 @@
+Inizio compilazione UTM: Sat Mar 29 15:40:26 CET 2025
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/config/translation-manager.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/resources/lang/en/core.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Commands/PublishTranslationsCommand.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Facades/UltraTrans.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Providers/UltraTranslationServiceProvider.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/TranslationManager.php
+
+File esclusi da UTM:
+
+Totale file server processati: 0
+Totale file client processati: 0
+Totale file config/misc processati: 0
+Totale file esclusi: 0
+Fine compilazione UTM: Sat Mar 29 15:40:26 CET 2025
+File compressi in: /home/fabio/sandbox/UltraUploadSandbox/UTMCompiled/UTM_compiled_20250329154026.zip

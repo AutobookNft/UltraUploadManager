@@ -4,8 +4,8 @@ if (import.meta.env.MODE === 'development') {
     console.log('current window:',  window.currentView);
 }
 
-import "./sendErrorEmail";
+// import "./sendErrorEmail";
 import "./notification";
-import "./errorMessage";
+// import "./errorMessage";
 
 

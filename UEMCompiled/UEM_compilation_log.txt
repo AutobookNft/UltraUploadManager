@@ -1,0 +1,51 @@
+Inizio compilazione UEM: Sat Mar 29 17:04:28 CET 2025
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/config/error-manager.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/config/logging.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/readme-md.txt
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/lang/en/errors.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/lang/it/errors.php
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/ErrorManager.ts
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/handlers/ErrorDisplayHandler.ts
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/index.ts
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/interfaces/ErrorTypes.ts
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/utils/ErrorConfigLoader.ts
+File aggiunto a Client: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/ts/utils/ErrorHandler.ts
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/dashboard/index.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/dashboard/show.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/dashboard/simulations.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/dashboard/statistics.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/dashboard/welcome.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/emails/error-notification.blade.php
+File aggiunto a Config: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/resources/views/layouts/app.blade.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/routes/api.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/routes/web.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Database/Seeders/ErrorLogSeeder.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/ErrorManager.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Exceptions/UltraErrorException.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Facades/TestingConditions.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Facades/UltraError.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/DatabaseLogHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/EmailNotificationHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/ErrorSimulationHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/LogHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/RecoveryActionHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/SlackNotificationHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Handlers/UserInterfaceHandler.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Helpers/helpers.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Http/Controllers/ErrorDashboardController.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Http/Controllers/ErrorSimulationController.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Http/Middleware/EnvironmentMiddleware.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Http/Middleware/ErrorHandlingMiddleware.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Interfaces/ErrorHandlerInterface.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Models/ErrorLog.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Providers/UltraErrorManagerServiceProvider.php
+File aggiunto a Server: /home/fabio/sandbox/UltraUploadSandbox/packages/ultra/errormanager/src/Services/TestingConditionsManager.php
+
+File esclusi da UEM:
+
+Totale file server processati: 0
+Totale file client processati: 0
+Totale file config/misc processati: 0
+Totale file esclusi: 0
+Fine compilazione UEM: Sat Mar 29 17:04:29 CET 2025
+File compressi in: /home/fabio/sandbox/UltraUploadSandbox/UEMCompiled/UEM_compiled_20250329170428.zip
