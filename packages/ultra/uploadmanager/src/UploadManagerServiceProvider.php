@@ -17,6 +17,9 @@ class UploadManagerServiceProvider extends ServiceProvider
     public function boot()
     {
 
+        Log::channel('upload')->info('UploadManagerServiceProvider booted');
+
+
         $this->loadRoutesFrom(__DIR__ . '/../routes/routes.php');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'uploadmanager');
 
@@ -99,6 +102,9 @@ class UploadManagerServiceProvider extends ServiceProvider
 
     public function register()
     {
+
+        Log::channel('upload')->info('UploadManagerServiceProvider registered');
+
         $this->mergeConfigFrom(__DIR__ . '/../config/upload-manager.php', 'upload-manager');
         $this->mergeConfigFrom(__DIR__ . '/../config/logging.php', 'logging');
         $this->mergeConfigFrom(__DIR__ . '/../config/queue.php', 'queue');

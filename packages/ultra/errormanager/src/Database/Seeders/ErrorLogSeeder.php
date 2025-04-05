@@ -7,6 +7,7 @@ use Ultra\ErrorManager\Models\ErrorLog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Log;
 
 class ErrorLogSeeder extends Seeder
 {
@@ -172,6 +173,6 @@ class ErrorLogSeeder extends Seeder
             ErrorLog::create($errorLog);
         }
 
-        \Log::info('Inseriti 225 log di errore di prova.');
+        Log::info('Inseriti 225 log di errore di prova.');
     }
 }

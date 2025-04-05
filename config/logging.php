@@ -142,6 +142,12 @@
                 'days' => 7,  // Numero di giorni per cui conservare i log
             ],
 
+            'error_manager' => [
+                'driver' => 'single',
+                'path' => storage_path('logs/error_manager.log'),
+                'level' => 'debug',
+            ],
+
             'loading' => [
                 'driver' => 'daily',
                 'path' => storage_path('logs/loading.log'),

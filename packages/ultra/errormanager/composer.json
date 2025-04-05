@@ -1,5 +1,5 @@
 {
-    "name": "ultra/errormanager",
+    "name": "ultra/ultra-error-manager",
     "description": "Sistema avanzato di gestione errori di livello Enterprise per applicazioni Laravel",
     "type": "library",
     "license": "MIT",
@@ -48,7 +48,7 @@
             }
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 
 }

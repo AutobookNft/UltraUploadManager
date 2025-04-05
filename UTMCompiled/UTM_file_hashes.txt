@@ -1,7 +1,0 @@
-### Hash dei File Inclusi in UTM ###
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/config/translation-manager.php: 9988561bffee0d6895ea27ff38a7cc093c9c7e58b449067c0aa4b7ab8b1fc769
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/resources/lang/en/core.php: e33fbd6eaf9d7806a56da12a30e48b8b439d65f8a9aac47d4972c5874ec4ace3
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Commands/PublishTranslationsCommand.php: c4a75340e417a2e4473f3e7595daf0067e084211aa76e9d0630b7be044b9f371
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Facades/UltraTrans.php: d760b79f0547872444de5fa598454cc961455e52ba6811aa17a2b97e6bfa74c3
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/Providers/UltraTranslationServiceProvider.php: a87ee273dc077196fd4d3b5f8b15a50ae4877acd7500b51cb4555cbc1d30e291
-/home/fabio/sandbox/UltraUploadSandbox/packages/ultra/translationmanager/src/TranslationManager.php: b4421c45bd9aa12366fd15d6cca8dd13dbc71a17c4c087a4b0eeb3ee2d43b8f0

@@ -23,12 +23,9 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "pusher/pusher-php-server": "^7.2",
         "symfony/process": "^7.0",
+        "ultra/ultra-translation-manager": "dev-main",
+        "ultra/ultra-error-manager": "dev-main"
 
-
-        "ultra/translationmanager": "dev-main",
-        "ultra/errormanager": "dev-main",
-        "ultra/ultra-log-manager": "dev-main",
-        "ultra/ultra-config-manager": "dev-main"
     },
     "autoload": {
         "psr-4": {
@@ -48,5 +45,5 @@
 
         }
     }
-    
+
 }

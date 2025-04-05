@@ -34,13 +34,6 @@ generate_hashes() {
     find "$target_dir" \
         -type d \( -path "*/vendor" -o -path "*/node_modules" -o -path "*/.*" -o -path "*/storage/framework" -o -path "*/public" -o -path "$target_dir/packages/ultra/errormanager" -o -path "$target_dir/packages/ultra/uploadmanager" -o -path "*/resources/lang" \) -prune -o \
         -type f \( -name "*.php" -o -name "*.ts" -o -name "*.js" -o -name "*.env" -o -name "*.config.js" -o -name "*.blade.php" -o -name "*.css" -o -name "*.ico" -o -name "*.txt" -o -name "*.json" -o -name "*.stub" \) -print | sort | while read -r file; do
-            # Escludi file specifici nella directory principale
-            case "$(basename "$file")" in
-                ".env" | ".gitattributes" | ".gitignore" | "phpunit.xml" | "artisan" | "composer.json" | "composer.lock" | "docker-compose.yml" | "Dockerfile" | "package.json" | "package-lock.json" | "postcss.config.js" | "README.md" | "tailwind.config.js" | "tsconfig.buildinfo" | "vite.config.copy.js" | "vite.config.js")
-                    continue
-                    ;;
-            esac
-
             if [[ $file == *"$target_dir/packages/ultra/authsandbox"* ]]; then
                 hash=$(sha256sum "$file" | awk '{print $1}')
                 echo "$file: $hash" >> "$hash_file"
@@ -114,15 +107,6 @@ add_file_to_output() {
 find "$target_dir" \
     -type d \( -path "*/vendor" -o -path "*/node_modules" -o -path "*/.*" -o -path "*/storage/framework" -o -path "*/public" -o -path "$target_dir/packages/ultra/errormanager" -o -path "$target_dir/packages/ultra/uploadmanager" -o -path "*/resources/lang" \) -prune -o \
     -type f \( -name "*.php" -o -name "*.ts" -o -name "*.js" -o -name "*.env" -o -name "*.config.js" -o -name "*.blade.php" -o -name "*.css" -o -name "*.ico" -o -name "*.txt" -o -name "*.json" -o -name "*.stub" \) -print | sort | while read -r file; do
-        # Escludi file specifici nella directory principale
-        case "$(basename "$file")" in
-            ".env" | ".gitattributes" | ".gitignore" | "artisan" | "docker-compose.yml" | "Dockerfile" )
-                excluded_files+=("$file")
-                ((excluded_count++))
-                continue
-                ;;
-        esac
-
         if [[ $file == *"vendor"* || $file == *"node_modules"* || $file == *"/.*"* || $file == *"storage/framework"* || $file == *"public"* || $file == *"$target_dir/packages/ultra/errormanager"* || $file == *"$target_dir/packages/ultra/uploadmanager"* || $file == *"resources/lang"* ]]; then
             excluded_files+=("$file")
             ((excluded_count++))
