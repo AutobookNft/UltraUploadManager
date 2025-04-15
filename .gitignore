@@ -1,0 +1,21 @@
+# Aggiungi contenuto di base (puoi usare nano, vim o echo)
+echo "/vendor/" >> .gitignore
+echo "/node_modules/" >> .gitignore
+echo ".env" >> .gitignore
+echo ".env.*" >> .gitignore
+echo "!/.env.example" >> .gitignore # Non ignorare l'esempio
+echo "/storage/logs/*.log" >> .gitignore
+echo "/storage/framework/cache/*" >> .gitignore
+echo "/storage/framework/sessions/*" >> .gitignore
+echo "/storage/framework/views/*" >> .gitignore
+echo ".phpunit.cache/" >> .gitignore
+echo "phpunit.xml" >> .gitignore # Spesso specifico del progetto host
+echo "composer.lock" >> .gitignore # Generalmente non committato nelle LIBRERIE
+echo ".idea/" >> .gitignore
+echo ".vscode/" >> .gitignore
+echo "*.swp" >> .gitignore
+echo "*.swo" >> .gitignore
+echo ".DS_Store" >> .gitignore
+# Aggiungi eventuali file di build frontend se li generi dentro il pacchetto
+# echo "/public/" >> .gitignore
+# echo "/dist/" >> .gitignore

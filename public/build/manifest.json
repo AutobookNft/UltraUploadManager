@@ -1,0 +1,40 @@
+{
+  "_sweetalert2.esm.all-B0Dix5B2.js": {
+    "file": "assets/sweetalert2.esm.all-B0Dix5B2.js",
+    "name": "sweetalert2.esm.all"
+  },
+  "packages/ultra/uploadmanager/resources/css/app.css": {
+    "file": "assets/app-Be41M1Nq.css",
+    "src": "packages/ultra/uploadmanager/resources/css/app.css",
+    "isEntry": true
+  },
+  "packages/ultra/uploadmanager/resources/js/app.js": {
+    "file": "assets/app-CpROX-od.js",
+    "name": "app",
+    "src": "packages/ultra/uploadmanager/resources/js/app.js",
+    "isEntry": true
+  },
+  "packages/ultra/uploadmanager/resources/ts/file_upload_manager.ts": {
+    "file": "assets/file_upload_manager-DovZbd6U.js",
+    "name": "file_upload_manager",
+    "src": "packages/ultra/uploadmanager/resources/ts/file_upload_manager.ts",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-B0Dix5B2.js"
+    ]
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-B6mwar2r.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-5VKrzpql.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-B0Dix5B2.js"
+    ]
+  }
+}
