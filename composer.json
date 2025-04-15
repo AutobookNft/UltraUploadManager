@@ -39,7 +39,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Ultra\\UploadManager\\Providers\\UploadManagerServiceProvider"
+                "Ultra\\UploadManager\\UploadManagerServiceProvider"
             ]
         }
     },
