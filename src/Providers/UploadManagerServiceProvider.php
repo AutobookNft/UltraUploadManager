@@ -137,10 +137,10 @@ class UploadManagerServiceProvider extends ServiceProvider
         // Note: Merging logging, queue, filesystems, AllowedFileType might overwrite app settings.
         // Consider if these should be published only, or if merging is truly needed.
         // For safety, commenting out potentially conflicting merges. Publish is better.
-        // $this->mergeConfigFrom($this->packageBasePath . '/config/logging.php', 'logging');
-        // $this->mergeConfigFrom($this->packageBasePath . '/config/queue.php', 'queue');
-        // $this->mergeConfigFrom($this->packageBasePath . '/config/filesystems.php', 'filesystems');
-        // $this->mergeConfigFrom($this->packageBasePath . '/config/AllowedFileType.php', 'AllowedFileType');
+        $this->mergeConfigFrom($this->packageBasePath . '/config/logging.php', 'logging');
+        $this->mergeConfigFrom($this->packageBasePath . '/config/queue.php', 'queue');
+        $this->mergeConfigFrom($this->packageBasePath . '/config/filesystems.php', 'filesystems');
+        $this->mergeConfigFrom($this->packageBasePath . '/config/AllowedFileType.php', 'AllowedFileType');
         $this->logger()?->debug('[UUM] Default configuration merged.', ['key' => 'upload-manager']);
 
         // Register UUM's specific BroadcastServiceProvider

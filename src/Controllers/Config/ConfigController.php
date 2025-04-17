@@ -84,7 +84,7 @@ class ConfigController extends Controller
 
             ];
 
-            Log::channel('upload')->info('Testing ENV MODE: '. $config['envMode']);
+            
 
 
             return response()->json($config);
