@@ -3,21 +3,22 @@
 /**
  * Trait providing file validation logic for the UltraUploadManager.
  *
- * Offers methods to validate uploaded files against configured rules for
- * extensions, MIME types, size, filename conventions, and basic structural
- * integrity for specific types like images (Imagick) and PDFs.
- * Relies on the consuming class to provide Logger, ErrorManager, and TestingConditions instances.
+ * Offers methods to validate uploaded files against rules (extensions, MIME types,
+ * size, filename conventions, structure) retrieved dynamically via UltraConfigManager (UCM).
+ * Relies on the consuming class to provide LoggerInterface (ULM), ErrorManagerInterface (UEM),
+ * TestingConditionsManager, and UltraConfigManager (UCM) instances.
  *
  * @package     Ultra\UploadManager\Traits
  * @author      Fabio Cherici <fabiocherici@gmail.com>
  * @copyright   2024 Fabio Cherici
  * @license     MIT
- * @version     1.1.0 // Refactored for DI (via consuming class), Oracode v1.5.0, Ultra Integration.
+ * @version     1.2.1 // Corrected UCM usage (get instead of getConfigByKey). Oracode v1.5.0 docs. Completed logs.
  * @since       1.0.0
  *
- * @property-read LoggerInterface $logger Injected Logger instance from consuming class.
- * @property-read ErrorManagerInterface $errorManager Injected ErrorManager instance from consuming class.
+ * @property-read LoggerInterface $logger Injected Logger instance from consuming class (ULM).
+ * @property-read ErrorManagerInterface $errorManager Injected ErrorManager instance from consuming class (UEM).
  * @property-read TestingConditionsManager $testingConditions Injected TestingConditions instance from consuming class.
+ * @property-read UltraConfigManager $configManager Injected UltraConfigManager instance from consuming class (UCM).
  * @property      string $channel Log channel name (expected to be defined in consuming class).
  */
 
@@ -25,63 +26,79 @@ namespace Ultra\UploadManager\Traits;
 
 // Laravel & PHP Dependencies
 use Illuminate\Http\UploadedFile;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory; // For Validator::make alternative
-use Illuminate\Validation\Validator as IlluminateValidator; // Type hint for validator instance
-use Psr\Log\LoggerInterface; // ULM Interface
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Validation\Validator as IlluminateValidator;
+use Psr\Log\LoggerInterface;
 use Throwable;
-use Exception; // Standard Exception for now
-use ImagickException; // Specific Imagick exception
+use Exception;
+use ImagickException;
 
 // Ultra Ecosystem Dependencies
-use Ultra\ErrorManager\Interfaces\ErrorManagerInterface; // UEM Interface
-use Ultra\ErrorManager\Services\TestingConditionsManager; // Testing Service
+use Ultra\ErrorManager\Interfaces\ErrorManagerInterface;
+use Ultra\ErrorManager\Services\TestingConditionsManager;
+use Ultra\UltraConfigManager\UltraConfigManager; // Import UCM
 
 trait HasValidation
 {
     /**
-     * Validate an uploaded file against a series of checks.
+     * Validate an uploaded file against a series of checks using UCM for rules.
      *
-     * This is the main entry point for validation within the trait. It orchestrates
-     * calls to more specific validation methods (base, image structure, filename, PDF content).
-     * Throws an Exception if any validation step fails, which should be caught and
-     * handled by the calling context (e.g., using UEM).
+     * Main entry point for validation. Orchestrates calls to specific validation methods.
+     * Retrieves validation parameters (extensions, sizes, patterns) from UltraConfigManager.
+     * Throws an Exception on failure, intended to be caught and handled by UEM in the calling context.
      *
      * --- Core Logic ---
-     * 1. Logs the start of the validation process.
-     * 2. Calls `baseValidation` for MIME, extension, and size checks.
-     * 3. If the file is an image, calls `validateImageStructure`.
-     * 4. Calls `validateFileName` for naming convention checks.
-     * 5. If the file is a PDF, calls `validatePdfContent`.
-     * 6. Logs successful completion.
-     * 7. Catches any Exception during validation, logs the failure, and re-throws it.
+     * 1. Logs start. Checks for required dependencies (logger, errorManager, configManager, testingConditions).
+     * 2. Calls `baseValidation` (MIME, Ext, Size from UCM).
+     * 3. If image, calls `validateImageStructure`.
+     * 4. Calls `validateFileName` (Pattern, Length from UCM).
+     * 5. If PDF, calls `validatePdfContent`.
+     * 6. Logs success.
+     * 7. Catches & logs failures, then re-throws Exception.
      * --- End Core Logic ---
      *
      * @param UploadedFile $file The file instance to validate.
      * @param int|string $index Optional index used for testing simulations.
      * @return void
      *
-     * @throws Exception If any validation rule fails. The exception message provides details.
+     * @throws Exception If any validation rule fails.
+     * @throws \LogicException If required dependencies (logger, uem, ucm, testing) are not available in the consuming class.
      *
-     * @sideEffect Logs validation steps and outcomes via the consuming class's logger.
+     * @sideEffect Reads configuration via UCM ('AllowedFileType.*', 'file_validation.*').
+     * @sideEffect Logs validation steps via LoggerInterface (ULM).
+     * @sideEffect Interacts with TestingConditionsManager.
      * @see self::baseValidation()
-     * @see self::isImageMimeType()
      * @see self::validateImageStructure()
      * @see self::validateFileName()
-     * @see self::isPdf()
      * @see self::validatePdfContent()
+     * @see \Ultra\UltraConfigManager\UltraConfigManager::get() For configuration retrieval.
      */
     protected function validateFile(UploadedFile $file, int|string $index = 0): void
     {
-        // Ensure logger is available from the consuming class
+        // --- Dependency Checks ---
         if (!isset($this->logger) || !$this->logger instanceof LoggerInterface) {
-            throw new \LogicException('Consuming class must provide a LoggerInterface property named $logger.');
+            // Cannot log this error as logger is missing
+            throw new \LogicException('Consuming class must provide LoggerInterface $logger.');
         }
-        $logChannel = $this->channel ?? 'upload'; // Use channel from consuming class or default
+         if (!isset($this->errorManager) || !$this->errorManager instanceof ErrorManagerInterface) {
+            $this->logger->error('[HasValidation][FATAL] Missing dependency: ErrorManagerInterface $errorManager');
+            throw new \LogicException('Consuming class must provide ErrorManagerInterface $errorManager.');
+        }
+        if (!isset($this->configManager) || !$this->configManager instanceof UltraConfigManager) {
+             $this->logger->error('[HasValidation][FATAL] Missing dependency: UltraConfigManager $configManager');
+            throw new \LogicException('Consuming class must provide UltraConfigManager $configManager.');
+        }
+        if (!isset($this->testingConditions) || !$this->testingConditions instanceof TestingConditionsManager) {
+             $this->logger->error('[HasValidation][FATAL] Missing dependency: TestingConditionsManager $testingConditions');
+             throw new \LogicException('Consuming class must provide TestingConditionsManager $testingConditions.');
+        }
+        // --- End Dependency Checks ---
 
+        $logChannel = $this->channel ?? 'upload'; // Use channel from consuming class or default
         $fileNameForLog = $file->getClientOriginalName(); // Get filename once for logging
 
         $this->logger->info(
-            '[HasValidation] Starting file validation process.',
+            '[HasValidation] Starting file validation process (using UCM).',
             [
                 'fileName' => $fileNameForLog,
                 'size' => $file->getSize(),
@@ -92,15 +109,15 @@ trait HasValidation
         );
 
         try {
-            // Perform base validation (MIME, Extension, Size)
+            // Perform base validation (MIME, Extension, Size) using rules from UCM
             $this->baseValidation($file, $index);
 
             // Perform image-specific validation if applicable
             if ($this->isImageMimeType($file)) {
-                $this->validateImageStructure($file, $index);
+                $this->validateImageStructure($file);
             }
 
-            // Validate filename conventions
+            // Validate filename conventions using rules from UCM
             $this->validateFileName($file);
 
             // Perform PDF-specific validation if applicable
@@ -130,97 +147,97 @@ trait HasValidation
     }
 
     /**
-     * Perform base file validation (MIME type, extension, size).
-     *
-     * Uses Laravel's Validator component (resolved via helper) to check against
-     * rules defined in the 'AllowedFileType.collection' configuration.
-     * Also integrates with TestingConditionsManager to simulate errors.
+     * Perform base file validation (MIME type, extension, size) using rules from UCM.
      *
      * @param UploadedFile $file The file to validate.
      * @param int|string $index Index for testing simulations.
      * @return void
      *
-     * @throws Exception If validation fails (rule violation or simulated error).
-     * @throws \LogicException If necessary dependencies (logger, testingConditions) are missing.
-     *
-     * @sideEffect Reads 'AllowedFileType.collection.allowed_extensions', 'AllowedFileType.collection.max_size' config.
-     * @sideEffect Interacts with TestingConditionsManager.
-     * @sideEffect Logs validation steps and outcomes.
-     *
-     * @configReads AllowedFileType.collection.allowed_extensions Defines allowed extensions.
-     * @configReads AllowedFileType.collection.max_size Defines max file size in bytes.
-     * @see \Illuminate\Contracts\Validation\Factory::make() Creates the validator instance.
-     * @see \Ultra\ErrorManager\Services\TestingConditionsManager::isTesting() Checks for simulated errors.
+     * @throws Exception If validation fails.
+     * @throws \LogicException If required dependencies (logger, configManager, testingConditions, validator) are missing.
+     * @sideEffect Reads 'AllowedFileType.collection.allowed_extensions', 'AllowedFileType.collection.max_size' config via UCM.
+     * @configReads AllowedFileType.collection.allowed_extensions UCM Key for allowed extensions (Array expected).
+     * @configReads AllowedFileType.collection.max_size UCM Key for max file size in bytes (Int expected).
+     * @see \Illuminate\Contracts\Validation\Factory For validator creation.
      */
     protected function baseValidation(UploadedFile $file, int|string $index): void
     {
-        // Dependency checks (should be present in consuming class)
-        if (!isset($this->logger) || !$this->logger instanceof LoggerInterface) {
-            throw new \LogicException('Consuming class must provide a LoggerInterface property named $logger.');
-        }
-        if (!isset($this->testingConditions) || !$this->testingConditions instanceof TestingConditionsManager) {
-             throw new \LogicException('Consuming class must provide a TestingConditionsManager property named $testingConditions.');
-        }
+         // Assume dependencies checked in validateFile()
          $logChannel = $this->channel ?? 'upload';
          $fileNameForLog = $file->getClientOriginalName();
 
-        // Get validation rules from configuration
-        // Use app('config') or config() helper - assumes config service is available
-        $allowedExtensions = app('config')->get('AllowedFileType.collection.allowed_extensions', []);
-        $maxSizeInKilobytes = (int)(app('config')->get('AllowedFileType.collection.max_size', 100 * 1024 * 1024) / 1024); // Validator expects KB
+         // Resolve necessary Laravel services via helper
+         try {
+            /** @var ValidationFactory $validatorFactory */
+            $validatorFactory = app('validator');
+            /** @var \Illuminate\Contracts\Config\Repository $configRepo */
+            // Note: We still use UCM instance, but keep app('config') for potential direct access if needed elsewhere
+         } catch(Throwable $e) {
+              $this->logger->critical('[HasValidation] Failed to resolve core Laravel services (validator/config).', ['error' => $e->getMessage()]);
+              throw new \LogicException('Core Laravel services unavailable in HasValidation trait.', 0, $e);
+         }
+
+
+        // --- Get validation rules from UCM ---
+        $allowedExtensions = $this->configManager->get('AllowedFileType.collection.allowed_extensions', []); // Correct method: get()
+        $maxSizeInBytes = $this->configManager->get('AllowedFileType.collection.max_size', 100 * 1024 * 1024); // Correct method: get()
+        // --- End UCM Usage ---
+
+        // Ensure retrieved values have correct types with logging
+        if (!is_array($allowedExtensions)) {
+            $this->logger->warning('[HasValidation] Invalid format retrieved from UCM for AllowedFileType.collection.allowed_extensions, expected array. Using fallback.', ['value_type' => gettype($allowedExtensions)]);
+            $allowedExtensions = []; // Fallback
+        }
+         if (!is_int($maxSizeInBytes) || $maxSizeInBytes <= 0) {
+            $this->logger->warning('[HasValidation] Invalid or non-positive format retrieved from UCM for AllowedFileType.collection.max_size, expected positive integer. Using fallback.', ['value' => $maxSizeInBytes]);
+            $maxSizeInBytes = 100 * 1024 * 1024; // Fallback
+        }
+
+        $maxSizeInKilobytes = (int)($maxSizeInBytes / 1024); // Validator expects KB
 
         $this->logger->debug(
-            '[HasValidation] Starting base validation (MIME, Ext, Size).',
-            [
-                'fileName' => $fileNameForLog,
-                'sizeBytes' => $file->getSize(),
-                'maxSizeKB' => $maxSizeInKilobytes,
-                'mimeType' => $file->getMimeType(),
-                'allowedExtensions' => $allowedExtensions,
-                'channel' => $logChannel
-            ]
+            '[HasValidation] Starting base validation (MIME, Ext, Size) using UCM rules.',
+             [
+                 'fileName' => $fileNameForLog,
+                 'sizeBytes' => $file->getSize(),
+                 'maxSizeKB' => $maxSizeInKilobytes,
+                 'mimeType' => $file->getMimeType(),
+                 'allowedExtensionsCount' => count($allowedExtensions),
+                 'channel' => $logChannel
+             ]
         );
 
-        // Define custom error messages or rely on Laravel defaults + UEM mapping later
+        // Use more specific default messages or rely on UEM mapping later
         $messages = [
-            'file.mimes' => 'MIME type not allowed.',
-            'file.max' => 'File exceeds maximum size.',
-            // 'file.extensions' => 'File extension not allowed.', // Laravel default might be better
-        ];
+             'file.max' => "File exceeds maximum allowed size ({$maxSizeInKilobytes} KB).",
+             'file.extensions' => 'File type (extension) is not allowed.',
+             'file.required' => 'A file is required.',
+             'file.file' => 'The uploaded item is not a valid file.'
+         ];
 
-        // Resolve Validator Factory
-        /** @var ValidationFactory $validatorFactory */
-        $validatorFactory = app('validator'); // Resolve via app helper
-
-        // Perform validation using Laravel's validator
         /** @var IlluminateValidator $validator */
         $validator = $validatorFactory->make(
             ['file' => $file],
-            // Use 'extensions' rule which is generally more reliable than 'mimes' alone
-            // Size rule expects kilobytes
+            // Validate it's a required file first, then size and extensions
             ['file' => ['required', 'file', 'max:' . $maxSizeInKilobytes, 'extensions:' . implode(',', $allowedExtensions)]],
             $messages
         );
 
-        // Add any simulated test errors (uses $this->testingConditions)
+        // Add simulated errors if applicable (uses $this->testingConditions)
         $this->addTestingErrors($validator, $index);
 
-        // If validation fails, log and throw exception
+        // Check for validation failures
         if ($validator->fails()) {
-            $errorMessage = $validator->errors()->first('file'); // Get the first error message for 'file'
-
+            $errorMessage = $validator->errors()->first('file'); // Get the first specific error
             $this->logger->warning(
                 '[HasValidation] Base validation failed.',
                 [
                     'fileName' => $fileNameForLog,
-                    'errors' => $validator->errors()->toArray(), // Log all errors
-                    'failedRule' => $errorMessage // Log first message
+                    'errors' => $validator->errors()->toArray(), // Log all validation errors
+                    'first_error' => $errorMessage
                 ]
             );
-
-            // Throw a generic exception - the caller (BaseUploadHandler) will map this
-            // to the specific UEM code 'INVALID_FILE_VALIDATION' and add context.
-            // We include the validation message for better debugging in the handler.
+            // Throw generic exception; BaseUploadHandler will catch and map to UEM code
             throw new Exception("Base validation failed: {$errorMessage}");
         }
 
@@ -239,7 +256,6 @@ trait HasValidation
     protected function isImageMimeType(UploadedFile $file): bool
     {
         $mimeType = $file->getMimeType();
-        // Ensure getMimeType() returned a string before checking
         return is_string($mimeType) && str_starts_with($mimeType, 'image/');
     }
 
@@ -257,25 +273,22 @@ trait HasValidation
     /**
      * Add simulated test errors to the Laravel Validator instance based on active testing conditions.
      *
-     * This method checks various testing conditions (e.g., 'MAX_FILE_SIZE') using the injected
-     * TestingConditionsManager and adds corresponding errors to the validator if a condition is active.
-     * This allows simulating validation failures during tests without needing invalid actual files.
-     *
-     * @param IlluminateValidator $validator The Laravel Validator instance to modify.
-     * @param int|string $index The index of the file being processed (used to target simulations).
+     * @param IlluminateValidator $validator The Laravel Validator instance.
+     * @param int|string $index The index of the file being processed.
      * @return void
-     *
-     * @sideEffect May add error messages to the provided $validator instance.
-     * @sideEffect Logs messages when simulating errors via the consuming class's logger.
+     * @throws \LogicException If required dependencies (logger, testingConditions) are missing.
+     * @sideEffect May add errors to the $validator. Logs simulation info.
      * @see \Ultra\ErrorManager\Services\TestingConditionsManager::isTesting()
      */
     protected function addTestingErrors(IlluminateValidator $validator, int|string $index): void
     {
-        // Ensure logger and testingConditions are available
-        if (!isset($this->logger) || !isset($this->testingConditions)) return;
-         $logChannel = $this->channel ?? 'upload';
+        // Assume dependencies checked by validateFile()
+        if (!isset($this->logger) || !isset($this->testingConditions)) {
+             throw new \LogicException('Logger or TestingConditionsManager not available in addTestingErrors.');
+        }
+        $logChannel = $this->channel ?? 'upload';
 
-        // Only apply simulations for the first file in a batch (index 0) typically
+        // Apply simulations usually only for the first file (index 0) in test scenarios
         if ($index !== 0 && $index !== '0') {
             return;
         }
@@ -285,16 +298,12 @@ trait HasValidation
             ['index' => $index]
         );
 
-        // Map testing condition keys to validator rule keys/messages
+        // Map Testing Condition Key -> [Validator Rule Key, Simulated Message]
         $testConditionsMap = [
-            'MAX_FILE_SIZE' => ['rule' => 'file.max', 'message' => 'Simulated MAX_FILE_SIZE failure.'],
+            'MAX_FILE_SIZE'          => ['rule' => 'file.max',        'message' => 'Simulated MAX_FILE_SIZE failure.'],
             'INVALID_FILE_EXTENSION' => ['rule' => 'file.extensions', 'message' => 'Simulated INVALID_FILE_EXTENSION failure.'],
-            // 'INVALID_FILE_NAME' => ['rule' => 'file.name', 'message' => 'Simulated INVALID_FILE_NAME failure.'], // Note: file.name isn't a standard validator rule key
-            'MIME_TYPE_NOT_ALLOWED' => ['rule' => 'file.mimes', 'message' => 'Simulated MIME_TYPE_NOT_ALLOWED failure.'],
-             // These need to be simulated by throwing exceptions in their respective methods
-            // 'INVALID_IMAGE_STRUCTURE' => ['rule' => 'file.structure', 'message' => 'Simulated INVALID_IMAGE_STRUCTURE failure.'],
-            // 'IMAGICK_NOT_AVAILABLE' => ['rule' => 'imagic_failed', 'message' => 'Simulated IMAGICK_NOT_AVAILABLE failure.'],
-            // 'INVALID_FILE_PDF' => ['rule' => 'file.pdf', 'message' => 'Simulated INVALID_FILE_PDF failure.'],
+            'MIME_TYPE_NOT_ALLOWED'  => ['rule' => 'file.mimes',      'message' => 'Simulated MIME_TYPE_NOT_ALLOWED failure.'],
+            // Note: filename, image structure, PDF content simulations should throw exceptions in their respective methods
         ];
 
         foreach ($testConditionsMap as $conditionKey => $errorDetails) {
@@ -303,12 +312,11 @@ trait HasValidation
                     '[HasValidation] Simulating validation error via TestingConditions.',
                     [
                         'test_condition' => $conditionKey,
-                        'rule_key' => $errorDetails['rule']
+                        'rule_key' => $errorDetails['rule'] // Log which rule we are faking
                     ]
                 );
-                // Add the error directly to the validator's message bag
+                // Add the error directly to the validator's message bag for the 'file' attribute
                 $validator->errors()->add('file', $errorDetails['message']);
-                // No need to use $validator->after() here, add directly
             }
         }
     }
@@ -316,155 +324,143 @@ trait HasValidation
     /**
      * Validate the structural integrity of an image file using Imagick.
      *
-     * Checks if the Imagick extension is loaded and attempts a lightweight
-     * validation (`pingImage`) on the file.
-     *
      * @param UploadedFile $file The image file to validate.
-     * @param int|string $index Optional index for testing simulations (not used here currently).
      * @return void
-     *
-     * @throws Exception If Imagick is not available or if the image structure is invalid.
-     * @throws \ImagickException If `pingImage` fails.
+     * @throws Exception If Imagick is unavailable or image is invalid.
+     * @throws ImagickException If Imagick processing fails.
      * @throws \LogicException If logger dependency is missing.
-     *
-     * @sideEffect Logs validation steps and outcomes. May interact with filesystem to read the file.
-     * @see https://www.php.net/manual/en/class.imagick.php
+     * @sideEffect Logs validation steps. Reads file content.
      */
-    protected function validateImageStructure(UploadedFile $file, int|string $index = 0): void
+    protected function validateImageStructure(UploadedFile $file): void
     {
-        if (!isset($this->logger)) throw new \LogicException('Logger not available in HasValidation trait.');
-        $logChannel = $this->channel ?? 'upload';
-        $fileNameForLog = $file->getClientOriginalName();
+         // Assume logger checked by validateFile()
+         $logChannel = $this->channel ?? 'upload';
+         $fileNameForLog = $file->getClientOriginalName();
 
-        $this->logger->info(
+         $this->logger->info(
             '[HasValidation] Starting image structure validation.',
             ['fileName' => $fileNameForLog]
-        );
+         );
 
         // Check if Imagick extension is loaded
         if (!extension_loaded('imagick') || !class_exists('Imagick')) {
             $this->logger->error(
-                '[HasValidation] Imagick extension not available.',
+                '[HasValidation] Imagick extension not available. Cannot validate image structure.',
                 ['fileName' => $fileNameForLog]
             );
-            // Let the caller handle this with UEM code 'IMAGICK_NOT_AVAILABLE'
+            // Let caller handle with UEM code 'IMAGICK_NOT_AVAILABLE'
             throw new Exception("Required Imagick extension is not loaded or class Imagick not found.");
         }
 
         $filePath = $file->getRealPath();
+        // Check if path is valid and file exists
         if ($filePath === false || !file_exists($filePath)) {
-            $this->logger->error(
-                '[HasValidation] Image file not found for structure validation.',
+           $this->logger->error(
+                '[HasValidation] Image file path invalid or file not found for structure validation.',
                 ['fileName' => $fileNameForLog, 'attemptedPath' => $filePath ?: 'N/A']
             );
-             // Let the caller handle this with UEM code 'FILE_NOT_FOUND' or similar
             throw new Exception("Image file path could not be determined or file does not exist.");
         }
 
+        $imagick = null; // Initialize variable
         try {
-            // Use Imagick to perform a basic validity check
-            $image = new \Imagick();
-            // pingImage is faster as it doesn't load the full image data
-            if (!$image->pingImage($filePath)) {
-                 // pingImage returning false usually indicates an issue
-                 throw new ImagickException("Imagick::pingImage returned false, indicating potential issue.");
+            $imagick = new \Imagick();
+            // Use pingImage for a quick check without loading full image data
+            if (!$imagick->pingImage($filePath)) {
+                 // pingImage returning false indicates a potential issue
+                 throw new ImagickException("Imagick::pingImage returned false, file might be corrupt or unsupported format.");
             }
-             // Optional: A more thorough check, but slower
-             // $image->readImage($filePath); // This would throw if format is unsupported/corrupt
-
-            $this->logger->info(
-                '[HasValidation] Image structure validation passed.',
+            // If pingImage passes, structure is likely okay for basic purposes
+             $this->logger->info(
+                '[HasValidation] Image structure validation passed (pingImage successful).',
                 ['fileName' => $fileNameForLog]
             );
-            // Destroy Imagick object explicitly (good practice)
-            $image->clear();
-            $image->destroy();
 
         } catch (ImagickException $e) {
             $this->logger->error(
                 '[HasValidation] Image structure validation failed (ImagickException).',
-                [
-                    'fileName' => $fileNameForLog,
-                    'error' => $e->getMessage(),
-                    'code' => $e->getCode(),
-                ]
+                ['fileName' => $fileNameForLog, 'error' => $e->getMessage(), 'code' => $e->getCode()]
             );
-             // Let the caller handle this with UEM code 'INVALID_IMAGE_STRUCTURE'
+             // Let caller handle with UEM code 'INVALID_IMAGE_STRUCTURE'
             throw new Exception("Invalid image structure detected by Imagick: " . $e->getMessage(), 0, $e);
         } catch (Throwable $e) {
              // Catch any other unexpected errors during Imagick usage
              $this->logger->error(
                 '[HasValidation] Unexpected error during image structure validation.',
-                [
-                    'fileName' => $fileNameForLog,
-                    'exception_class' => get_class($e),
-                    'error' => $e->getMessage(),
-                ]
+                 ['fileName' => $fileNameForLog, 'exception_class' => get_class($e), 'error' => $e->getMessage()]
             );
              throw new Exception("Unexpected error during Imagick validation: " . $e->getMessage(), 0, $e);
+        } finally {
+            // Ensure Imagick object is destroyed even if errors occur
+            if ($imagick instanceof \Imagick) {
+                $imagick->clear();
+                $imagick->destroy();
+            }
         }
     }
 
     /**
-     * Validate the filename against configured length and pattern rules.
+     * Validate the filename against length and pattern rules retrieved from UCM.
      *
      * @param UploadedFile $file The file whose name needs validation.
      * @return void
-     *
-     * @throws Exception If the filename length is invalid or contains disallowed characters.
-     * @throws \LogicException If logger dependency is missing.
-     *
-     * @sideEffect Reads 'file_validation' configuration (custom config assumed).
-     * @sideEffect Logs validation steps and outcomes.
-     * @configReads file_validation.images.max_name_length Assumed config key for max length.
-     * @configReads file_validation.min_name_length Assumed config key for min length.
-     * @configReads file_validation.allowed_name_pattern Assumed config key for regex pattern.
+     * @throws Exception If the filename is invalid.
+     * @throws \LogicException If logger or configManager dependencies are missing.
+     * @sideEffect Reads 'file_validation.*' configuration via UCM. Logs validation steps.
+     * @configReads file_validation.images.max_name_length UCM Key for max length.
+     * @configReads file_validation.min_name_length UCM Key for min length.
+     * @configReads file_validation.allowed_name_pattern UCM Key for regex pattern.
      */
     protected function validateFileName(UploadedFile $file): void
     {
-        if (!isset($this->logger)) throw new \LogicException('Logger not available in HasValidation trait.');
+        // Assume dependencies checked by validateFile()
         $logChannel = $this->channel ?? 'upload';
         $fileName = $file->getClientOriginalName();
 
         $this->logger->info(
-            '[HasValidation] Starting filename validation.',
+            '[HasValidation] Starting filename validation using UCM rules.',
             ['fileName' => $fileName]
         );
 
-        // Retrieve validation rules from config (assuming a 'file_validation' config file exists)
-        // Provide sensible defaults if config is missing
-        $maxLength = config('file_validation.images.max_name_length', 255);
-        $minLength = config('file_validation.min_name_length', 1);
-        // Default pattern allows alphanumeric, underscore, hyphen, period, space
-        $allowedPattern = config('file_validation.allowed_name_pattern', '/^[\w\-. ]+$/u'); // Added 'u' modifier for UTF-8
+        // --- Use UCM to get validation rules ---
+        $maxLength = $this->configManager->get('file_validation.images.max_name_length', 255);
+        $minLength = $this->configManager->get('file_validation.min_name_length', 1);
+        $allowedPattern = $this->configManager->get('file_validation.allowed_name_pattern', '/^[\w\-. ]+$/u'); // Added 'u' modifier default for UTF-8
+        // --- End UCM Usage ---
 
-        // Check Length
-        $nameLength = mb_strlen($fileName, 'UTF-8'); // Use mb_strlen for UTF-8 support
+        // Validate retrieved config types
+        if (!is_int($maxLength) || $maxLength <= 0) {
+            $this->logger->warning('[HasValidation] Invalid config value for file_validation.images.max_name_length, using default.', ['retrieved_value' => $maxLength]);
+            $maxLength = 255;
+        }
+        if (!is_int($minLength) || $minLength < 0) { // minLength can be 0 if needed, adjust logic if 1 is absolute minimum
+            $this->logger->warning('[HasValidation] Invalid config value for file_validation.min_name_length, using default.', ['retrieved_value' => $minLength]);
+            $minLength = 1;
+        }
+        if (!is_string($allowedPattern) || empty($allowedPattern)) {
+            $this->logger->warning('[HasValidation] Invalid config value for file_validation.allowed_name_pattern, using default.', ['retrieved_value' => $allowedPattern]);
+            $allowedPattern = '/^[\w\-. ]+$/u';
+        }
+
+        // Check Length using mb_strlen for multibyte characters
+        $nameLength = mb_strlen($fileName, 'UTF-8');
         if ($nameLength < $minLength || $nameLength > $maxLength) {
-            $this->logger->error(
+             $this->logger->error(
                 '[HasValidation] Filename length validation failed.',
-                [
-                    'fileName' => $fileName,
-                    'length' => $nameLength,
-                    'minLength' => $minLength,
-                    'maxLength' => $maxLength
-                ]
+                 ['fileName' => $fileName, 'length' => $nameLength, 'minLength' => $minLength, 'maxLength' => $maxLength]
             );
-            // Let caller handle with UEM code 'INVALID_FILE_NAME'
+            // Caller handles with UEM code 'INVALID_FILE_NAME'
             throw new Exception("Invalid filename: Length must be between {$minLength} and {$maxLength} characters.");
         }
 
-        // Check Pattern
+        // Check Pattern using preg_match
         if (!preg_match($allowedPattern, $fileName)) {
             $this->logger->error(
                 '[HasValidation] Filename pattern validation failed.',
-                [
-                    'fileName' => $fileName,
-                    'pattern' => $allowedPattern
-                ]
+                ['fileName' => $fileName, 'pattern' => $allowedPattern]
             );
-             // Let caller handle with UEM code 'INVALID_FILE_NAME'
-            throw new Exception("Invalid filename: Contains disallowed characters matching pattern '{$allowedPattern}'.");
+            // Caller handles with UEM code 'INVALID_FILE_NAME'
+            throw new Exception("Invalid filename: Contains disallowed characters or does not match required pattern '{$allowedPattern}'.");
         }
 
         $this->logger->info(
@@ -474,22 +470,17 @@ trait HasValidation
     }
 
     /**
-     * Validate the basic structure of a PDF file.
-     *
-     * Checks if the file exists and if its initial content contains the standard '%PDF' magic bytes.
+     * Validate the basic structure of a PDF file by checking for the '%PDF' magic header.
      *
      * @param UploadedFile $file The PDF file to validate.
      * @return void
-     *
-     * @throws Exception If the file is not found or does not start with '%PDF'.
+     * @throws Exception If the file is not found, cannot be read, or lacks the '%PDF' header.
      * @throws \LogicException If logger dependency is missing.
-     *
-     * @sideEffect Reads the beginning of the file content from the filesystem.
-     * @sideEffect Logs validation steps and outcomes.
+     * @sideEffect Reads the beginning of the file content. Logs validation steps.
      */
     protected function validatePdfContent(UploadedFile $file): void
     {
-        if (!isset($this->logger)) throw new \LogicException('Logger not available in HasValidation trait.');
+        // Assume logger checked by validateFile()
         $logChannel = $this->channel ?? 'upload';
         $fileNameForLog = $file->getClientOriginalName();
 
@@ -499,34 +490,35 @@ trait HasValidation
         );
 
         $filePath = $file->getRealPath();
+        // Validate file path
         if ($filePath === false || !file_exists($filePath)) {
-            $this->logger->error(
-                '[HasValidation] PDF file not found for content validation.',
-                ['fileName' => $fileNameForLog, 'attemptedPath' => $filePath ?: 'N/A']
-            );
-             // Let caller handle with UEM code 'FILE_NOT_FOUND' or similar
+           $this->logger->error(
+               '[HasValidation] PDF file path invalid or file not found for content validation.',
+               ['fileName' => $fileNameForLog, 'attemptedPath' => $filePath ?: 'N/A']
+           );
             throw new Exception("PDF file path could not be determined or file does not exist.");
         }
 
-        // Read only the first few bytes to check for the magic number
-        $fileStart = file_get_contents($filePath, false, null, 0, 10); // Read first 10 bytes
+        // Read only the first few bytes (e.g., 10 bytes) to check for '%PDF'
+        $fileStart = file_get_contents($filePath, false, null, 0, 10);
 
+        // Check if reading failed
         if ($fileStart === false) {
              $this->logger->error(
                 '[HasValidation] Failed to read start of PDF file.',
                 ['fileName' => $fileNameForLog, 'path' => $filePath]
             );
              // Let caller handle with UEM code 'FILE_READ_ERROR' or similar
-            throw new Exception("Could not read PDF file content.");
+            throw new Exception("Could not read PDF file content for validation.");
         }
 
-        // Check if the file starts with '%PDF'
+        // Check if the file starts with the PDF magic number
         if (!str_starts_with($fileStart, '%PDF')) {
-            $this->logger->error(
+             $this->logger->error(
                 '[HasValidation] PDF content validation failed (Missing %PDF header).',
-                ['fileName' => $fileNameForLog, 'startBytes' => bin2hex($fileStart)] // Log hex for non-printables
+                 ['fileName' => $fileNameForLog, 'startBytesHex' => bin2hex($fileStart)]
             );
-             // Let caller handle with UEM code 'INVALID_FILE_PDF'
+             // Caller handles with UEM code 'INVALID_FILE_PDF'
             throw new Exception("Invalid PDF file content: Missing '%PDF' header.");
         }
 
@@ -535,4 +527,4 @@ trait HasValidation
             ['fileName' => $fileNameForLog]
         );
     }
-}
+} // End trait HasValidation
