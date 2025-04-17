@@ -1,0 +1,40 @@
+# Ignora la cartella .history
+.history/
+
+# Ignora i file di log
+*.log
+
+# Ignora i file dell'IDE (ad esempio, Visual Studio Code)
+.vscode/
+.idea/
+
+# Ignora i file di sistema
+.DS_Store
+Thumbs.db
+
+# Ignora le dipendenze del compositore (se non vuoi includerle nel repository)
+vendor/
+
+# Ignora i file di cache
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+
+# Ignora i file di ambiente
+.env
+.env.backup
+.env.local
+
+# Ignora le cache di Composer
+composer.lock
+
+# Ignora le cache di NPM
+node_modules/
+
+# Ignora le risorse compilate
+/public/css/
+/public/js/
+/public/mix-manifest.json
+/public/hot
+
+# Ignora altri file o cartelle specifiche del tuo progetto

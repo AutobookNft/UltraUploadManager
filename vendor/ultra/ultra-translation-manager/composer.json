@@ -1,0 +1,38 @@
+{
+    "name": "ultra/ultra-translation-manager",
+    "description": "Ultra Translation Manager for managing translations in the Ultra ecosystem",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Fabio Cherici",
+            "email": "fabiocherici@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1|^8.2|^8.3",
+        "laravel/framework": "^11.0",
+        "illuminate/support": "^11.0",
+        "illuminate/translation": "^11.0", 
+        "illuminate/cache": "^11.0",      
+        "illuminate/filesystem": "^11.0" 
+    },
+    
+    "autoload": {
+        "psr-4": {
+            "Ultra\\TranslationManager\\": "src/" 
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ultra\\TranslationManager\\Providers\\UltraTranslationServiceProvider"
+            ],
+            "aliases": {
+                "UltraTrans": "Ultra\\TranslationManager\\Facades\\UltraTrans"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

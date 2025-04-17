@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /home/fabio/libraries/UltraConfigManager/src</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="_css/bootstrap.min.css?v=12.1.2" rel="stylesheet" type="text/css">
+  <link href="_css/nv.d3.min.css?v=12.1.2" rel="stylesheet" type="text/css">
+  <link href="_css/style.css?v=12.1.2" rel="stylesheet" type="text/css">
+  <link href="_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="index.html">/home/fabio/libraries/UltraConfigManager/src</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Console/Commands/UConfigInitializeCommand.php.html#78">Ultra\UltraConfigManager\Console\Commands\UConfigInitializeCommand</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigAuditData.php.html#31">Ultra\UltraConfigManager\DataTransferObjects\ConfigAuditData</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigDisplayData.php.html#30">Ultra\UltraConfigManager\DataTransferObjects\ConfigDisplayData</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigEditData.php.html#32">Ultra\UltraConfigManager\DataTransferObjects\ConfigEditData</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ConfigNotFoundException.php.html#35">Ultra\UltraConfigManager\Exceptions\ConfigNotFoundException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/DuplicateKeyException.php.html#36">Ultra\UltraConfigManager\Exceptions\DuplicateKeyException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/PersistenceException.php.html#39">Ultra\UltraConfigManager\Exceptions\PersistenceException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Facades/UConfig.php.html#83">Ultra\UltraConfigManager\Facades\UConfig</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#64">Ultra\UltraConfigManager\Http\Controllers\UltraConfigController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#85">Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#40">Ultra\UltraConfigManager\Models\User</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#87">Ultra\UltraConfigManager\Providers\UConfigServiceProvider</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/VersionManager.php.html#72">Ultra\UltraConfigManager\Services\VersionManager</a></td><td class="text-right">27%</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#72">Ultra\UltraConfigManager\Casts\EncryptedCast</a></td><td class="text-right">46%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#89">Ultra\UltraConfigManager\Dao\EloquentConfigDao</a></td><td class="text-right">63%</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#57">Ultra\UltraConfigManager\Constants\GlobalConstants</a></td><td class="text-right">68%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#109">Ultra\UltraConfigManager\UltraConfigManager</a></td><td class="text-right">72%</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#102">Ultra\UltraConfigManager\Models\UltraConfigVersion</a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="Models/UltraConfigAudit.php.html#96">Ultra\UltraConfigManager\Models\UltraConfigAudit</a></td><td class="text-right">86%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#64">Ultra\UltraConfigManager\Http\Controllers\UltraConfigController</a></td><td class="text-right">992</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#85">Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole</a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#109">Ultra\UltraConfigManager\UltraConfigManager</a></td><td class="text-right">220</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#89">Ultra\UltraConfigManager\Dao\EloquentConfigDao</a></td><td class="text-right">146</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#87">Ultra\UltraConfigManager\Providers\UConfigServiceProvider</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigDisplayData.php.html#30">Ultra\UltraConfigManager\DataTransferObjects\ConfigDisplayData</a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Models/User.php.html#40">Ultra\UltraConfigManager\Models\User</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#72">Ultra\UltraConfigManager\Casts\EncryptedCast</a></td><td class="text-right">50</td></tr>
+       <tr><td><a href="Console/Commands/UConfigInitializeCommand.php.html#78">Ultra\UltraConfigManager\Console\Commands\UConfigInitializeCommand</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/VersionManager.php.html#72">Ultra\UltraConfigManager\Services\VersionManager</a></td><td class="text-right">14</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#102">Ultra\UltraConfigManager\Models\UltraConfigVersion</a></td><td class="text-right">14</td></tr>
+       <tr><td><a href="Models/UltraConfigAudit.php.html#96">Ultra\UltraConfigManager\Models\UltraConfigAudit</a></td><td class="text-right">9</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#57">Ultra\UltraConfigManager\Constants\GlobalConstants</a></td><td class="text-right">7</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Console/Commands/UConfigInitializeCommand.php.html#101"><abbr title="Ultra\UltraConfigManager\Console\Commands\UConfigInitializeCommand::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#76"><abbr title="Ultra\UltraConfigManager\Constants\GlobalConstants::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigAuditData.php.html#37"><abbr title="Ultra\UltraConfigManager\DataTransferObjects\ConfigAuditData::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigDisplayData.php.html#41"><abbr title="Ultra\UltraConfigManager\DataTransferObjects\ConfigDisplayData::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigDisplayData.php.html#59"><abbr title="Ultra\UltraConfigManager\DataTransferObjects\ConfigDisplayData::fromModel">fromModel</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigEditData.php.html#39"><abbr title="Ultra\UltraConfigManager\DataTransferObjects\ConfigEditData::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ConfigNotFoundException.php.html#44"><abbr title="Ultra\UltraConfigManager\Exceptions\ConfigNotFoundException::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/DuplicateKeyException.php.html#45"><abbr title="Ultra\UltraConfigManager\Exceptions\DuplicateKeyException::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/PersistenceException.php.html#48"><abbr title="Ultra\UltraConfigManager\Exceptions\PersistenceException::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Facades/UConfig.php.html#91"><abbr title="Ultra\UltraConfigManager\Facades\UConfig::getFacadeAccessor">getFacadeAccessor</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#67"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#82"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#109"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#126"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#180"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#226"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#304"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#368"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::audit">audit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#87"><abbr title="Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#103"><abbr title="Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#180"><abbr title="Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole::mapPermissionToFallbackRole">mapPermissionToFallbackRole</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#153"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigVersion::newFactory">newFactory</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#175"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigVersion::user">user</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#87"><abbr title="Ultra\UltraConfigManager\Models\User::audits">audits</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#98"><abbr title="Ultra\UltraConfigManager\Models\User::versions">versions</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#110"><abbr title="Ultra\UltraConfigManager\Models\User::boot">boot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#115"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::register">register</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#158"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::boot">boot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#195"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::shouldSkipBoot">shouldSkipBoot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#224"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::loadRoutes">loadRoutes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#256"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::registerMiddleware">registerMiddleware</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#286"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::publishResources">publishResources</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#332"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::publishMigrations">publishMigrations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/VersionManager.php.html#86"><abbr title="Ultra\UltraConfigManager\Services\VersionManager::getNextVersion">getNextVersion</abbr></a></td><td class="text-right">27%</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#145"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::set">set</abbr></a></td><td class="text-right">28%</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#194"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::resolveLogger">resolveLogger</abbr></a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="Models/UltraConfigAudit.php.html#204"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigAudit::getLogger">getLogger</abbr></a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="Models/UltraConfigModel.php.html#276"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigModel::getLogger">getLogger</abbr></a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#230"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigVersion::getLogger">getLogger</abbr></a></td><td class="text-right">33%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#507"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::getAllEntriesForDisplay">getAllEntriesForDisplay</abbr></a></td><td class="text-right">36%</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#176"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::resolveEncrypter">resolveEncrypter</abbr></a></td><td class="text-right">40%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#110"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getAllConfigs">getAllConfigs</abbr></a></td><td class="text-right">40%</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#92"><abbr title="Ultra\UltraConfigManager\Constants\GlobalConstants::getConstant">getConstant</abbr></a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#333"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getAuditsByConfigId">getAuditsByConfigId</abbr></a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#86"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::get">get</abbr></a></td><td class="text-right">60%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#130"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getConfigByKey">getConfigByKey</abbr></a></td><td class="text-right">60%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#161"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getConfigById">getConfigById</abbr></a></td><td class="text-right">60%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#277"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::deleteConfigByKey">deleteConfigByKey</abbr></a></td><td class="text-right">61%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#356"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getVersionsByConfigId">getVersionsByConfigId</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#398"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::calculateNextVersion">calculateNextVersion</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#462"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::internalCreateAudit">internalCreateAudit</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#577"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::findEntryForAudit">findEntryForAudit</abbr></a></td><td class="text-right">62%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#548"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::findEntryForEdit">findEntryForEdit</abbr></a></td><td class="text-right">64%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#423"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::internalCreateVersion">internalCreateVersion</abbr></a></td><td class="text-right">68%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#124"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::__construct">__construct</abbr></a></td><td class="text-right">68%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#287"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::set">set</abbr></a></td><td class="text-right">69%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#219"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::loadFromDatabase">loadFromDatabase</abbr></a></td><td class="text-right">70%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#393"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::refreshConfigCache">refreshConfigCache</abbr></a></td><td class="text-right">72%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#459"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::reload">reload</abbr></a></td><td class="text-right">73%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#170"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::loadConfig">loadConfig</abbr></a></td><td class="text-right">74%</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#195"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::saveConfig">saveConfig</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#342"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::delete">delete</abbr></a></td><td class="text-right">81%</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#119"><abbr title="Ultra\UltraConfigManager\Constants\GlobalConstants::validateConstant">validateConstant</abbr></a></td><td class="text-right">88%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#103"><abbr title="Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole::handle">handle</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="DataTransferObjects/ConfigDisplayData.php.html#59"><abbr title="Ultra\UltraConfigManager\DataTransferObjects\ConfigDisplayData::fromModel">fromModel</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#226"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::update">update</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#304"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::destroy">destroy</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Middleware/CheckConfigManagerRole.php.html#180"><abbr title="Ultra\UltraConfigManager\Http\Middleware\CheckConfigManagerRole::mapPermissionToFallbackRole">mapPermissionToFallbackRole</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Models/User.php.html#110"><abbr title="Ultra\UltraConfigManager\Models\User::boot">boot</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/UConfigInitializeCommand.php.html#101"><abbr title="Ultra\UltraConfigManager\Console\Commands\UConfigInitializeCommand::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#126"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::store">store</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#180"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::edit">edit</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#368"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::audit">audit</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/VersionManager.php.html#86"><abbr title="Ultra\UltraConfigManager\Services\VersionManager::getNextVersion">getNextVersion</abbr></a></td><td class="text-right">14</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#287"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::set">set</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#393"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::refreshConfigCache">refreshConfigCache</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/UltraConfigController.php.html#82"><abbr title="Ultra\UltraConfigManager\Http\Controllers\UltraConfigController::index">index</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#158"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::boot">boot</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#507"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::getAllEntriesForDisplay">getAllEntriesForDisplay</abbr></a></td><td class="text-right">11</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#277"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::deleteConfigByKey">deleteConfigByKey</abbr></a></td><td class="text-right">9</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#195"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::saveConfig">saveConfig</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#194"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::resolveLogger">resolveLogger</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Models/UltraConfigAudit.php.html#204"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigAudit::getLogger">getLogger</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Models/UltraConfigModel.php.html#276"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigModel::getLogger">getLogger</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="Models/UltraConfigVersion.php.html#230"><abbr title="Ultra\UltraConfigManager\Models\UltraConfigVersion::getLogger">getLogger</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#124"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::__construct">__construct</abbr></a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#170"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::loadConfig">loadConfig</abbr></a></td><td class="text-right">7</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#176"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::resolveEncrypter">resolveEncrypter</abbr></a></td><td class="text-right">7</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#342"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::delete">delete</abbr></a></td><td class="text-right">7</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#130"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getConfigByKey">getConfigByKey</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#161"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getConfigById">getConfigById</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#356"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getVersionsByConfigId">getVersionsByConfigId</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#577"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::findEntryForAudit">findEntryForAudit</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#145"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::set">set</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#548"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::findEntryForEdit">findEntryForEdit</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#224"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::loadRoutes">loadRoutes</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Providers/UConfigServiceProvider.php.html#332"><abbr title="Ultra\UltraConfigManager\Providers\UConfigServiceProvider::publishMigrations">publishMigrations</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#459"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::reload">reload</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="Casts/EncryptedCast.php.html#86"><abbr title="Ultra\UltraConfigManager\Casts\EncryptedCast::get">get</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#110"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getAllConfigs">getAllConfigs</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="UltraConfigManager.php.html#219"><abbr title="Ultra\UltraConfigManager\UltraConfigManager::loadFromDatabase">loadFromDatabase</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#333"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::getAuditsByConfigId">getAuditsByConfigId</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#462"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::internalCreateAudit">internalCreateAudit</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#423"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::internalCreateVersion">internalCreateVersion</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#119"><abbr title="Ultra\UltraConfigManager\Constants\GlobalConstants::validateConstant">validateConstant</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="Constants/GlobalConstants.php.html#92"><abbr title="Ultra\UltraConfigManager\Constants\GlobalConstants::getConstant">getConstant</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="Dao/EloquentConfigDao.php.html#398"><abbr title="Ultra\UltraConfigManager\Dao\EloquentConfigDao::calculateNextVersion">calculateNextVersion</abbr></a></td><td class="text-right">2</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 12.1.2</a> using <a href="https://www.php.net/" target="_top">PHP 8.3.15</a> and <a href="https://phpunit.de/">PHPUnit 12.1.2</a> at Sun Apr 13 9:55:50 UTC 2025.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="_js/jquery.min.js?v=12.1.2" type="text/javascript"></script>
+  <script src="_js/d3.min.js?v=12.1.2" type="text/javascript"></script>
+  <script src="_js/nv.d3.min.js?v=12.1.2" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([12,0,0,1,0,1,0,2,2,1,1,1], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([33,0,0,2,5,2,2,12,5,2,0,24], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[46,15,"<a href=\"Casts\/EncryptedCast.php.html#72\">Ultra\\UltraConfigManager\\Casts\\EncryptedCast<\/a>"],[0,5,"<a href=\"Console\/Commands\/UConfigInitializeCommand.php.html#78\">Ultra\\UltraConfigManager\\Console\\Commands\\UConfigInitializeCommand<\/a>"],[68.75,6,"<a href=\"Constants\/GlobalConstants.php.html#57\">Ultra\\UltraConfigManager\\Constants\\GlobalConstants<\/a>"],[63.84180790960452,46,"<a href=\"Dao\/EloquentConfigDao.php.html#89\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao<\/a>"],[0,1,"<a href=\"DataTransferObjects\/ConfigAuditData.php.html#31\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigAuditData<\/a>"],[0,10,"<a href=\"DataTransferObjects\/ConfigDisplayData.php.html#30\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigDisplayData<\/a>"],[0,1,"<a href=\"DataTransferObjects\/ConfigEditData.php.html#32\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigEditData<\/a>"],[100,9,"<a href=\"Enums\/CategoryEnum.php.html#73\">Ultra\\UltraConfigManager\\Enums\\CategoryEnum<\/a>"],[0,1,"<a href=\"Exceptions\/ConfigNotFoundException.php.html#35\">Ultra\\UltraConfigManager\\Exceptions\\ConfigNotFoundException<\/a>"],[0,1,"<a href=\"Exceptions\/DuplicateKeyException.php.html#36\">Ultra\\UltraConfigManager\\Exceptions\\DuplicateKeyException<\/a>"],[0,1,"<a href=\"Exceptions\/PersistenceException.php.html#39\">Ultra\\UltraConfigManager\\Exceptions\\PersistenceException<\/a>"],[0,1,"<a href=\"Facades\/UConfig.php.html#83\">Ultra\\UltraConfigManager\\Facades\\UConfig<\/a>"],[0,31,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#64\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController<\/a>"],[0,17,"<a href=\"Http\/Middleware\/CheckConfigManagerRole.php.html#85\">Ultra\\UltraConfigManager\\Http\\Middleware\\CheckConfigManagerRole<\/a>"],[86.66666666666667,9,"<a href=\"Models\/UltraConfigAudit.php.html#96\">Ultra\\UltraConfigManager\\Models\\UltraConfigAudit<\/a>"],[90.2439024390244,14,"<a href=\"Models\/UltraConfigModel.php.html#110\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel<\/a>"],[75,12,"<a href=\"Models\/UltraConfigVersion.php.html#102\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion<\/a>"],[0,8,"<a href=\"Models\/User.php.html#40\">Ultra\\UltraConfigManager\\Models\\User<\/a>"],[0,11,"<a href=\"Providers\/UConfigServiceProvider.php.html#87\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider<\/a>"],[27.77777777777778,5,"<a href=\"Services\/VersionManager.php.html#72\">Ultra\\UltraConfigManager\\Services\\VersionManager<\/a>"],[72,80,"<a href=\"UltraConfigManager.php.html#109\">Ultra\\UltraConfigManager\\UltraConfigManager<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[60,4,"<a href=\"Casts\/EncryptedCast.php.html#86\">Ultra\\UltraConfigManager\\Casts\\EncryptedCast::get<\/a>"],[28.57142857142857,3,"<a href=\"Casts\/EncryptedCast.php.html#145\">Ultra\\UltraConfigManager\\Casts\\EncryptedCast::set<\/a>"],[40,4,"<a href=\"Casts\/EncryptedCast.php.html#176\">Ultra\\UltraConfigManager\\Casts\\EncryptedCast::resolveEncrypter<\/a>"],[33.33333333333333,4,"<a href=\"Casts\/EncryptedCast.php.html#194\">Ultra\\UltraConfigManager\\Casts\\EncryptedCast::resolveLogger<\/a>"],[0,5,"<a href=\"Console\/Commands\/UConfigInitializeCommand.php.html#101\">Ultra\\UltraConfigManager\\Console\\Commands\\UConfigInitializeCommand::handle<\/a>"],[0,1,"<a href=\"Constants\/GlobalConstants.php.html#76\">Ultra\\UltraConfigManager\\Constants\\GlobalConstants::__construct<\/a>"],[50,2,"<a href=\"Constants\/GlobalConstants.php.html#92\">Ultra\\UltraConfigManager\\Constants\\GlobalConstants::getConstant<\/a>"],[88.88888888888889,3,"<a href=\"Constants\/GlobalConstants.php.html#119\">Ultra\\UltraConfigManager\\Constants\\GlobalConstants::validateConstant<\/a>"],[100,1,"<a href=\"Dao\/EloquentConfigDao.php.html#100\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::__construct<\/a>"],[40,3,"<a href=\"Dao\/EloquentConfigDao.php.html#110\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::getAllConfigs<\/a>"],[60,5,"<a href=\"Dao\/EloquentConfigDao.php.html#130\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::getConfigByKey<\/a>"],[60,5,"<a href=\"Dao\/EloquentConfigDao.php.html#161\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::getConfigById<\/a>"],[75.67567567567568,8,"<a href=\"Dao\/EloquentConfigDao.php.html#195\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::saveConfig<\/a>"],[61.53846153846154,7,"<a href=\"Dao\/EloquentConfigDao.php.html#277\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::deleteConfigByKey<\/a>"],[50,3,"<a href=\"Dao\/EloquentConfigDao.php.html#333\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::getAuditsByConfigId<\/a>"],[62.5,5,"<a href=\"Dao\/EloquentConfigDao.php.html#356\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::getVersionsByConfigId<\/a>"],[100,1,"<a href=\"Dao\/EloquentConfigDao.php.html#383\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::shouldBypassSchemaChecks<\/a>"],[62.5,2,"<a href=\"Dao\/EloquentConfigDao.php.html#398\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::calculateNextVersion<\/a>"],[68.42105263157895,3,"<a href=\"Dao\/EloquentConfigDao.php.html#423\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::internalCreateVersion<\/a>"],[62.5,3,"<a href=\"Dao\/EloquentConfigDao.php.html#462\">Ultra\\UltraConfigManager\\Dao\\EloquentConfigDao::internalCreateAudit<\/a>"],[0,1,"<a href=\"DataTransferObjects\/ConfigAuditData.php.html#37\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigAuditData::__construct<\/a>"],[0,1,"<a href=\"DataTransferObjects\/ConfigDisplayData.php.html#41\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigDisplayData::__construct<\/a>"],[0,9,"<a href=\"DataTransferObjects\/ConfigDisplayData.php.html#59\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigDisplayData::fromModel<\/a>"],[0,1,"<a href=\"DataTransferObjects\/ConfigEditData.php.html#39\">Ultra\\UltraConfigManager\\DataTransferObjects\\ConfigEditData::__construct<\/a>"],[100,2,"<a href=\"Enums\/CategoryEnum.php.html#88\">Ultra\\UltraConfigManager\\Enums\\CategoryEnum::translationKey<\/a>"],[100,1,"<a href=\"Enums\/CategoryEnum.php.html#104\">Ultra\\UltraConfigManager\\Enums\\CategoryEnum::translatedName<\/a>"],[100,3,"<a href=\"Enums\/CategoryEnum.php.html#119\">Ultra\\UltraConfigManager\\Enums\\CategoryEnum::translatedOptions<\/a>"],[100,3,"<a href=\"Enums\/CategoryEnum.php.html#138\">Ultra\\UltraConfigManager\\Enums\\CategoryEnum::validValues<\/a>"],[0,1,"<a href=\"Exceptions\/ConfigNotFoundException.php.html#44\">Ultra\\UltraConfigManager\\Exceptions\\ConfigNotFoundException::__construct<\/a>"],[0,1,"<a href=\"Exceptions\/DuplicateKeyException.php.html#45\">Ultra\\UltraConfigManager\\Exceptions\\DuplicateKeyException::__construct<\/a>"],[0,1,"<a href=\"Exceptions\/PersistenceException.php.html#48\">Ultra\\UltraConfigManager\\Exceptions\\PersistenceException::__construct<\/a>"],[0,1,"<a href=\"Facades\/UConfig.php.html#91\">Ultra\\UltraConfigManager\\Facades\\UConfig::getFacadeAccessor<\/a>"],[0,1,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#67\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::__construct<\/a>"],[0,3,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#82\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#109\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::create<\/a>"],[0,4,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#126\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::store<\/a>"],[0,4,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#180\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::edit<\/a>"],[0,7,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#226\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::update<\/a>"],[0,7,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#304\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::destroy<\/a>"],[0,4,"<a href=\"Http\/Controllers\/UltraConfigController.php.html#368\">Ultra\\UltraConfigManager\\Http\\Controllers\\UltraConfigController::audit<\/a>"],[0,1,"<a href=\"Http\/Middleware\/CheckConfigManagerRole.php.html#87\">Ultra\\UltraConfigManager\\Http\\Middleware\\CheckConfigManagerRole::__construct<\/a>"],[0,10,"<a href=\"Http\/Middleware\/CheckConfigManagerRole.php.html#103\">Ultra\\UltraConfigManager\\Http\\Middleware\\CheckConfigManagerRole::handle<\/a>"],[0,6,"<a href=\"Http\/Middleware\/CheckConfigManagerRole.php.html#180\">Ultra\\UltraConfigManager\\Http\\Middleware\\CheckConfigManagerRole::mapPermissionToFallbackRole<\/a>"],[100,1,"<a href=\"Models\/UltraConfigAudit.php.html#139\">Ultra\\UltraConfigManager\\Models\\UltraConfigAudit::uconfig<\/a>"],[100,1,"<a href=\"Models\/UltraConfigAudit.php.html#150\">Ultra\\UltraConfigManager\\Models\\UltraConfigAudit::user<\/a>"],[100,3,"<a href=\"Models\/UltraConfigAudit.php.html#164\">Ultra\\UltraConfigManager\\Models\\UltraConfigAudit::boot<\/a>"],[33.33333333333333,4,"<a href=\"Models\/UltraConfigAudit.php.html#204\">Ultra\\UltraConfigManager\\Models\\UltraConfigAudit::getLogger<\/a>"],[100,1,"<a href=\"Models\/UltraConfigModel.php.html#153\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::newFactory<\/a>"],[100,1,"<a href=\"Models\/UltraConfigModel.php.html#164\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::versions<\/a>"],[100,1,"<a href=\"Models\/UltraConfigModel.php.html#175\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::audits<\/a>"],[100,1,"<a href=\"Models\/UltraConfigModel.php.html#188\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::setCategoryAttribute<\/a>"],[100,2,"<a href=\"Models\/UltraConfigModel.php.html#204\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::setKeyAttribute<\/a>"],[100,4,"<a href=\"Models\/UltraConfigModel.php.html#220\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::boot<\/a>"],[33.33333333333333,4,"<a href=\"Models\/UltraConfigModel.php.html#276\">Ultra\\UltraConfigManager\\Models\\UltraConfigModel::getLogger<\/a>"],[0,1,"<a href=\"Models\/UltraConfigVersion.php.html#153\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion::newFactory<\/a>"],[100,1,"<a href=\"Models\/UltraConfigVersion.php.html#164\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion::uconfig<\/a>"],[0,1,"<a href=\"Models\/UltraConfigVersion.php.html#175\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion::user<\/a>"],[100,5,"<a href=\"Models\/UltraConfigVersion.php.html#190\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion::boot<\/a>"],[33.33333333333333,4,"<a href=\"Models\/UltraConfigVersion.php.html#230\">Ultra\\UltraConfigManager\\Models\\UltraConfigVersion::getLogger<\/a>"],[0,1,"<a href=\"Models\/User.php.html#87\">Ultra\\UltraConfigManager\\Models\\User::audits<\/a>"],[0,1,"<a href=\"Models\/User.php.html#98\">Ultra\\UltraConfigManager\\Models\\User::versions<\/a>"],[0,6,"<a href=\"Models\/User.php.html#110\">Ultra\\UltraConfigManager\\Models\\User::boot<\/a>"],[0,1,"<a href=\"Providers\/UConfigServiceProvider.php.html#115\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::register<\/a>"],[0,3,"<a href=\"Providers\/UConfigServiceProvider.php.html#158\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::boot<\/a>"],[0,1,"<a href=\"Providers\/UConfigServiceProvider.php.html#195\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::shouldSkipBoot<\/a>"],[0,2,"<a href=\"Providers\/UConfigServiceProvider.php.html#224\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::loadRoutes<\/a>"],[0,1,"<a href=\"Providers\/UConfigServiceProvider.php.html#256\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::registerMiddleware<\/a>"],[0,1,"<a href=\"Providers\/UConfigServiceProvider.php.html#286\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::publishResources<\/a>"],[0,2,"<a href=\"Providers\/UConfigServiceProvider.php.html#332\">Ultra\\UltraConfigManager\\Providers\\UConfigServiceProvider::publishMigrations<\/a>"],[27.77777777777778,5,"<a href=\"Services\/VersionManager.php.html#86\">Ultra\\UltraConfigManager\\Services\\VersionManager::getNextVersion<\/a>"],[68.42105263157895,7,"<a href=\"UltraConfigManager.php.html#124\">Ultra\\UltraConfigManager\\UltraConfigManager::__construct<\/a>"],[100,1,"<a href=\"UltraConfigManager.php.html#160\">Ultra\\UltraConfigManager\\UltraConfigManager::isCacheEnabled<\/a>"],[100,1,"<a href=\"UltraConfigManager.php.html#165\">Ultra\\UltraConfigManager\\UltraConfigManager::getCacheTtl<\/a>"],[74.19354838709677,7,"<a href=\"UltraConfigManager.php.html#170\">Ultra\\UltraConfigManager\\UltraConfigManager::loadConfig<\/a>"],[70,4,"<a href=\"UltraConfigManager.php.html#219\">Ultra\\UltraConfigManager\\UltraConfigManager::loadFromDatabase<\/a>"],[100,3,"<a href=\"UltraConfigManager.php.html#248\">Ultra\\UltraConfigManager\\UltraConfigManager::mergeWithEnvironment<\/a>"],[100,1,"<a href=\"UltraConfigManager.php.html#263\">Ultra\\UltraConfigManager\\UltraConfigManager::has<\/a>"],[100,6,"<a href=\"UltraConfigManager.php.html#270\">Ultra\\UltraConfigManager\\UltraConfigManager::get<\/a>"],[69.6969696969697,10,"<a href=\"UltraConfigManager.php.html#287\">Ultra\\UltraConfigManager\\UltraConfigManager::set<\/a>"],[81.48148148148148,7,"<a href=\"UltraConfigManager.php.html#342\">Ultra\\UltraConfigManager\\UltraConfigManager::delete<\/a>"],[100,1,"<a href=\"UltraConfigManager.php.html#386\">Ultra\\UltraConfigManager\\UltraConfigManager::all<\/a>"],[72.09302325581395,10,"<a href=\"UltraConfigManager.php.html#393\">Ultra\\UltraConfigManager\\UltraConfigManager::refreshConfigCache<\/a>"],[73.33333333333333,5,"<a href=\"UltraConfigManager.php.html#459\">Ultra\\UltraConfigManager\\UltraConfigManager::reload<\/a>"],[100,2,"<a href=\"UltraConfigManager.php.html#484\">Ultra\\UltraConfigManager\\UltraConfigManager::validateConstant<\/a>"],[36.36363636363637,5,"<a href=\"UltraConfigManager.php.html#507\">Ultra\\UltraConfigManager\\UltraConfigManager::getAllEntriesForDisplay<\/a>"],[64.70588235294117,5,"<a href=\"UltraConfigManager.php.html#548\">Ultra\\UltraConfigManager\\UltraConfigManager::findEntryForEdit<\/a>"],[62.5,5,"<a href=\"UltraConfigManager.php.html#577\">Ultra\\UltraConfigManager\\UltraConfigManager::findEntryForAudit<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

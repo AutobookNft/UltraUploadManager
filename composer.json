@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": "^8.2|^8.3",
+        "php": "^8.2|^8.3", 
         "illuminate/support": "^11.0",
         "illuminate/http": "^11.0",
         "illuminate/routing": "^11.0",
@@ -19,13 +19,23 @@
         "illuminate/events": "^11.0",
         "illuminate/console": "^11.0",
         "illuminate/queue": "^11.0",
-        "league/flysystem-aws-s3-v3": "^3.0",
-        "pusher/pusher-php-server": "^7.2",
-        "symfony/process": "^7.0",
+        "league/flysystem": "^3.0", 
+        "league/flysystem-aws-s3-v3": "^3.0", 
+        "pusher/pusher-php-server": "^7.2", 
+        "symfony/process": "^7.0", 
         "ultra/ultra-log-manager": "dev-main",
         "ultra/ultra-translation-manager": "dev-main",
         "ultra/ultra-config-manager": "dev-main",
-        "ultra/ultra-error-manager": "dev-main"
+        "ultra/ultra-error-manager": "dev-main",
+        "psr/log": "^3.0" 
+    },
+    
+    "require-dev": {
+        "orchestra/testbench": "^9.0", 
+        "phpunit/phpunit": "^10.0|^11.0", 
+        "mockery/mockery": "^1.6",
+        "fakerphp/faker": "^1.9",
+        "doctrine/dbal": "^3.0"
     },
     "autoload": {
         "psr-4": {
@@ -36,13 +46,41 @@
             "src/Helpers/helpers.php"
         ]
     },
+    
+    "autoload-dev": {
+        "psr-4": {
+            "Ultra\\UploadManager\\Tests\\": "tests/" 
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [
-                "Ultra\\UploadManager\\UploadManagerServiceProvider"
+                "Ultra\\UploadManager\\Providers\\UploadManagerServiceProvider" 
             ]
+            
         }
     },
+     
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/AutobookNft/UltraLogManager" },
+        { "type": "vcs", "url": "https://github.com/AutobookNft/UltraTranslationManager.git" },
+        { "type": "vcs", "url": "https://github.com/AutobookNft/UltraErrorManager.git" },
+        { "type": "vcs", "url": "https://github.com/AutobookNft/UltraConfigManager" }
+    ],
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+ 
+    "scripts": {
+        "test": "vendor/bin/phpunit", 
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage" 
+        
+    },
+    "config": {
+         "sort-packages": true,
+         "optimize-autoloader": true,
+          "allow-plugins": { 
+             "pestphp/pest-plugin": true,
+             "php-http/discovery": true
+         }
+     }
 }
