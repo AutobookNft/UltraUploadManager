@@ -1,12 +1,3 @@
-Certamente, Fabio. Creiamo un `README.md` iniziale per UltraUploadManager (UUM) che rifletta il suo scopo, le dipendenze (incluso l'ecosistema Ultra), il processo di installazione aggiornato che abbiamo definito, e che aderisca allo standard Oracode v1.5.0 per la documentazione.
-
-Questo README servirà come base e potrà essere ulteriormente arricchito man mano che completiamo il refactoring.
-
----
-
-**START OF FILE: README.md (for UltraUploadManager)**
-
-```markdown
 # UltraUploadManager (UUM) - Oracode Compliant Upload Management
 
 [![Latest Version](https://img.shields.io/badge/version-v1.0.0-blue.svg?style=flat-square)](...) <!-- Placeholder -->
@@ -239,7 +230,7 @@ class EgiUploadController extends Controller
 
 **Frontend (Conceptual Initialization):**
 
-```typescript
+```js
 // In your application's main JS/TS file (e.g., resources/js/app.js)
 // Ensure Echo and global config (window. ...) are set up first in bootstrap.js/layout
 
@@ -263,77 +254,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
 UUM broadcasts status updates during the upload and scanning process using Laravel Echo.
 
-*   **Driver:** Pusher (configure in `.env` and `config/broadcasting.php`)
-*   **Channel:** `upload` (Public channel by default in Service Provider)
-*   **Event Class:** `Ultra\UploadManager\Events\FileProcessingUpload`
-*   **Event Name:** `.TestUploadEvent12345` *(Note: This name seems like a placeholder and should likely be made configurable or more descriptive in the refactored version. Current frontend JS listens for this specific name.)*
-*   **Payload:** Includes `message`, `state`, `user_id`, `progress`.
+* **Driver:** Pusher (configure in .env and config/broadcasting.php)
+* **Channel:** upload (Public channel by default in Service Provider)
+* **Event Class:** Ultra\UploadManager\Events\FileProcessingUpload
+* **Event Name:** .TestUploadEvent12345 (Note: This name seems like a placeholder and should likely be made configurable or more descriptive in the refactored version. Current frontend JS listens for this specific name.)
+* **Payload:** Includes message, state, user_id, progress.
 
-Ensure your application's frontend Echo listener is configured correctly in `resources/js/bootstrap.js`.
+Ensure your application's frontend Echo listener is configured correctly in resources/js/bootstrap.js.
 
 ---
 
 ## 🛡️ Error Handling
 
-UUM relies on **UltraErrorManager (UEM)** for robust error handling.
+UUM relies on UltraErrorManager (UEM) for robust error handling.
 
-*   Internal UUM exceptions (e.g., `VirusException`, validation errors, storage errors) should ideally be caught and mapped to specific UEM error codes within UUM's services/controllers.
-*   The consuming application (Sandbox/FlorenceEGI) **must define** these UUM-specific error codes in its `config/error-manager.php` file, specifying how they should be logged, reported, and what messages (via UTM keys) should be shown to the user.
-*   Unexpected errors are caught by UEM's global `ErrorHandlingMiddleware`.
+* Internal UUM exceptions (e.g., VirusException, validation errors, storage errors) should ideally be caught and mapped to specific UEM error codes within UUM's services/controllers.
+* The consuming application (Sandbox/FlorenceEGI) must define these UUM-specific error codes in its config/error-manager.php file, specifying how they should be logged, reported, and what messages (via UTM keys) should be shown to the user.
+* Unexpected errors are caught by UEM's global ErrorHandlingMiddleware.
 
 ---
 
 ## 🧪 Testing
 
-*   UUM includes its own PHPUnit test suite using Orchestra Testbench.
-*   Run tests from the package directory: `composer test`
-*   Coverage reports can be generated (see `composer.json` scripts).
-*   Integration with UEM's `TestingConditions` facade can be used for simulating specific failure scenarios (e.g., antivirus failure).
+UUM includes its own PHPUnit test suite using Orchestra Testbench.
+
+* Run tests from the package directory: `composer test`
+* Coverage reports can be generated (see composer.json scripts).
+* Integration with UEM's TestingConditions facade can be used for simulating specific failure scenarios (e.g., antivirus failure).
 
 ---
 
 ## 🔐 GDPR & Privacy
 
-*   **Temporary Files:** UUM stores files temporarily during processing. The `ultra:clean-temp` command helps ensure these are not kept indefinitely. Ensure the temporary storage location (`config/upload-manager.php -> temp_path`) is appropriately secured.
-*   **Context Logging:** Be mindful of the user/request context passed to ULM and UEM. Ensure PII is not logged unnecessarily or is properly sanitized if required. UEM DB logging includes basic redaction based on `error-manager.database_logging.sensitive_keys`.
-*   **User Association:** Uploads are typically associated with the authenticated user ID for tracking and permissions.
+* **Temporary Files:** UUM stores files temporarily during processing. The `ultra:clean-temp` command helps ensure these are not kept indefinitely. Ensure the temporary storage location (config/upload-manager.php -> temp_path) is appropriately secured.
+* **Context Logging:** Be mindful of the user/request context passed to ULM and UEM. Ensure PII is not logged unnecessarily or is properly sanitized if required. UEM DB logging includes basic redaction based on error-manager.database_logging.sensitive_keys.
+* **User Association:** Uploads are typically associated with the authenticated user ID for tracking and permissions.
 
 ---
 
 ## 🚧 Technical Debt / Known Issues (Pre-Refactor v1.0 State)
 
-*   The current codebase extracted from the Sandbox requires significant refactoring for proper Dependency Injection, Oracode v1.5.0 documentation, adherence to SOLID principles, and robust error handling via UEM.
-*   Frontend relies heavily on global `window` variables set by Blade; a more structured approach (e.g., passing data via component props or dedicated API endpoints) is recommended post-refactoring.
-*   The broadcast event name `.TestUploadEvent12345` needs review.
-*   Test coverage needs to be significantly expanded during refactoring.
+* The current codebase extracted from the Sandbox requires significant refactoring for proper Dependency Injection, Oracode v1.5.0 documentation, adherence to SOLID principles, and robust error handling via UEM.
+* Frontend relies heavily on global window variables set by Blade; a more structured approach (e.g., passing data via component props or dedicated API endpoints) is recommended post-refactoring.
+* The broadcast event name `.TestUploadEvent12345` needs review.
+* Test coverage needs to be significantly expanded during refactoring.
 
 ---
 
 ## 🤝 Contributing
 
-*(Placeholder - Add contribution guidelines if planning to open source)*
+(Placeholder - Add contribution guidelines if planning to open source)
 
 ---
 
 ## 📄 License
 
-UltraUploadManager is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
----
-```
-
-**END OF FILE: README.md (for UltraUploadManager)**
-
----
-
-**Note:**
-
-*   Ho inserito placeholder per i badge di versione/build/coverage.
-*   Ho aggiunto riferimenti espliciti a **tutte** le dipendenze Ultra.
-*   Ho dettagliato **tutti** i passaggi di installazione che abbiamo discusso, inclusi quelli per le dipendenze, `.env`, Vite, Echo e la cruciale configurazione JS globale.
-*   Ho menzionato la necessità di definire i codici errore di UUM nel file `error-manager.php` dell'applicazione.
-*   Ho aggiunto una sezione sul Debito Tecnico basata sullo stato pre-refactoring.
-*   Ho usato lo stile PHPDoc standard per i commenti nel testo (non DocBlock completi, trattandosi di un README).
-*   La sezione "Basic Usage" mostra un esempio *concettuale* di come dovrebbe funzionare *dopo* il refactoring con DI.
-
-Questo README è molto più completo e dovrebbe fornire una guida solida per l'installazione e la comprensione di UUM nel suo ecosistema.
+UltraUploadManager is open-sourced software licensed under the MIT license.
