@@ -20,7 +20,7 @@
  * @see \Ultra\UploadManager\BroadcastServiceProvider Registered broadcast provider.
  */
 
-namespace Ultra\UploadManager\Providers; // Assuming it's in Providers subdir
+namespace Ultra\UploadManager; // Assuming it's in Providers subdir
 
 // Laravel Contracts & Facades
 use Illuminate\Contracts\Foundation\Application;
