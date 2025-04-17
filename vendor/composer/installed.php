@@ -3,7 +3,7 @@
         'name' => 'ultra/ultra-upload-manager',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '58d341cbb8219955cbebfa43289b160ca5ea3e9b',
+        'reference' => '4149e9d4a48324dd4754a99ad72452e71fdd6125',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1483,7 +1483,7 @@
         'ultra/ultra-upload-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '58d341cbb8219955cbebfa43289b160ca5ea3e9b',
+            'reference' => '4149e9d4a48324dd4754a99ad72452e71fdd6125',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

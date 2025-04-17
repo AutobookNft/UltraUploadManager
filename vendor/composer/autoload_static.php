@@ -417,8 +417,8 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -482,8 +482,8 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         ),
         'League\\Uri\\' => 
         array (
-            0 => __DIR__ . '/..' . '/league/uri-interfaces',
-            1 => __DIR__ . '/..' . '/league/uri',
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
         ),
         'League\\MimeTypeDetection\\' => 
         array (
@@ -8532,7 +8532,6 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         'Ultra\\UploadManager\\Controllers\\ErrorCodeController' => __DIR__ . '/../..' . '/src/Controllers/ErrorCodeController.php',
         'Ultra\\UploadManager\\Controllers\\ErrorEmailController' => __DIR__ . '/../..' . '/src/Controllers/ErrorEmailController.php',
         'Ultra\\UploadManager\\Controllers\\ErrorReportingController' => __DIR__ . '/../..' . '/src/Controllers/ErrorReportingController.php',
-        'Ultra\\UploadManager\\Controllers\\Handlers\\BaseUploadController' => __DIR__ . '/../..' . '/src/Controllers/Handlers/BaseUploadController.php',
         'Ultra\\UploadManager\\Controllers\\Mail\\ErrorOccurredMailable' => __DIR__ . '/../..' . '/src/Controllers/Mail/ErrorOccurredMailable.php',
         'Ultra\\UploadManager\\Controllers\\Mail\\OrderShipped' => __DIR__ . '/../..' . '/src/Controllers/Mail/OrderShipped.php',
         'Ultra\\UploadManager\\Controllers\\Mail\\SendErrorEmail' => __DIR__ . '/../..' . '/src/Controllers/Mail/SendErrorEmail.php',
@@ -8546,6 +8545,7 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         'Ultra\\UploadManager\\Events\\FileProcessingUpload' => __DIR__ . '/../..' . '/src/Events/FileProcessingUpload.php',
         'Ultra\\UploadManager\\Exceptions\\CustomException' => __DIR__ . '/../..' . '/src/Exceptions/CustomException.php',
         'Ultra\\UploadManager\\Exceptions\\VirusException' => __DIR__ . '/../..' . '/src/Exceptions/VirusException.php',
+        'Ultra\\UploadManager\\Handlers\\BaseUploadHandler' => __DIR__ . '/../..' . '/src/Handlers/BaseUploadHandler.php',
         'Ultra\\UploadManager\\Jobs\\DeleteTempFolder' => __DIR__ . '/../..' . '/src/Jobs/DeleteTempFolder.php',
         'Ultra\\UploadManager\\Jobs\\TempFilesCleaner' => __DIR__ . '/../..' . '/src/Jobs/TempFilesCleaner.php',
         'Ultra\\UploadManager\\Jobs\\UpdateProgressJob' => __DIR__ . '/../..' . '/src/Jobs/UpdateProgressJob.php',

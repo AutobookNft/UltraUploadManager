@@ -6,7 +6,7 @@ use Ultra\UploadManager\Controllers\ErrorCodeController;
 use Ultra\UploadManager\Controllers\ErrorEmailController;
 use Ultra\UploadManager\Controllers\ErrorReportingController;
 use Ultra\UploadManager\Controllers\FileController;
-use Ultra\UploadManager\Controllers\Handlers\BaseUploadController;
+use Ultra\UploadManager\Handlers\BaseUploadHandler;
 // use Ultra\UploadManager\Controllers\ItemsEdit;
 use Ultra\UploadManager\Controllers\NonBlockingErrorController;
 use Ultra\UploadManager\Controllers\SaveTemporaryFiles;
@@ -86,7 +86,7 @@ Route::middleware(['throttle:50,1'])
 
         Route::get('/uploading', [UploadingFiles::class, 'show'])->name('uploading');
 
-        Route::post('/uploading/default', [BaseUploadController::class, 'handler'])->name('uploading.hendler');
+        Route::post('/uploading/default', [BaseUploadHandler::class, 'handler'])->name('uploading.hendler');
 
         Route::get('/api/system/upload-limits', [ConfigController::class, 'getUploadLimits'])->name('global.config.limits');
 
