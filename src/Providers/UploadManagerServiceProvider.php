@@ -303,7 +303,7 @@ class UploadManagerServiceProvider extends ServiceProvider
             $this->publishes([
                 $this->packageBasePath . '/config/upload-manager.php' => $this->app->configPath('upload-manager.php'),
                 // Publish AllowedFileType config as well, maybe with a more specific name?
-                $this->packageBasePath . '/config/AllowedFileType.php' => $this->app->configPath('AllowedFileType_UUM.php'),
+                $this->packageBasePath . '/config/AllowedFileType.php' => $this->app->configPath('AllowedFileType.php'),
                  // Publish potentially conflicting configs with specific names
                  $this->packageBasePath . '/config/logging.php' => $this->app->configPath('logging_uum.php'),
                  $this->packageBasePath . '/config/queue.php' => $this->app->configPath('queue_uum.php'),
