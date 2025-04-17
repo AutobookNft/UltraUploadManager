@@ -17,10 +17,10 @@
  * @see \Ultra\UploadManager\Console\CleanTempFilesCommand Registered console command.
  * @see \Ultra\UploadManager\Console\UltraSetupCommand Registered console command.
  * @see \Ultra\UploadManager\Services\SizeParser Service registered.
- * @see \Ultra\UploadManager\BroadcastServiceProvider Registered broadcast provider.
+ * @see \Ultra\UploadManager\Providers\BroadcastServiceProvider Registered broadcast provider.
  */
 
-namespace Ultra\UploadManager; // Assuming it's in Providers subdir
+namespace Ultra\UploadManager\Providers; // Assuming it's in Providers subdir
 
 // Laravel Contracts & Facades
 use Illuminate\Contracts\Foundation\Application;
@@ -33,10 +33,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Ultra\UploadManager\Console\CleanTempFilesCommand;
 use Ultra\UploadManager\Console\UltraSetupCommand;
 use Ultra\UploadManager\Services\SizeParser;
-use Ultra\UploadManager\BroadcastServiceProvider; // UUM's specific broadcast provider
+use Ultra\UploadManager\Providers\BroadcastServiceProvider; // UUM's specific broadcast provider
 
 // Ultra Ecosystem Dependencies
 use Psr\Log\LoggerInterface; // Use PSR-3 Logger Interface (ULM provides implementation)
+use Throwable;
 use Ultra\TranslationManager\Contracts\TranslationManagerContract; // Use UTM Contract
 use Ultra\ErrorManager\Interfaces\ErrorManagerInterface; // Use UEM Contract
 
@@ -122,7 +123,7 @@ class UploadManagerServiceProvider extends ServiceProvider
      * @return void
      * @sideEffect Merges 'upload-manager', 'logging', 'queue', 'filesystems', 'AllowedFileType' configurations.
      * @sideEffect Registers BroadcastServiceProvider and SizeParser singleton.
-     * @see \Ultra\UploadManager\BroadcastServiceProvider
+     * @see \Ultra\UploadManager\Providers\BroadcastServiceProvider
      * @see \Ultra\UploadManager\Services\SizeParser
      */
     public function register(): void

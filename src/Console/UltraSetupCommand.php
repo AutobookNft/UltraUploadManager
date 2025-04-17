@@ -36,7 +36,7 @@ class UltraSetupCommand extends Command
     protected function publishConfigs()
     {
         $this->info('Pubblicazione file di configurazione...');
-        $params = ['--provider' => 'Ultra\UploadManager\UploadManagerServiceProvider'];
+        $params = ['--provider' => 'Ultra\UploadManager\Providers\UploadManagerServiceProvider'];
 
         if ($this->option('force')) {
             $params['--force'] = true;
@@ -119,7 +119,7 @@ class UltraSetupCommand extends Command
             $contents = File::get($appConfig);
 
             $providers = [
-                'Ultra\\UploadManager\\UploadManagerServiceProvider',
+                'Ultra\\UploadManager\\Providers\\UploadManagerServiceProvider',
                 'Ultra\\UploadManager\\Providers\\BroadcastingConfigServiceProvider'
             ];
 

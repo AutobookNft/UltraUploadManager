@@ -1,6 +1,6 @@
 <?php
 
-namespace Ultra\UploadManager;
+namespace Ultra\UploadManager\Providers;
 
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;

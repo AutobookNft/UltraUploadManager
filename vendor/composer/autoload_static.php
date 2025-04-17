@@ -417,8 +417,8 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -482,8 +482,8 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         ),
         'League\\Uri\\' => 
         array (
-            0 => __DIR__ . '/..' . '/league/uri',
-            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+            0 => __DIR__ . '/..' . '/league/uri-interfaces',
+            1 => __DIR__ . '/..' . '/league/uri',
         ),
         'League\\MimeTypeDetection\\' => 
         array (
@@ -8526,7 +8526,6 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         'Ultra\\UltraLogManager\\Logging\\CustomizeFormatter' => __DIR__ . '/..' . '/ultra/ultra-log-manager/src/Logging/CustomizeFormatter.php',
         'Ultra\\UltraLogManager\\Providers\\UltraLogManagerServiceProvider' => __DIR__ . '/..' . '/ultra/ultra-log-manager/src/Providers/UltraLogManagerServiceProvider.php',
         'Ultra\\UltraLogManager\\UltraLogManager' => __DIR__ . '/..' . '/ultra/ultra-log-manager/src/UltraLogManager.php',
-        'Ultra\\UploadManager\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/src/BroadcastServiceProvider.php',
         'Ultra\\UploadManager\\Console\\CleanTempFilesCommand' => __DIR__ . '/../..' . '/src/Console/CleanTempFilesCommand.php',
         'Ultra\\UploadManager\\Console\\UltraSetupCommand' => __DIR__ . '/../..' . '/src/Console/UltraSetupCommand.php',
         'Ultra\\UploadManager\\Controllers\\Config\\ConfigController' => __DIR__ . '/../..' . '/src/Controllers/Config/ConfigController.php',
@@ -8553,12 +8552,13 @@ class ComposerStaticInitaa0a2c1f40a5851e5a3d35f64bcc4542
         'Ultra\\UploadManager\\Mail\\ErrorOccurredMailable' => __DIR__ . '/../..' . '/src/Mail/ErrorOccurredMailable.php',
         'Ultra\\UploadManager\\Mail\\OrderShipped' => __DIR__ . '/../..' . '/src/Mail/OrderShipped.php',
         'Ultra\\UploadManager\\Mail\\SendErrorEmail' => __DIR__ . '/../..' . '/src/Mail/SendErrorEmail.php',
+        'Ultra\\UploadManager\\Providers\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/src/Providers/BroadcastServiceProvider.php',
+        'Ultra\\UploadManager\\Providers\\UploadManagerServiceProvider' => __DIR__ . '/../..' . '/src/Providers/UploadManagerServiceProvider.php',
         'Ultra\\UploadManager\\Services\\SizeParser' => __DIR__ . '/../..' . '/src/Services/SizeParser.php',
         'Ultra\\UploadManager\\Services\\TestingConditionsManager' => __DIR__ . '/../..' . '/src/Services/TestingConditionsManager.php',
         'Ultra\\UploadManager\\Traits\\HasUtilitys' => __DIR__ . '/../..' . '/src/Traits/HasUtilitys.php',
         'Ultra\\UploadManager\\Traits\\HasValidation' => __DIR__ . '/../..' . '/src/Traits/HasValidation.php',
         'Ultra\\UploadManager\\Traits\\TestingTrait' => __DIR__ . '/../..' . '/src/Traits/TestingTrait.php',
-        'Ultra\\UploadManager\\UploadManagerServiceProvider' => __DIR__ . '/../..' . '/src/UploadManagerServiceProvider.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
         'Webmozart\\Assert\\Assert' => __DIR__ . '/..' . '/webmozart/assert/src/Assert.php',

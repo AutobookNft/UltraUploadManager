@@ -31,7 +31,7 @@ public function testServiceProviders()
 {
     return [
         'providers' => app()->getLoadedProviders(),
-        'our_provider' => array_key_exists('Ultra\\UploadManager\\UploadManagerServiceProvider', app()->getLoadedProviders())
+        'our_provider' => array_key_exists('Ultra\\UploadManager\\Providers\\UploadManagerServiceProvider', app()->getLoadedProviders())
     ];
 }
 
