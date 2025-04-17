@@ -227,61 +227,64 @@ class UploadManagerServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the package's translations using UltraTranslationManager (UTM).
-     * Attempts to resolve UTM via its contract and register the 'uploadmanager' namespace.
-     * Logs warnings or errors if UTM is unavailable or registration fails.
-     * Includes a fallback to standard Laravel translation loading if UTM fails,
-     * but logs this as a potential issue.
+     * Register the package's translations with the application.
+     *
+     * This method uses the standard Laravel `loadTranslationsFrom` helper.
+     * It relies on the application's service container correctly providing an
+     * implementation of `Illuminate\Contracts\Translation\Translator` (which
+     * should be UltraTranslationManager if it's registered correctly).
+     * It logs the process and handles potential exceptions during loading using UEM/ULM.
      *
      * @return void
-     * @sideEffect Registers translation namespace with UTM or Laravel's translator.
-     * @see \Ultra\TranslationManager\Contracts\TranslationManagerContract
+     * @sideEffect Registers the 'uploadmanager' translation namespace.
+     * @see \Illuminate\Support\ServiceProvider::loadTranslationsFrom() For the underlying Laravel helper.
+     * @see \Illuminate\Contracts\Translation\Translator Contract being used implicitly.
      */
     protected function registerPackageTranslations(): void
     {
         $langPath = $this->packageBasePath . '/resources/lang';
         $namespace = 'uploadmanager';
 
+        // Check if the language directory exists before attempting to load
         if (!is_dir($langPath)) {
-             $this->logger()?->warning('[UUM] Package language directory not found, skipping translation registration.', ['path' => $langPath]);
-             return;
+            $this->logger()?->warning( // Use warning level for missing directory
+                '[UUM Provider] Package language directory not found, skipping translation registration.',
+                ['path' => $langPath]
+            );
+            // Optionally handle this via UEM if considered an error state
+            // $this->errorManager()?->handle('UUM_LANG_DIR_MISSING', ['path' => $langPath]);
+            return; // Exit the method if directory is missing
         }
 
-        // Prefer UTM
-        if ($this->app->bound(TranslationManagerContract::class)) {
-            $this->logger()?->debug('[UUM] Attempting to register translations via UTM.', ['namespace' => $namespace, 'path' => $langPath]);
-            try {
-                /** @var TranslationManagerContract $utm */
-                $utm = $this->app->make(TranslationManagerContract::class);
-                $utm->registerPackageTranslations($namespace, $langPath);
-                $this->logger()?->info('[UUM] Translations registered via UltraTranslationManager.', ['namespace' => $namespace]);
-                return; // Success via UTM
-            } catch (Throwable $e) {
-                 $errorMessage = '[UUM] Failed to register translations via UTM.';
-                 $context = ['namespace' => $namespace, 'path' => $langPath, 'exception' => $e->getMessage()];
-                 // Log error via UEM if possible, otherwise use internal logger
-                 $this->errorManager()?->handle('UUM_UTM_REGISTRATION_FAILED', $context, $e)
-                    ?? $this->logger()?->error($errorMessage, $context);
-                 // Continue to fallback...
-            }
-        } else {
-            // UEM handle should be called if UEM itself is available
-            $this->errorManager()?->handle('UUM_UTM_BINDING_MISSING', [
-                'provider' => static::class,
-                'method' => 'registerPackageTranslations'
-            ]);
-             $this->logger()?->warning('[UUM] UltraTranslationManager (UTM) contract not bound. Attempting fallback registration.', ['namespace' => $namespace]);
-        }
+        $this->logger()?->debug( // Use debug level for standard operation info
+            '[UUM Provider] Attempting to register translation namespace using standard method.',
+            ['namespace' => $namespace, 'path' => $langPath]
+        );
 
-        // Fallback to standard Laravel loader if UTM failed or wasn't bound
         try {
-             $this->loadTranslationsFrom($langPath, $namespace);
-             $this->logger()?->info('[UUM] Translations registered using standard Laravel fallback.', ['namespace' => $namespace]);
+            // Use the standard Laravel helper to load translations.
+            // This will utilize whatever Translator implementation is bound in the container (ideally UTM).
+            $this->loadTranslationsFrom($langPath, $namespace);
+
+            $this->logger()?->info( // Use info level for successful registration
+                '[UUM Provider] Translation namespace registered successfully.',
+                ['namespace' => $namespace, 'path' => $langPath]
+            );
         } catch (Throwable $e) {
-             $errorMessage = '[UUM] Failed to register translations using standard Laravel fallback.';
-             $context = ['namespace' => $namespace, 'path' => $langPath, 'exception' => $e->getMessage()];
-              $this->errorManager()?->handle('UUM_TRANSLATION_LOAD_FAILED', $context, $e)
-                 ?? $this->logger()?->error($errorMessage, $context);
+            // If loadTranslationsFrom fails for any reason (e.g., filesystem issues)
+            $errorMessage = '[UUM Provider] Failed to register translations using loadTranslationsFrom.';
+            $context = [
+                'namespace' => $namespace,
+                'path' => $langPath,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+            ];
+
+            // Attempt to handle the error via UEM first, fallback to internal logger
+            $this->errorManager()?->handle('UUM_TRANSLATION_LOAD_FAILED', $context, $e)
+                ?? $this->logger()?->error($errorMessage, $context); // Use error level for failures
         }
     }
 
