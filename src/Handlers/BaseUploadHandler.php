@@ -13,7 +13,7 @@
  * @author      Fabio Cherici <fabiocherici@gmail.com>
  * @copyright   2024 Fabio Cherici
  * @license     MIT
- * @version     1.1.1 // Refactored for DI, Oracode v1.5.0, Ultra Integration
+ * @version     1.1.2 // Refactored for DI, Oracode v1.5.0, Ultra Integration
  * @since       1.0.0 // As BaseUploadHandler
  *
  * @see \Ultra\UltraLogManager\UltraLogManager; // Dependency For logging via ULM.
@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Storage; // Use Storage Facade for abstraction
 
 // Dependencies from other Ultra packages
 use Ultra\UltraLogManager\UltraLogManager; // Dependency
+use Ultra\UltraConfigManager\UltraConfigManager; // Dependency
 use Throwable; // Catch all throwables
 use Exception; // Standard Exception
 
@@ -58,6 +59,12 @@ class BaseUploadHandler
      * @var UltraLogManager
      */
     protected readonly UltraLogManager $logger;
+
+    /**
+     * Ultra Config Manager instance.
+     * @var UltraConfigManager
+     */
+    protected readonly UltraConfigManager $configManager;
 
     /**
      * Ultra Error Manager instance.
@@ -85,16 +92,20 @@ class BaseUploadHandler
      * @param UltraLogManager $logger PSR-3 Logger (ULM).
      * @param ErrorManagerInterface $errorManager UEM instance.
      * @param TestingConditionsManager $testingConditions Testing conditions manager.
+     * @param UltraConfigManager $configManager UCM instance. 
      */
     public function __construct(
         UltraLogManager $logger,
-        ErrorManagerInterface $errorManager,
-        TestingConditionsManager $testingConditions
+        ErrorManagerInterface $errorManager,    
+        TestingConditionsManager $testingConditions,
+        UltraConfigManager $configManager
         // Removed Filesystem $filesystem
     ) {
         $this->logger = $logger;
         $this->errorManager = $errorManager;
         $this->testingConditions = $testingConditions;
+        $this->configManager = $configManager;
+                
         $this->logger->debug('[BaseUploadHandler] Initialized.'); // Log initialization
     }
 
