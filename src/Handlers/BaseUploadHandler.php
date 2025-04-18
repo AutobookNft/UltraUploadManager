@@ -13,10 +13,10 @@
  * @author      Fabio Cherici <fabiocherici@gmail.com>
  * @copyright   2024 Fabio Cherici
  * @license     MIT
- * @version     1.1.0 // Refactored for DI, Oracode v1.5.0, Ultra Integration
+ * @version     1.1.1 // Refactored for DI, Oracode v1.5.0, Ultra Integration
  * @since       1.0.0 // As BaseUploadHandler
  *
- * @see \Psr\Log\LoggerInterface For logging via ULM.
+ * @see \Ultra\UltraLogManager\UltraLogManager; // Dependency For logging via ULM.
  * @see \Ultra\ErrorManager\Interfaces\ErrorManagerInterface For error handling via UEM.
  * @see \Ultra\ErrorManager\Services\TestingConditionsManager For test condition checks.
  * @see \Illuminate\Contracts\Filesystem\Factory For storage operations (used via Storage facade).
@@ -32,7 +32,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage; // Use Storage Facade for abstraction
-use Psr\Log\LoggerInterface; // ULM Interface
+
+// Dependencies from other Ultra packages
+use Ultra\UltraLogManager\UltraLogManager; // Dependency
 use Throwable; // Catch all throwables
 use Exception; // Standard Exception
 
@@ -53,9 +55,9 @@ class BaseUploadHandler
 
     /**
      * PSR-3 Logger instance (typically UltraLogManager).
-     * @var LoggerInterface
+     * @var UltraLogManager
      */
-    protected LoggerInterface $logger;
+    protected readonly UltraLogManager $logger;
 
     /**
      * Ultra Error Manager instance.
@@ -80,12 +82,12 @@ class BaseUploadHandler
     /**
      * Constructor with Dependency Injection.
      *
-     * @param LoggerInterface $logger PSR-3 Logger (ULM).
+     * @param UltraLogManager $logger PSR-3 Logger (ULM).
      * @param ErrorManagerInterface $errorManager UEM instance.
      * @param TestingConditionsManager $testingConditions Testing conditions manager.
      */
     public function __construct(
-        LoggerInterface $logger,
+        UltraLogManager $logger,
         ErrorManagerInterface $errorManager,
         TestingConditionsManager $testingConditions
         // Removed Filesystem $filesystem
