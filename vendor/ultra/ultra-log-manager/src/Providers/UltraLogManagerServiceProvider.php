@@ -6,91 +6,67 @@ namespace Ultra\UltraLogManager\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Psr\Log\LogLevel;
+use Ultra\UltraLogManager\Contracts\ContextSanitizerInterface;
+use Ultra\UltraLogManager\Sanitizer\NoOpSanitizer;
 use Ultra\UltraLogManager\UltraLogManager;
 
 /**
- * 🎯 UltraLogManagerServiceProvider – Oracoded Logging Service Registration
+ * UltraLogManagerServiceProvider – DI bindings & config publishing.
  *
- * Registers the UltraLogManager service in the Laravel application container,
- * providing a configurable, injectable logging solution for the Ultra ecosystem.
+ * This provider wires UltraLogManager into a Laravel application and offers a
+ * default (no‑op) implementation of {@see ContextSanitizerInterface}. It also
+ * publishes the configuration file so that host apps may override channels,
+ * log levels or swap the sanitizer binding.
  *
- * 🧱 Structure:
- * - Registers UltraLogManager as a singleton
- * - Configures Monolog as the underlying logger
- * - Publishes configuration for customization
+ * --- Core Logic ---
+ * 1. Merge package config with app‑level overrides.
+ * 2. Bind {@see ContextSanitizerInterface} → {@see NoOpSanitizer} (singleton).
+ * 3. Register {@see UltraLogManager} as singleton using Monolog under the
+ *    channel name defined in config `ultra_log_manager.log_channel`.
+ *    ⚠️  Monolog v3 deprecates numeric level constants; we ingest a **PSR‑3
+ *    string level** (e.g. "debug") and convert via {@see Logger::toMonologLevel()}.
+ * 4. Publish `config/ultra_log_manager.php` for artisan vendor:publish.
+ * --- End Core Logic ---
  *
- * 📡 Communicates:
- * - With Laravel container to bind UltraLogManager
- * - With filesystem to publish config
- *
- * 🧪 Testable:
- * - Dependencies injectable via $app
- * - Configuration mockable
+ * @package     Ultra\UltraLogManager\Providers
+ * @author      Fabio Cherici <fabiocherici@gmail.com>
+ * @license     MIT
+ * @version     1.0.1‑oracode
  */
-class UltraLogManagerServiceProvider extends ServiceProvider
+final class UltraLogManagerServiceProvider extends ServiceProvider
 {
-    /**
-     * 🎯 Register UltraLogManager service
-     *
-     * Binds UltraLogManager to the Laravel container as a singleton, initializing
-     * it with a Monolog logger and configuration.
-     *
-     * 🧱 Structure:
-     * - Merges default config with application config
-     * - Creates Monolog logger with StreamHandler
-     * - Instantiates UltraLogManager with dependencies
-     *
-     * 📡 Communicates:
-     * - Registers service in $app
-     *
-     * 🧪 Testable:
-     * - $app mockable
-     * - Config injectable
-     *
-     * @return void
-     */
+    /** @inheritDoc */
     public function register(): void
     {
-        // Merge default configuration with application overrides
+        // 1) Merge default package configuration
         $this->mergeConfigFrom(__DIR__ . '/../../config/ultra_log_manager.php', 'ultra_log_manager');
 
-        // Register UltraLogManager as a singleton
-        $this->app->singleton(UltraLogManager::class, function (Application $app) {
-            $config = $app['config']['ultra_log_manager'] ?? [];
+        // 2) Default sanitizer → no‑op (can be swapped by host app)
+        $this->app->singleton(ContextSanitizerInterface::class, NoOpSanitizer::class);
 
-            // Initialize Monolog logger
-            $logger = new Logger('ultra_log_manager');
-            $logger->pushHandler(new StreamHandler(
-                storage_path('logs/ultra_log_manager.log'),
-                $config['log_level'] ?? Logger::DEBUG // Configurabile via config
-            ));
+        // 3) Logger singleton
+        $this->app->singleton(UltraLogManager::class, function (Application $app): UltraLogManager {
+            $cfg = $app['config']['ultra_log_manager'] ?? [];
 
-            // Return UltraLogManager with injected dependencies
-            return new UltraLogManager($logger, $config);
+            $channel  = $cfg['log_channel'] ?? 'ultra_log_manager';
+            $logPath  = storage_path("logs/{$channel}.log");
+            $psrLevel = $cfg['log_level'] ?? LogLevel::DEBUG; // PSR‑3 string (e.g. 'debug')
+            $monoLevel = Logger::toMonologLevel($psrLevel);   // convert to Monolog int
+
+            $mono = new Logger($channel);
+            $mono->pushHandler(new StreamHandler($logPath, $monoLevel));
+
+            return new UltraLogManager($mono, $cfg);
         });
     }
 
-    /**
-     * 🎯 Bootstrap configuration publishing
-     *
-     * Publishes the UltraLogManager configuration file to the application’s config directory,
-     * allowing customization by end users.
-     *
-     * 🧱 Structure:
-     * - Defines publishable assets with tag
-     *
-     * 📡 Communicates:
-     * - With filesystem to copy config file
-     *
-     * 🧪 Testable:
-     * - Publishing testable in CLI context
-     *
-     * @return void
-     */
+    /** @inheritDoc */
     public function boot(): void
     {
+        // 4) Allow artisan vendor:publish --tag=ultra-log-config
         $this->publishes([
             __DIR__ . '/../../config/ultra_log_manager.php' => config_path('ultra_log_manager.php'),
         ], 'ultra-log-config');

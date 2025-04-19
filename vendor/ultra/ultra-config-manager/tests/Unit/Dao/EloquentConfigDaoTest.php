@@ -25,6 +25,7 @@ use Ultra\UltraConfigManager\Models\UltraConfigVersion;
 use Ultra\UltraConfigManager\Models\User; // For user_id context
 use Ultra\UltraConfigManager\Enums\CategoryEnum;
 use Ultra\UltraConfigManager\Constants\GlobalConstants;
+use Ultra\UltraConfigManager\Services\VersionManager;
 use Ultra\UltraConfigManager\Tests\UltraTestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -51,8 +52,10 @@ use Throwable;
  */
 #[CoversClass(EloquentConfigDao::class)]
 #[UsesClass(UltraConfigModel::class)]
+#[UsesClass(VersionManager::class)] 
 #[UsesClass(UltraConfigVersion::class)]
 #[UsesClass(UltraConfigAudit::class)]
+#[UsesClass(UltraConfigModel::class)]
 #[UsesClass(User::class)] // Assumed usage for user context
 #[UsesClass(CategoryEnum::class)]
 #[UsesClass(GlobalConstants::class)]
@@ -61,6 +64,7 @@ use Throwable;
 #[UsesClass(DuplicateKeyException::class)]
 #[UsesClass(PersistenceException::class)]
 #[UsesClass(\Ultra\UltraConfigManager\Providers\UConfigServiceProvider::class)]
+
 // We don't 'Use' the Interface, we Cover the implementation
 class EloquentConfigDaoTest extends UltraTestCase
 {
@@ -360,6 +364,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $newKey,
             value: $newValue,
             category: $newCategory->value, // Pass the string value
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: true,
             createAudit: true,
@@ -422,6 +427,7 @@ class EloquentConfigDaoTest extends UltraTestCase
         // 🧪 Arrange: Create an initial configuration (V1)
         $key = 'test.config.update.' . uniqid();
         $oldValue = 'Initial Value Version 1';
+        $sourceFile = 'test_manual';
         $oldCategory = CategoryEnum::System;
         $userId = $this->testUser ? $this->testUser->id : GlobalConstants::NO_USER;
 
@@ -430,7 +436,7 @@ class EloquentConfigDaoTest extends UltraTestCase
         }
 
         // Create V1 directly via DAO to simulate initial state
-        $initialConfig = $this->dao->saveConfig($key, $oldValue, $oldCategory->value, $userId, true, true, null);
+        $initialConfig = $this->dao->saveConfig($key, $oldValue, $oldCategory->value, $sourceFile, $userId, true, true, null);
         $configId = $initialConfig->id;
 
         // Define new data for update (V2)
@@ -445,6 +451,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $newValue,
             category: $newCategory->value,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: true,
             createAudit: true,
@@ -506,6 +513,7 @@ class EloquentConfigDaoTest extends UltraTestCase
         $key = 'test.config.restore.' . uniqid();
         $valueV1 = 'Initial Value V1';
         $categoryV1 = CategoryEnum::System;
+        $sourceFile = 'test_manual';
         $userId = $this->testUser ? $this->testUser->id : GlobalConstants::NO_USER;
 
         if (!$this->testUser) {
@@ -513,14 +521,15 @@ class EloquentConfigDaoTest extends UltraTestCase
         }
 
         // Create V1
-        $config = $this->dao->saveConfig($key, $valueV1, $categoryV1->value, $userId, true, true, null);
+        $config = $this->dao->saveConfig($key, $valueV1, $categoryV1->value, $sourceFile, $userId, true, true, null);
         $configId = $config->id;
 
         // Update to V2
         $valueV2 = 'Updated Value V2';
         $categoryV2 = CategoryEnum::Application;
+        $sourceFile = 'test_manual';
         sleep(1); // Ensure timestamp difference for audit ordering if needed
-        $this->dao->saveConfig($key, $valueV2, $categoryV2->value, $userId, true, true, $valueV1);
+        $this->dao->saveConfig($key, $valueV2, $categoryV2->value, $sourceFile ,$userId, true, true, $valueV1);
 
         // Soft Delete
         sleep(1); // Ensure timestamp difference
@@ -537,6 +546,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV3,
             category: $categoryV3->value,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: true,
             createAudit: true,
@@ -605,6 +615,7 @@ class EloquentConfigDaoTest extends UltraTestCase
         $key = 'existing.active.key.for-update.' . uniqid();
         $valueV1 = 'Value V1';
         $categoryV1 = CategoryEnum::System;
+        $sourceFile = 'test_manual';
         $userId = $this->testUser ? $this->testUser->id : GlobalConstants::NO_USER;
 
         if (!$this->testUser) {
@@ -612,7 +623,7 @@ class EloquentConfigDaoTest extends UltraTestCase
         }
 
         // Create V1 using the DAO
-        $initialConfig = $this->dao->saveConfig($key, $valueV1, $categoryV1->value, $userId, true, true, null);
+        $initialConfig = $this->dao->saveConfig($key, $valueV1, $categoryV1->value, $sourceFile, $userId, true, true, null);
         $configId = $initialConfig->id;
 
         // Define new data for the update (V2)
@@ -626,6 +637,7 @@ class EloquentConfigDaoTest extends UltraTestCase
                 key: $key,
                 value: $valueV2,
                 category: $categoryV2->value,
+                sourceFile: 'test_manual',
                 userId: $userId,
                 createVersion: true, // Ensure versioning/auditing happens for update
                 createAudit: true,
@@ -697,6 +709,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $value,
             category: null, // Pass null here
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: true,
             createAudit: true,
@@ -730,6 +743,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV2,
             category: null, // Update to null
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: true,
             createAudit: true,
@@ -784,6 +798,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV1,
             category: $categoryV1->value,
+            sourceFile: 'test_manual',
             userId: $testUserId, // Pass the specific ID
             createVersion: true,
             createAudit: true,
@@ -816,6 +831,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV2,
             category: $categoryV1->value, // Keep category the same for simplicity
+            sourceFile: 'test_manual',
             userId: $testUserId, // Pass the specific ID again
             createVersion: true,
             createAudit: true,
@@ -861,6 +877,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV1,
             category: null,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: false, // <-- Skip version
             createAudit: true,    // <-- Keep audit for isolation
@@ -887,6 +904,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $valueV2,
             category: null,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: false, // <-- Skip version again
             createAudit: true,    // <-- Keep audit
@@ -937,6 +955,7 @@ class EloquentConfigDaoTest extends UltraTestCase
              key: $key,
              value: $valueV1,
              category: null,
+             sourceFile: 'test_manual',
              userId: $userId,
              createVersion: true,  // <-- Keep version
              createAudit: false,   // <-- Skip audit
@@ -963,6 +982,7 @@ class EloquentConfigDaoTest extends UltraTestCase
              key: $key,
              value: $valueV2,
              category: null,
+             sourceFile: 'test_manual',
              userId: $userId,
              createVersion: true,  // <-- Keep version
              createAudit: false,   // <-- Skip audit again
@@ -1079,6 +1099,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $keyToDelete,
             value: $originalValue,
             category: null,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: false, // Version not strictly needed for this test
             createAudit: false,   // Don't need creation audit for this test
@@ -1173,13 +1194,14 @@ class EloquentConfigDaoTest extends UltraTestCase
         // 🧪 Arrange: Create, then soft-delete a configuration with audit
         $keyToDeleteTwice = 'already.deleted.key.' . uniqid();
         $originalValue = 'Value To Be Deleted Twice?';
+        $sourceFile = 'test_manual';
         $userId = $this->testUser ? $this->testUser->id : GlobalConstants::NO_USER;
         if (!$this->testUser) {
              $this->markTestSkipped("Test user not available.");
         }
 
         // Create and delete it the first time (ensuring audit is created here)
-        $config = $this->dao->saveConfig($keyToDeleteTwice, $originalValue, null, $userId, false, false, null); // No need for audit/version on create here
+        $config = $this->dao->saveConfig($keyToDeleteTwice, $originalValue, null, $sourceFile, $userId, false, false, null); // No need for audit/version on create here
         $configId = $config->id;
         $this->dao->deleteConfigByKey($keyToDeleteTwice, $userId, true); // First delete with audit
 
@@ -1239,8 +1261,10 @@ class EloquentConfigDaoTest extends UltraTestCase
             // Ignore if second user creation fails, proceed with primary user
         }
 
+        $sourceFile = 'test_manual';
+
         // Create the config (user doesn't matter here, could be null/system)
-        $config = $this->dao->saveConfig($keyToDelete, $originalValue, null, GlobalConstants::NO_USER, false, false, null);
+        $config = $this->dao->saveConfig($keyToDelete, $originalValue, null, $sourceFile, GlobalConstants::NO_USER, false, false, null);
         $configId = $config->id;
 
         // 🚀 Act: Delete the config using the specific user ID
@@ -1390,18 +1414,19 @@ class EloquentConfigDaoTest extends UltraTestCase
         // Target Config
         $keyTarget = 'audit.target.' . uniqid();
         $valueV1 = 'Audit Value V1';
-        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, null, $userId, false, true, null); // Create (Audit 1: created)
+        $sourceFile = 'test_manual';
+        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, null, $sourceFile, $userId, false, true, null); // Create (Audit 1: created)
         $configTargetId = $configTarget->id;
 
         sleep(1); // Ensure distinct timestamps
 
         $valueV2 = 'Audit Value V2';
-        $this->dao->saveConfig($keyTarget, $valueV2, null, $userId, false, true, $valueV1); // Update 1 (Audit 2: updated)
+        $this->dao->saveConfig($keyTarget, $valueV2, null, $sourceFile, $userId, false, true, $valueV1); // Update 1 (Audit 2: updated)
 
         sleep(1);
 
         $valueV3 = 'Audit Value V3';
-        $this->dao->saveConfig($keyTarget, $valueV3, null, $userId, false, true, $valueV2); // Update 2 (Audit 3: updated)
+        $this->dao->saveConfig($keyTarget, $valueV3, null, $sourceFile, $userId, false, true, $valueV2); // Update 2 (Audit 3: updated)
 
         sleep(1);
 
@@ -1409,7 +1434,7 @@ class EloquentConfigDaoTest extends UltraTestCase
 
         // Other Config (should be ignored)
         $keyOther = 'audit.other.' . uniqid();
-        $this->dao->saveConfig($keyOther, 'Other Value', null, $userId, false, true, null);
+        $this->dao->saveConfig($keyOther, 'Other Value', null, $sourceFile,$userId, false, true, null);
 
         // 🚀 Act: Call the method under test
         $audits = $this->dao->getAuditsByConfigId($configTargetId);
@@ -1477,20 +1502,21 @@ class EloquentConfigDaoTest extends UltraTestCase
         $keyTarget = 'version.target.' . uniqid();
         $valueV1 = 'Version Value V1';
         $categoryV1 = CategoryEnum::System;
-        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, $categoryV1->value, $userId, true, false, null); // Create V1 (Version 1)
+        $sourceFile = 'test_manual';
+        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, $categoryV1->value, $sourceFile,$userId, true, false, null); // Create V1 (Version 1)
         $configTargetId = $configTarget->id;
 
         $valueV2 = 'Version Value V2';
         $categoryV2 = CategoryEnum::Application;
-        $this->dao->saveConfig($keyTarget, $valueV2, $categoryV2->value, $userId, true, false, $valueV1); // Update to V2 (Version 2)
+        $this->dao->saveConfig($keyTarget, $valueV2, $categoryV2->value, $sourceFile,$userId, true, false, $valueV1); // Update to V2 (Version 2)
 
         $valueV3 = 'Version Value V3';
         $categoryV3 = CategoryEnum::Security;
-        $this->dao->saveConfig($keyTarget, $valueV3, $categoryV3->value, $userId, true, false, $valueV2); // Update to V3 (Version 3)
+        $this->dao->saveConfig($keyTarget, $valueV3, $categoryV3->value, $sourceFile,$userId, true, false, $valueV2); // Update to V3 (Version 3)
 
         // Other Config (should be ignored)
         $keyOther = 'version.other.' . uniqid();
-        $this->dao->saveConfig($keyOther, 'Other Version Value', null, $userId, true, false, null); // Create version for other config
+        $this->dao->saveConfig($keyOther, 'Other Version Value', null, $sourceFile,$userId, true, false, null); // Create version for other config
 
         // 🚀 Act: Call the method under test with default ordering
         $versions = $this->dao->getVersionsByConfigId($configTargetId);
@@ -1536,20 +1562,21 @@ class EloquentConfigDaoTest extends UltraTestCase
         $keyTarget = 'version.target.date.asc.' . uniqid();
         $valueV1 = 'Version Date Asc V1';
         $categoryV1 = CategoryEnum::System;
-        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, $categoryV1->value, $userId, true, false, null); // V1
+        $sourceFile = 'test_manual';
+        $configTarget = $this->dao->saveConfig($keyTarget, $valueV1, $categoryV1->value, $sourceFile,$userId, true, false, null); // V1
         $configTargetId = $configTarget->id;
 
         sleep(1); // Ensure timestamp difference
 
         $valueV2 = 'Version Date Asc V2';
         $categoryV2 = CategoryEnum::Application;
-        $this->dao->saveConfig($keyTarget, $valueV2, $categoryV2->value, $userId, true, false, $valueV1); // V2
+        $this->dao->saveConfig($keyTarget, $valueV2, $categoryV2->value, $sourceFile,$userId, true, false, $valueV1); // V2
 
         sleep(1); // Ensure timestamp difference
 
         $valueV3 = 'Version Date Asc V3';
         $categoryV3 = CategoryEnum::Security;
-        $this->dao->saveConfig($keyTarget, $valueV3, $categoryV3->value, $userId, true, false, $valueV2); // V3
+        $this->dao->saveConfig($keyTarget, $valueV3, $categoryV3->value, $sourceFile,$userId, true, false, $valueV2); // V3
 
         // 🚀 Act: Call the method under test ordering by created_at asc
         $versions = $this->dao->getVersionsByConfigId($configTargetId, 'created_at', 'asc');
@@ -1601,6 +1628,7 @@ class EloquentConfigDaoTest extends UltraTestCase
             key: $key,
             value: $value,
             category: null,
+            sourceFile: 'test_manual',
             userId: $userId,
             createVersion: false, // <-- Explicitly false
             createAudit: false,   // Audit doesn't matter here

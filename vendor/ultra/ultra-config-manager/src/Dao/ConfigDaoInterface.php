@@ -125,6 +125,7 @@ interface ConfigDaoInterface
         string $key,
         mixed $value,
         ?string $category,
+        ?string $sourceFile, // Optional source file for the config
         int $userId, // Changed from ?int to int, use GlobalConstants::NO_USER if null
         bool $createVersion,
         bool $createAudit,

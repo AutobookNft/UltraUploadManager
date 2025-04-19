@@ -1,178 +1,133 @@
-# 📘 UltraLogManager
+# Ultra Log Manager (ULM) – Living Logging for the Ultra Ecosystem
 
-**UltraLogManager** is the semantic logging core of the Ultra ecosystem.  
-It provides enriched, structured, and future-proof logging for Laravel 11+ applications,  
-fully aligned with the principles of [Oracode – The Doctrine of Living Code](https://github.com/ultra/oracode).
+> *“Code must speak even when its author is gone.”* – Oracode Pillar 6 *(Interrogable)*
 
----
+ULM is a thin, **PSR‑3–compatible** wrapper around Monolog that auto‑adds caller
+(class & method) to every log entry and embraces the Oracode doctrine.
 
-## 🎯 Purpose
-
-UltraLogManager is built to:
-- Centralize logging across all Ultra libraries
-- Enrich log messages with caller context (class + method)
-- Comply with PSR-3 (`LoggerInterface`)
-- Remain fully testable, injectable, and facade-optional
-- Support multilingual error feedback
-- Include semantic metadata for debugging, analytics, and audits
+* **Framework‑agnostic core** – works in any PHP ≥ 8.1 project.
+* **First‑class Laravel integration** via `UltraLogManagerServiceProvider`.
+* **Sanitizer contract** (`ContextSanitizerInterface`) to keep logs GDPR‑safe.
+* **Fail‑fast philosophy** – mis‑configuration surfaces immediately.
 
 ---
 
-## 🧱 Architecture
-
-```
-┌────────────────────────────┐
-│ UltraLogManager (Core)    │◄───── Injected PSR-3 Logger (e.g. Monolog)
-├────────────────────────────┤
-│ Enriches Context           │
-│ Detects Caller Class/Func  │
-│ Supports All Log Levels    │
-└────────────┬───────────────┘
-             │
-      CustomException → logs upon construction
-             │
-  UltraLog (Facade, test-safe) ← Optional
-```
-
----
-
-## ⚙️ Installation
+##  🚀 Installation
 
 ```bash
 composer require ultra/ultra-log-manager
 ```
 
-### Laravel auto-discovery is enabled.
-
-If needed manually:
-```php
-// config/app.php
-'providers' => [
-    Ultra\UltraLogManager\Providers\UltraLogManagerServiceProvider::class,
-],
-'aliases' => [
-    'UltraLog' => Ultra\UltraLogManager\Facades\UltraLog::class,
-],
-```
+Laravel 11+ auto‑discovers the service provider; for other frameworks see
+*Manual bootstrap* below.
 
 ---
 
-## 🛠️ Configuration
-
-After installation, publish the config:
+##  🔧 Configuration
 
 ```bash
 php artisan vendor:publish --tag=ultra-log-config
 ```
+creates `config/ultra_log_manager.php` with:
 
-### Key settings in `config/ultra_log_manager.php`:
+| Key | Meaning | Default |
+|-----|---------|---------|
+| `log_channel` | Default channel name | `ultra_log_manager` |
+| `log_level`   | PSR‑3 string level (`debug`, `info`, …) | `debug` |
+| `log_backtrace_depth` / `backtrace_limit` | Introspection depth for caller info | `3 / 7` |
 
-| Key                     | Description                                           |
-|------------------------|-------------------------------------------------------|
-| `log_channel`          | Laravel log channel name (`error_manager` default)   |
-| `log_level`            | Minimum log level (`debug`, `info`, etc.)            |
-| `log_backtrace_depth`  | Where to start scanning the call stack (default: 3)  |
-| `backtrace_limit`      | Maximum call stack depth (default: 7)                |
-| `supported_languages`  | Languages for error messages (`it,en,fr,es,pt,de`)   |
-| `devteam_email`        | Email address for critical error alerts              |
-| `email_notifications`  | Enable/disable DevTeam notifications (default: false)|
+### Choosing channels per class
+
+```php
+$this->app->when(App\Services\OrderService::class)
+          ->needs(Ultra\UltraLogManager\UltraLogManager::class)
+          ->give(function () {
+              $m = new Monolog\Logger('order');
+              $m->pushHandler(new StreamHandler(storage_path('logs/order.log')));
+              return new UltraLogManager($m);
+          });
+```
+No code change inside `OrderService`; it just requests `UltraLogManager`.
 
 ---
 
-## 📡 Usage Examples
+##  🛡️ Context Sanitizer
 
-### Basic Logging via Core Class
+| Contract | Default binding | Swap example |
+|-----------|-----------------|--------------|
+| `ContextSanitizerInterface` | `NoOpSanitizer` (pass‑through) | In `AppServiceProvider`:<br>`$this->app->singleton(ContextSanitizerInterface::class, DefaultContextSanitizer::class);` |
 
-```php
-use Ultra\UltraLogManager\UltraLogManager;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-$logger = new Logger('custom');
-$logger->pushHandler(new StreamHandler(storage_path('logs/custom.log')));
-
-$ultraLogger = new UltraLogManager($logger);
-$ultraLogger->info("UserLogin", "User has logged in", ['user_id' => 42]);
-```
-
-### Laravel-style Facade Logging
+Callers sanitize *before* logging:
 
 ```php
-UltraLog::info("UserModule", "Login successful", ['user_id' => 42]);
-UltraLog::error("UploadModule", "File scan failed", ['filename' => 'malicious.pdf']);
+$context = $sanitizer->sanitize(['email' => $userEmail, 'ip' => $ip]);
+$log->info('User login', $context);
 ```
 
 ---
 
-## 📦 Custom Exceptions
+##  💻 Usage
+
+### Laravel / DI
 
 ```php
-use Ultra\UltraLogManager\Exceptions\CustomException;
-use Illuminate\Support\Facades\Log;
-
-throw new CustomException("UPLOAD_FAILED", Log::channel('error_manager'));
-```
-
-Logs automatically:
-```json
+final class CheckoutController
 {
-  "Class": "Ultra\\UltraLogManager\\Exceptions\\CustomException",
-  "Method": "__construct",
-  "StringCode": "UPLOAD_FAILED"
+    public function __construct(private UltraLogManager $log) {}
+
+    public function store(Request $r): Response
+    {
+        $this->log->info('Order placed', ['order_id' => 42]);
+        // …
+    }
+}
+```
+
+### Plain PHP
+
+```php
+$mono = new Monolog\Logger('cli');
+$mono->pushHandler(new StreamHandler(__DIR__.'/cli.log'));
+$log = new UltraLogManager($mono);
+$log->warning('Cron started');
+```
+
+---
+
+##  🧪 Oracular Tests (Example)
+
+```php
+#[Test]
+public function it_enriches_context(): void
+{
+    $mono = new TestLogger(); // Monolog test handler
+    $ul   = new UltraLogManager($mono);
+
+    $ul->info('Ping');
+
+    $record = $mono->records[0];
+    $this->assertArrayHasKey('Class', $record['context']);
 }
 ```
 
 ---
 
-## 🌐 Language Support
+##  📡 Fail‑Fast Philosophy
 
-Available translations:
-- 🇮🇹 Italian
-- 🇺🇸 English
-- 🇫🇷 French
-- 🇪🇸 Spanish
-- 🇩🇪 German
-- 🇵🇹 Portuguese
-
-File structure:
-```
-resources/lang/{lang}/errors.php
-```
+ULM throws **InvalidArgumentException** (Monolog) or IO errors during boot if
+log path is unwritable. Do **not** silence them – fix the config or directory
+permissions. *(Pillar 5 – Variation‑Ready)*
 
 ---
 
-## 🧪 Testing & Safety
+##  📜 Changelog
 
-- Fully injectable (constructor-based)
-- No static state or global dependencies
-- `UltraLog` facade safely falls back to `NullLogger` in tests
-- Configurable log level and context
+See `CHANGELOG.md` for version history (semantic‑versioned, `‑oracode` suffix
+indicates full compliance with Oracode v1.5).
 
 ---
 
-## 🔐 Oracode Compliance
+##  🖋️ Credits
 
-ULM adheres to the 8 pillars of [Oracode](https://github.com/ultra/oracode), including:
+Fabio Cherici – Ultra Ecosystem
 
-- Explicitly Intentional documentation
-- Semantic Enrichment via context metadata
-- Backtrace-safe caller resolution
-- GDPR-conscious logging
-- Interpretable by future humans and AIs
-
-Each method is annotated semantically for AI and human parsing.  
-This package is more than a tool. It's a message to the future.
-
----
-
-## 📜 License
-
-MIT – Created by Fabio Cherici (fabiocherici@gmail.com)  
-For the Ultra Ecosystem – built from trauma, designed for dignity.
-
----
-
-## 💬 Questions?
-
-**🧠 Designed for semantic clarity. If you're confused, it's a bug.**  
-Open an issue or contact [Fabio](mailto:fabiocherici@gmail.com).

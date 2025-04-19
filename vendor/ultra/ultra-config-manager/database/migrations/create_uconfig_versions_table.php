@@ -13,15 +13,16 @@ return new class extends Migration {
             $table->integer('version')->default(1);
             $table->string('key');
             $table->string('category')->nullable();
+            $table->string('source_file')->nullable()->index()->comment('Source config file (e.g., app.php) or manual input indicator');
             $table->text('note')->nullable();
             $table->longText('value');
-            // NUOVA COLONNA user_id
-            $table->unsignedBigInteger('user_id')->nullable()->after('value'); // Aggiunta dopo 'value'
+            $table->unsignedBigInteger('user_id')->nullable()->comment('ID dell\'utente che ha effettuato la modifica');
             $table->timestamps();
 
             // Chiavi esterne
             $table->foreign('uconfig_id')->references('id')->on('uconfig')->onDelete('cascade');
-            // NUOVA FOREIGN KEY per user_id
+            
+            // Chiave esterna per l'utente che ha effettuato la modifica
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
 
             // Potrebbe essere utile un indice sulla versione per performance

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ultra\UltraLogManager\Interfaces;
+namespace Ultra\UltraLogManager\Contracts;
 
 interface UltraLoggerInterface
 {

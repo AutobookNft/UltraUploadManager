@@ -3,7 +3,7 @@
         'name' => 'ultra/ultra-upload-manager',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '4149e9d4a48324dd4754a99ad72452e71fdd6125',
+        'reference' => '98dd9a5e3334698631123fffcf35647a5fbf6781',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'aws/aws-sdk-php' => array(
-            'pretty_version' => '3.342.28',
-            'version' => '3.342.28.0',
-            'reference' => '16cec140483869b3d244a5995b55d5365465dc58',
+            'pretty_version' => '3.342.30',
+            'version' => '3.342.30.0',
+            'reference' => 'eaa4f64784fdf8e66b511df18de43c43fbeb4f63',
             'type' => 'library',
             'install_path' => __DIR__ . '/../aws/aws-sdk-php',
             'aliases' => array(),
@@ -485,9 +485,9 @@
             'dev_requirement' => true,
         ),
         'league/commonmark' => array(
-            'pretty_version' => '2.6.1',
-            'version' => '2.6.1.0',
-            'reference' => 'd990688c91cedfb69753ffc2512727ec646df2ad',
+            'pretty_version' => '2.6.2',
+            'version' => '2.6.2.0',
+            'reference' => '06c3b0bf2540338094575612f4a1778d0d2d5e94',
             'type' => 'library',
             'install_path' => __DIR__ . '/../league/commonmark',
             'aliases' => array(),
@@ -1439,7 +1439,7 @@
         'ultra/ultra-config-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'd3201504493ece79d573c7f72218c0880f5dfdb3',
+            'reference' => '5cb1c5880e984a3d9702acb4e63b14be6b47f80c',
             'type' => 'library',
             'install_path' => __DIR__ . '/../ultra/ultra-config-manager',
             'aliases' => array(
@@ -1450,7 +1450,7 @@
         'ultra/ultra-error-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'f4fac69681ee7c17f596a87e97639b30cf0f3735',
+            'reference' => '38e9d57c17d5609add5ef15ee4cb7220f5264e53',
             'type' => 'library',
             'install_path' => __DIR__ . '/../ultra/ultra-error-manager',
             'aliases' => array(
@@ -1461,7 +1461,7 @@
         'ultra/ultra-log-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '3db636d62168b4e781b4edb80717d0af6f8d39c4',
+            'reference' => 'c838bc82873c7b3339fc2894a477d7fced7f3ceb',
             'type' => 'library',
             'install_path' => __DIR__ . '/../ultra/ultra-log-manager',
             'aliases' => array(
@@ -1483,7 +1483,7 @@
         'ultra/ultra-upload-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '4149e9d4a48324dd4754a99ad72452e71fdd6125',
+            'reference' => '98dd9a5e3334698631123fffcf35647a5fbf6781',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

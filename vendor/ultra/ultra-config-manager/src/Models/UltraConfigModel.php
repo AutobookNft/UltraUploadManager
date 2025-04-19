@@ -126,6 +126,7 @@ class UltraConfigModel extends Model
         'value',
         'category',
         'note',
+        'source_file',
     ];
 
     /**

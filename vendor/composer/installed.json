@@ -59,17 +59,17 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.342.28",
-            "version_normalized": "3.342.28.0",
+            "version": "3.342.30",
+            "version_normalized": "3.342.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "16cec140483869b3d244a5995b55d5365465dc58"
+                "reference": "eaa4f64784fdf8e66b511df18de43c43fbeb4f63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/16cec140483869b3d244a5995b55d5365465dc58",
-                "reference": "16cec140483869b3d244a5995b55d5365465dc58",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/eaa4f64784fdf8e66b511df18de43c43fbeb4f63",
+                "reference": "eaa4f64784fdf8e66b511df18de43c43fbeb4f63",
                 "shasum": ""
             },
             "require": {
@@ -109,7 +109,7 @@
                 "ext-openssl": "Allows working with CloudFront private distributions and verifying received SNS messages",
                 "ext-sockets": "To use client-side monitoring"
             },
-            "time": "2025-04-16T18:13:32+00:00",
+            "time": "2025-04-18T18:05:51+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -153,7 +153,7 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.28"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.342.30"
             },
             "install-path": "../aws/aws-sdk-php"
         },
@@ -2373,17 +2373,17 @@
         },
         {
             "name": "league/commonmark",
-            "version": "2.6.1",
-            "version_normalized": "2.6.1.0",
+            "version": "2.6.2",
+            "version_normalized": "2.6.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/commonmark.git",
-                "reference": "d990688c91cedfb69753ffc2512727ec646df2ad"
+                "reference": "06c3b0bf2540338094575612f4a1778d0d2d5e94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/d990688c91cedfb69753ffc2512727ec646df2ad",
-                "reference": "d990688c91cedfb69753ffc2512727ec646df2ad",
+                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/06c3b0bf2540338094575612f4a1778d0d2d5e94",
+                "reference": "06c3b0bf2540338094575612f4a1778d0d2d5e94",
                 "shasum": ""
             },
             "require": {
@@ -2417,7 +2417,7 @@
             "suggest": {
                 "symfony/yaml": "v2.3+ required if using the Front Matter extension"
             },
-            "time": "2024-12-29T14:10:59+00:00",
+            "time": "2025-04-18T21:09:27+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -9560,12 +9560,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/AutobookNft/UltraConfigManager.git",
-                "reference": "d3201504493ece79d573c7f72218c0880f5dfdb3"
+                "reference": "5cb1c5880e984a3d9702acb4e63b14be6b47f80c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/d3201504493ece79d573c7f72218c0880f5dfdb3",
-                "reference": "d3201504493ece79d573c7f72218c0880f5dfdb3",
+                "url": "https://api.github.com/repos/AutobookNft/UltraConfigManager/zipball/5cb1c5880e984a3d9702acb4e63b14be6b47f80c",
+                "reference": "5cb1c5880e984a3d9702acb4e63b14be6b47f80c",
                 "shasum": ""
             },
             "require": {
@@ -9589,7 +9589,7 @@
             "suggest": {
                 "spatie/laravel-permission": "Enables advanced role and permission management"
             },
-            "time": "2025-04-16T16:05:19+00:00",
+            "time": "2025-04-19T10:55:05+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {
@@ -9640,12 +9640,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/AutobookNft/UltraErrorManager.git",
-                "reference": "f4fac69681ee7c17f596a87e97639b30cf0f3735"
+                "reference": "38e9d57c17d5609add5ef15ee4cb7220f5264e53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraErrorManager/zipball/f4fac69681ee7c17f596a87e97639b30cf0f3735",
-                "reference": "f4fac69681ee7c17f596a87e97639b30cf0f3735",
+                "url": "https://api.github.com/repos/AutobookNft/UltraErrorManager/zipball/38e9d57c17d5609add5ef15ee4cb7220f5264e53",
+                "reference": "38e9d57c17d5609add5ef15ee4cb7220f5264e53",
                 "shasum": ""
             },
             "require": {
@@ -9668,7 +9668,7 @@
                 "phpstan/phpstan": "^1.10",
                 "squizlabs/php_codesniffer": "^3.7"
             },
-            "time": "2025-04-16T14:20:18+00:00",
+            "time": "2025-04-18T11:44:49+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {
@@ -9726,12 +9726,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/AutobookNft/UltraLogManager.git",
-                "reference": "3db636d62168b4e781b4edb80717d0af6f8d39c4"
+                "reference": "c838bc82873c7b3339fc2894a477d7fced7f3ceb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/3db636d62168b4e781b4edb80717d0af6f8d39c4",
-                "reference": "3db636d62168b4e781b4edb80717d0af6f8d39c4",
+                "url": "https://api.github.com/repos/AutobookNft/UltraLogManager/zipball/c838bc82873c7b3339fc2894a477d7fced7f3ceb",
+                "reference": "c838bc82873c7b3339fc2894a477d7fced7f3ceb",
                 "shasum": ""
             },
             "require": {
@@ -9742,7 +9742,7 @@
                 "monolog/monolog": "^3.0",
                 "php": "^8.1|^8.2|^8.3"
             },
-            "time": "2025-04-16T07:19:38+00:00",
+            "time": "2025-04-18T11:48:32+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {

@@ -14,6 +14,10 @@ use Ultra\UltraConfigManager\Casts\EncryptedCast;
 use Ultra\UltraConfigManager\Providers\UConfigServiceProvider;
 use PHPUnit\Framework\Attributes\UsesClass; 
 
+use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Mockery\MockInterface;
+use Psr\Log\LoggerInterface;
 
 #[CoversClass(VersionManager::class)]
 #[UsesClass(UltraConfigModel::class)]        
@@ -24,13 +28,21 @@ class VersionManagerTest extends UltraTestCase
 {
     use RefreshDatabase; // <-- Aggiungere trait per pulire DB
 
+    use MockeryPHPUnitIntegration; // Usa questo se non già presente
+
+    protected LoggerInterface&MockInterface $loggerMock; // Mock per il logger
+    protected VersionManager $versionManager; // Istanza sotto test
+
     private VersionManager $manager;
 
 
     protected function setUp(): void
     {
         parent::setUp(); // Necessario per Testbench/RefreshDatabase
-        $this->manager = new VersionManager();
+        $this->loggerMock = Mockery::mock(LoggerInterface::class)->shouldIgnoreMissing();
+
+
+        $this->versionManager = new VersionManager($this->loggerMock);
     }
 
     #[Test] // <-- Aggiungere attributo
@@ -40,10 +52,10 @@ class VersionManagerTest extends UltraTestCase
         $config = UltraConfigModel::factory()->create();
 
         // Act: Chiama getNextVersion per questo ID
-        $nextVersion = $this->manager->getNextVersion($config->id);
+        $nextVersion = $this->versionManager->getNextVersion($config->id);
 
         // Assert: Deve restituire 1
-        $this->assertEquals(1, $nextVersion);
+        $this->assertSame(1, $nextVersion);
     }
 
     #[Test] // <-- Aggiungere attributo
@@ -69,7 +81,7 @@ class VersionManagerTest extends UltraTestCase
 
 
         // Act: Chiama getNextVersion per questo ID
-        $nextVersion = $this->manager->getNextVersion($config->id);
+        $nextVersion = $this->versionManager->getNextVersion($config->id);
 
         // Assert: Deve restituire 6 (max(5, 2) + 1)
         $this->assertEquals(6, $nextVersion);
@@ -79,7 +91,7 @@ class VersionManagerTest extends UltraTestCase
     public function getNextVersion_throws_exception_for_invalid_id(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->manager->getNextVersion(0); // ID non valido
+        $this->versionManager->getNextVersion(0); // ID non valido
     }
 
     // Test per PersistenceException (più difficile da simulare senza mocking profondo)

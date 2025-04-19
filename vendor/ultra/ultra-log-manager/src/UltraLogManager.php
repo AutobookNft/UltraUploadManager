@@ -5,314 +5,174 @@ declare(strict_types=1);
 namespace Ultra\UltraLogManager;
 
 use Psr\Log\LoggerInterface;
-use Throwable;
+use Stringable;
 
 /**
- * 🎯 UltraLogManager – Oracoded Logging Core
+ * UltraLogManager – Centralised PSR‑3 Logger enriched with caller context.
  *
- * Centralized logging manager for the Ultra ecosystem, designed to provide
- * detailed, context-enriched logs with configurable channels and caller tracking.
- * Implements PSR-3 for compatibility while preserving Ultra-specific semantics.
+ * This service is the semantic core of logging for the Ultra ecosystem. It
+ * delegates every write to an injected PSR‑3 implementation while enriching the
+ * log context with the *who* (class & method) and a snapshot of the original
+ * message.
  *
- * 🧱 Structure:
- * - Delegates logging to an injected PSR-3 logger
- * - Enriches context with caller class, method, type, and message
- * - Caches caller context for performance
+ * --- Core Logic ---
+ * 1. Accepts any PSR‑3 compliant logger (typically Monolog)
+ * 2. Reads behavioural knobs from the **ultra_log_manager** config file
+ *    - `log_channel` (used as *default* channel name)
+ *    - `log_backtrace_depth`
+ *    - `backtrace_limit`
+ * 3. Builds an enriched context array for each call (see {@link enrichContext()})
+ * 4. Forwards level, message and enriched context to the underlying logger
+ * 5. Caches caller information for performance across subsequent calls
+ * --- End Core Logic ---
  *
- * 📡 Communicates:
- * - With external systems via the injected logger
- * - With callers by embedding their context in logs
+ * --- GDPR Note ---
+ * UltraLogManager itself does **not** ingest or persist personal data. Any
+ * payload received via `$context` **must** already be sanitized or anonymised by
+ * the caller. A helper `ContextSanitizer` (see README) is provided in the
+ * package for common masking patterns (e.g. e‑mail, IP). Use it upstream before
+ * logging to remain GDPR‑compliant.
+ * --- End GDPR Note ---
  *
- * 🧪 Testable:
- * - Fully injectable via constructor
- * - No static dependencies
- * - All methods mockable
+ * @package   Ultra\UltraLogManager
+ * @author    Fabio Cherici <fabiocherici@gmail.com>
+ * @license   MIT
+ * @version   1.3.2‑oracode
+ * @since     1.0.0
+ *
+ * @configReads  ultra_log_manager.log_channel
+ * @configReads  ultra_log_manager.log_backtrace_depth
+ * @configReads  ultra_log_manager.backtrace_limit
  */
 class UltraLogManager implements LoggerInterface
 {
-    /**
-     * 🧱 @dependency Injected PSR-3 logger
-     *
-     * Core logging implementation, typically Monolog.
-     *
-     * @var LoggerInterface
-     */
+    /** Injected PSR‑3 logger */
     protected LoggerInterface $logger;
 
-    /**
-     * 🧱 @config Default log channel
-     *
-     * Fallback channel for logging operations.
-     *
-     * @var string
-     */
+    /** Default channel used by the injected logger */
     protected string $defaultChannel;
 
-    /**
-     * 🧱 @config Configuration array
-     *
-     * Holds settings like backtrace depth and channel.
-     *
-     * @var array
-     */
+    /** Copy of config array read at construction */
     protected array $config;
 
-    /**
-     * 🧱 @cache Caller context
-     *
-     * Cached caller class and method to avoid repeated backtrace calls.
-     *
-     * @var array|null
-     */
+    /** Cached [class, method] for the current call stack */
     protected ?array $callerContextCache = null;
 
     /**
-     * 🎯 Initialize the logger
+     * Create a new UltraLogManager.
      *
-     * Sets up the logger with an injected PSR-3 implementation and configuration.
-     *
-     * 🧱 Structure:
-     * - Stores logger and config
-     * - Sets default channel from config
-     *
-     * 📡 Communicates:
-     * - None directly, prepares state
-     *
-     * 🧪 Testable:
-     * - Dependencies injectable
-     * - No side effects
-     *
-     * @param LoggerInterface $logger Injected logger instance
-     * @param array $config Configuration (channel, backtrace settings)
+     * @param LoggerInterface $logger Concrete PSR‑3 implementation already bound
+     *                                to the desired channel (e.g. a Monolog
+     *                                instance named "order" or "security").
+     * @param array<string,mixed> $config Behaviour overrides (channel depth, etc.)
      */
     public function __construct(LoggerInterface $logger, array $config = [])
     {
-        $this->logger = $logger;
-        $this->config = $config;
-        $this->defaultChannel = $config['log_channel'] ?? 'error_manager';
+        $this->logger         = $logger;
+        $this->config         = $config;
+        $this->defaultChannel = $config['log_channel'] ?? $logger->getName() ?? 'ultra_log_manager';
     }
 
-    /**
-     * 🎯 Log a message at a specified level
-     *
-     * Core logging method that enriches context with caller info, type, and message.
-     *
-     * 🧱 Structure:
-     * - Builds enriched context
-     * - Delegates to injected logger
-     *
-     * 📡 Communicates:
-     * - Logs via the injected logger
-     *
-     * 🧪 Testable:
-     * - Logger mockable
-     * - Context enrichment isolabile
-     *
-     * @param mixed $level Log level (e.g., 'info', 'error')
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    /** @inheritDoc */
+    public function log($level, Stringable|string $message, array $context = []): void
     {
-        $enrichedContext = $this->enrichContext($message, $context);
-        $this->logger->log($level, $message, $enrichedContext);
+        $this->logger->log($level, (string) $message, $this->enrichContext($message, $context));
     }
 
-    /**
-     * 🎯 Log an info-level message
-     *
-     * Logs informational events with enriched context.
-     *
-     * 🧱 Structure:
-     * - Delegates to `log` with 'info' level
-     *
-     * 📡 Communicates:
-     * - Via injected logger
-     *
-     * 🧪 Testable:
-     * - Fully mockable
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function info($message, array $context = []): void
+    /** @inheritDoc */
+    public function info(Stringable|string $message, array $context = []): void
     {
         $this->log('info', $message, $context);
     }
 
-    /**
-     * 🎯 Log an error-level message
-     *
-     * Logs error events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function error($message, array $context = []): void
+    /** @inheritDoc */
+    public function error(Stringable|string $message, array $context = []): void
     {
         $this->log('error', $message, $context);
     }
 
-    /**
-     * 🎯 Log a warning-level message
-     *
-     * Logs warning events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function warning($message, array $context = []): void
+    /** @inheritDoc */
+    public function warning(Stringable|string $message, array $context = []): void
     {
         $this->log('warning', $message, $context);
     }
 
-    /**
-     * 🎯 Log a debug-level message
-     *
-     * Logs debug events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function debug($message, array $context = []): void
+    /** @inheritDoc */
+    public function debug(Stringable|string $message, array $context = []): void
     {
         $this->log('debug', $message, $context);
     }
 
-    /**
-     * 🎯 Log a critical-level message
-     *
-     * Logs critical events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function critical($message, array $context = []): void
+    /** @inheritDoc */
+    public function critical(Stringable|string $message, array $context = []): void
     {
         $this->log('critical', $message, $context);
     }
 
-    /**
-     * 🎯 Log an emergency-level message
-     *
-     * Logs emergency events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function emergency($message, array $context = []): void
+    /** @inheritDoc */
+    public function emergency(Stringable|string $message, array $context = []): void
     {
         $this->log('emergency', $message, $context);
     }
 
-    /**
-     * 🎯 Log an alert-level message
-     *
-     * Logs alert events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function alert($message, array $context = []): void
+    /** @inheritDoc */
+    public function alert(Stringable|string $message, array $context = []): void
     {
         $this->log('alert', $message, $context);
     }
 
-    /**
-     * 🎯 Log a notice-level message
-     *
-     * Logs notice events with enriched context.
-     *
-     * @param string|\Stringable $message Message to log
-     * @param array $context Additional context data
-     * @return void
-     */
-    public function notice($message, array $context = []): void
+    /** @inheritDoc */
+    public function notice(Stringable|string $message, array $context = []): void
     {
         $this->log('notice', $message, $context);
     }
 
     /**
-     * 🎯 Enrich log context with caller and message information
+     * Build an enriched context array.
      *
-     * Adds caller class, method, and original message to the context for detailed logging.
-     *
-     * 🧱 Structure:
-     * - Uses cached caller context
-     * - Merges with provided context
-     *
-     * 📡 Communicates:
-     * - Provides enriched data to logger
-     *
-     * 🧪 Testable:
-     * - Pure function
-     * - Caller context mockable via config
-     *
-     * @param string|\Stringable $message Original message
-     * @param array $context Provided context data
-     * @return array Enriched context
+     * @param Stringable|string $message  Original message from caller
+     * @param array<string,mixed> $context Caller‑provided context
+     * @return array<string,mixed>         Merged context with introspection data
      */
-    protected function enrichContext(string|\Stringable $message, array $context): array
+    protected function enrichContext(Stringable|string $message, array $context): array
     {
         if ($this->callerContextCache === null) {
             $this->callerContextCache = $this->getCallerContext();
         }
 
         [$callerClass, $callerMethod] = $this->callerContextCache;
-        $context['Class'] = $callerClass;
-        $context['Method'] = $callerMethod;
-        $context['Message'] = (string) $message;
 
-        // 'Type' rimane nel context se il chiamante lo fornisce, altrimenti non lo aggiungiamo
-        // Nessuna azione necessaria: $context['Type'] è già preservato se presente
-
-        return $context;
+        return $context + [
+            'Class'   => $callerClass,
+            'Method'  => $callerMethod,
+            'Message' => (string) $message,
+        ];
     }
 
     /**
-     * 🎯 Retrieve caller context from backtrace
+     * Retrieve caller [class, method] using debug_backtrace().
      *
-     * Identifies the calling class and method for context enrichment.
-     *
-     * 🧱 Structure:
-     * - Uses configurable backtrace depth
-     * - Filters out internal calls
-     *
-     * 📡 Communicates:
-     * - Returns caller info for `enrichContext`
-     *
-     * 🧪 Testable:
-     * - Config mockable
-     * - Backtrace isolabile
-     *
-     * @return array [class, method]
+     * @return array{string,string}
      */
     protected function getCallerContext(): array
     {
-        $initialDepth = $this->config['log_backtrace_depth'] ?? 3;
-        $backtraceLimit = $this->config['backtrace_limit'] ?? 7;
-        $currentDepth = $initialDepth;
+        $depth        = (int) ($this->config['log_backtrace_depth'] ?? 3);
+        $limit        = (int) ($this->config['backtrace_limit'] ?? 7);
+        $currentDepth = $depth;
 
-        while ($currentDepth <= $backtraceLimit) {
+        while ($currentDepth <= $limit) {
             $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $currentDepth);
             foreach ($backtrace as $trace) {
                 if (isset($trace['class']) && $trace['class'] !== self::class) {
                     return [
-                        $trace['class'] ?? 'UnknownClass',
+                        $trace['class']    ?? 'UnknownClass',
                         $trace['function'] ?? 'UnknownMethod',
                     ];
                 }
             }
             $currentDepth += 2;
         }
+
         return ['UnknownClass', 'UnknownMethod'];
     }
 }

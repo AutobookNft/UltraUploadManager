@@ -121,6 +121,7 @@ class UltraConfigVersion extends Model
         'version',
         'key',
         'category',
+        'source_file',
         'note',
         'value',
         'user_id', 

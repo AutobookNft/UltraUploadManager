@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->string('key')->unique();
             $table->longText('value')->nullable();
             $table->string('category')->nullable();
+            $table->string('source_file')->nullable()->index()->comment('Source config file (e.g., app.php) or manual input indicator');
             $table->text('note')->nullable();
             $table->timestamps();
             $table->softDeletes(); // Supporto per soft delete
