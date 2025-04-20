@@ -204,5 +204,58 @@
         </div>
     
     </div>
+
+    <script>
+        function setLanguage(lang) {
+            fetch('{{ route("global.config") }}?lang=' + lang, {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(config => {
+                // Assign all configuration properties to window
+                Object.assign(window, config);
+    
+                // Notify that configuration has been loaded
+                document.dispatchEvent(new Event('configLoaded'));
+    
+                // Update language without reloading the entire page (if possible)
+                // Here you can dynamically update texts if you have a client-side translation system
+                window.location.href = window.location.pathname + '?lang=' + lang; // Reload with new parameter
+            })
+            .catch(error => {
+                console.error('Error changing language:', error);
+                alert('Error changing language. Try again.');
+            });
+        }
+    
+        // Initialization on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load global configuration
+            fetch('{{ route("global.config") }}', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                }
+            })
+            .then(response => response.json())
+            .then(config => {
+                // Assign all configuration properties to window
+                Object.assign(window, config);
+    
+                // Notify that configuration has been loaded
+                document.dispatchEvent(new Event('configLoaded'));
+            })
+            .catch(error => {
+                console.error('Error loading configuration:', error);
+            });
+        });
+    </script>
+    
     </body>
     </html>

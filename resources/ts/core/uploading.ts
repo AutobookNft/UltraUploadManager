@@ -242,7 +242,20 @@ export async function handleUpload(): Promise<void> {
 
                 if (response instanceof Response) {
                     const resultResponse = await response.json();
-                    updateStatusDiv(resultResponse.userMessage || updateFileSavedMessage(file.name), 'success');
+                
+                    // 1. Controllo Esplicito del Tipo e dell'Esistenza:
+                    if (typeof resultResponse.userMessage === 'string' && resultResponse.userMessage.trim() !== '') {
+                        // Se 'userMessage' esiste, è una stringa e non è vuota, usala.
+                        updateStatusDiv(resultResponse.userMessage, 'success');
+                    } else {
+                        // 2. Log Specifico del Problema:
+                        // Se 'userMessage' manca, non è una stringa, o è vuota, logga un warning.
+                        console.warn('Server response missing or invalid "userMessage" string property. Using fallback message.', { responseReceived: resultResponse }); // Logga la risposta per debug
+                
+                        // 3. Chiamata Esplicita al Fallback:
+                        // Esegui il fallback solo DOPO aver identificato il problema.
+                        updateStatusDiv(updateFileSavedMessage(file.name), 'success');
+                    }
                     updateProgressBar(index, increment);
                 }
             }
@@ -332,5 +345,9 @@ export function finalizeUpload(flagUploadOk: boolean, iterFailed: number): void 
  */
 export function updateFileSavedMessage(fileName: string): string {
     const messageTemplate = window.fileSavedSuccessfullyTemplate;
+    if (typeof messageTemplate !== 'string') { // Controllo esplicito
+        console.error('Global variable "fileSavedSuccessfullyTemplate" is missing or not a string!');
+        return `File ${fileName} saved (template missing).`; // Fallback sicuro
+    }
     return messageTemplate.replace(':fileCaricato', fileName);
 }

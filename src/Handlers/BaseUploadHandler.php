@@ -1,28 +1,16 @@
 <?php
 
 /**
- * Base Handler for Core File Upload Logic.
+ * Base Handler for Core File Upload Logic (Laravel Standard).
  *
- * Provides foundational functionality for processing file uploads, including
- * initial validation, logging, interaction with testing conditions, file moving,
- * metadata extraction, and basic persistence simulation (via JSON file in this example).
- * It integrates with the Ultra Ecosystem for logging (ULM), error handling (UEM),
- * and configuration (UCM).
+ * Provides foundational functionality using standard Laravel helpers and facades.
  *
  * @package     Ultra\UploadManager\Handlers
  * @author      Fabio Cherici <fabiocherici@gmail.com>
  * @copyright   2024 Fabio Cherici
  * @license     MIT
- * @version     1.1.3 // Refined error handling in handler method for validation exceptions.
+ * @version     1.2.1 // Corrected response key to userMessage, documentation to English.
  * @since       1.0.0
- *
- * @see \Ultra\UltraLogManager\UltraLogManager For logging via ULM.
- * @see \Ultra\ErrorManager\Interfaces\ErrorManagerInterface For error handling via UEM.
- * @see \Ultra\UltraConfigManager\UltraConfigManager For configuration via UCM.
- * @see \Ultra\ErrorManager\Services\TestingConditionsManager For test condition checks.
- * @see \Illuminate\Support\Facades\Storage For storage operations.
- * @see \Ultra\UploadManager\Traits\HasValidation Provides validation logic.
- * @see \Ultra\UploadManager\Traits\HasUtilitys Provides utility logic.
  */
 
 namespace Ultra\UploadManager\Handlers;
@@ -31,205 +19,127 @@ namespace Ultra\UploadManager\Handlers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log; // Use Log Facade
 use Illuminate\Support\Facades\Storage; // Use Storage Facade for abstraction
-use Psr\Log\LoggerInterface; // PSR-3 Interface
 use Throwable;
-use Exception; // Standard Exception for validation rules for now
-use LogicException; // For dependency checks in trait
+use Exception; // Standard Exception
+use LogicException; // For setup/config errors
 
-// Ultra Ecosystem Dependencies
-use Ultra\UltraLogManager\UltraLogManager; // Specific ULM implementation
-use Ultra\ErrorManager\Interfaces\ErrorManagerInterface; // UEM Interface
-use Ultra\ErrorManager\Services\TestingConditionsManager; // Testing Conditions Service
-use Ultra\UltraConfigManager\UltraConfigManager; // UCM Implementation
-
-// Local Traits
+// Local Traits (Refactored versions)
 use Ultra\UploadManager\Traits\HasUtilitys;
 use Ultra\UploadManager\Traits\HasValidation;
-// TODO: Consider creating a custom ValidationRuleFailedException
 
 class BaseUploadHandler
 {
+    // Use refactored traits using config() and Log::
     use HasValidation, HasUtilitys;
-
-    // --- Injected Dependencies (declared as readonly for safety) ---
-    protected readonly UltraLogManager $logger;
-    protected readonly UltraConfigManager $configManager;
-    protected readonly ErrorManagerInterface $errorManager;
-    protected readonly TestingConditionsManager $testingConditions;
 
     /**
      * The default log channel for this handler.
+     * Inheriting classes can override this.
      * @var string
      */
-    protected string $logChannel = 'upload';
+    protected string $logChannel = 'stack'; // Use Laravel's default stack
 
     /**
-     * Constructor with Dependency Injection.
-     *
-     * @param UltraLogManager $logger PSR-3 Logger (ULM).
-     * @param ErrorManagerInterface $errorManager UEM instance.
-     * @param TestingConditionsManager $testingConditions Testing conditions manager.
-     * @param UltraConfigManager $configManager UCM instance.
+     * 🎯 Constructor: No dependencies needed in this refactored version.
+     * Logs initialization.
      */
-    public function __construct(
-        UltraLogManager $logger,
-        ErrorManagerInterface $errorManager,
-        TestingConditionsManager $testingConditions,
-        UltraConfigManager $configManager
-    ) {
-        $this->logger = $logger;
-        $this->errorManager = $errorManager;
-        $this->testingConditions = $testingConditions;
-        $this->configManager = $configManager; // Correctly assigned
-
-        $this->logger->debug('[BaseUploadHandler] Initialized with all dependencies (including UCM).');
+    public function __construct()
+    {
+        Log::channel($this->logChannel)->debug('[BaseUploadHandler] Initialized (Laravel Standard).');
     }
 
     /**
-     * Handle the core file upload process with refined error handling.
+     * Handle the core file upload process using standard Laravel tools.
      *
-     * Processes an uploaded file: checks POST limits, validates the file (distinguishing
-     * between validation rule failures, dependency errors, and internal validation errors),
-     * moves it to storage, extracts metadata, simulates persistence, and returns a JSON response.
-     * Uses ULM for logging and UEM for error handling with specific codes.
+     * Processes an uploaded file: checks POST limits, validates (using refactored trait),
+     * moves it to storage, extracts metadata, simulates persistence (JSON),
+     * and returns a JSON response. Uses standard Log facade.
      *
-     * --- Refined Core Logic ---
-     * 1. Log start and check POST size limits (delegating error to UEM).
-     * 2. Validate file existence/integrity. Handle via UEM if invalid.
-     * 3. Log file processing start.
-     * 4. Check/handle simulated 'FILE_NOT_FOUND' error.
-     * 5. Capture metadata.
-     * 6. Check/handle simulated 'GENERIC_SERVER_ERROR'.
-     * 7. **Try** validating the file using `$this->validateFile()`:
-     *     a. **Catch `LogicException`**: If the trait check fails (dependency missing) -> Handle with `UUM_DEPENDENCY_MISSING`.
-     *     b. **Catch `Exception`**: If a validation rule fails (current behavior) -> Handle with `INVALID_FILE_VALIDATION`.
-     *     c. **Catch `Throwable`**: If any other unexpected error occurs *during* validation -> Handle with `UUM_VALIDATION_INTERNAL_ERROR`.
-     * 8. If validation passes, get destination path from config. Handle missing config via UEM (`UUM_CONFIG_PATH_MISSING`).
-     * 9. Move the uploaded file. Handle exceptions via UEM (`UUM_FILE_MOVE_FAILED`).
-     * 10. Prepare file metadata (including hash).
-     * 11. Simulate persistence (JSON file). Handle exceptions via UEM (`ERROR_SAVING_FILE_METADATA`).
-     * 12. Log completion and return success JsonResponse.
-     * 13. Catch any unexpected Throwable *outside* the validation block and handle via UEM (`UNEXPECTED_ERROR`).
-     * --- End Refined Core Logic ---
+     * --- Core Logic ---
+     * (Steps remain the same as previous refactored description)
+     * --- End Core Logic ---
      *
      * @param Request $request The incoming HTTP request.
-     * @return JsonResponse Success or error response generated by UEM.
+     * @return JsonResponse Success or error response.
      *
-     * @throws Throwable Can re-throw critical exceptions if UEM decides to.
-     * @sideEffect See original method description.
-     * @configReads See original method description.
-     * @uemErrorCodes INVALID_FILE, MAX_FILE_SIZE, UPLOAD_NO_FILE_SENT, FILE_NOT_FOUND,
-     *                GENERIC_SERVER_ERROR, UUM_DEPENDENCY_MISSING, INVALID_FILE_VALIDATION,
-     *                UUM_VALIDATION_INTERNAL_ERROR, UUM_CONFIG_PATH_MISSING, UUM_FILE_MOVE_FAILED,
-     *                ERROR_SAVING_FILE_METADATA, UNEXPECTED_ERROR, POST_SIZE_LIMIT_EXCEEDED
+     * @throws Throwable Can re-throw exceptions for global handler or caller.
+     * @sideEffect Moves uploaded file, writes to JSON file, logs messages.
+     * @configReads upload-manager.default_path, logging.channels configuration.
      */
     public function handler(Request $request): JsonResponse
     {
         $file = null;
         $originalName = 'unknown';
+        $logContext = ['handler' => static::class];
 
         try {
-            $this->logger->info('[BaseUploadHandler] Starting file upload process.', [ /* context */ ]);
+            Log::channel($this->logChannel)->info('[BaseUploadHandler] Starting file upload process.', $logContext);
 
             // --- Check POST Size Limits ---
             if (empty($_FILES) && empty($_POST) && isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) === 'post') {
                 $postMaxSize = ini_get('post_max_size');
-                $this->logger->error('[BaseUploadHandler] POST data exceeds server limits.', [ /* context */ ]);
-                // Define POST_SIZE_LIMIT_EXCEEDED in UEM config
-                return $this->errorManager->handle('POST_SIZE_LIMIT_EXCEEDED', ['post_max_size' => $postMaxSize], new Exception('POST data exceeds server limits'));
+                $errorMsg = "POST data exceeds server limits (max: {$postMaxSize}).";
+                Log::channel($this->logChannel)->error('[BaseUploadHandler] ' . $errorMsg, $logContext);
+                throw new Exception($errorMsg, 413); // 413 Payload Too Large
             }
 
             // --- Validate File Existence/Integrity ---
             if (!$request->hasFile('file') || !$request->file('file')->isValid()) {
-                $uploadError = $request->hasFile('file') ? $request->file('file')->getError() : 'No file uploaded';
-                $this->logger->warning('[BaseUploadHandler] Invalid or missing file received.', [ /* context */ ]);
-                $context = ['fileName' => $originalName, 'upload_error_code' => $uploadError];
-                $uemCode = match($uploadError) {
-                    UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'MAX_FILE_SIZE',
-                    UPLOAD_ERR_NO_FILE => 'UPLOAD_NO_FILE_SENT', // Define in UEM config
-                    default => 'INVALID_FILE',
-                };
-                return $this->errorManager->handle($uemCode, $context);
+                $uploadError = $request->hasFile('file') ? $request->file('file')->getError() : UPLOAD_ERR_NO_FILE;
+                $errorMsg = 'Invalid or missing file received.';
+                 match($uploadError) {
+                     UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => $errorMsg = 'File exceeds allowed size limits.',
+                     UPLOAD_ERR_NO_FILE => $errorMsg = 'No file was uploaded.',
+                     default => $errorMsg = 'File upload error: code ' . $uploadError,
+                 };
+                 Log::channel($this->logChannel)->warning('[BaseUploadHandler] ' . $errorMsg, array_merge($logContext, ['upload_error_code' => $uploadError]));
+                 throw new Exception($errorMsg, 400); // 400 Bad Request
             }
 
             $file = $request->file('file');
             $originalName = $file->getClientOriginalName();
-            $index = $request->input('index');
-            $this->logger->info('[BaseUploadHandler] Processing file.', [ /* context */ ]);
-
-            // --- Simulate Errors (Testing) ---
-            if ($this->testingConditions->isTesting('FILE_NOT_FOUND') && $index === '0') {
-                $this->logger->info('[BaseUploadHandler] Simulating FILE_NOT_FOUND error.', [ /* context */ ]);
-                return $this->errorManager->handle('FILE_NOT_FOUND', ['fileName' => $originalName]);
-            }
-            if ($this->testingConditions->isTesting('GENERIC_SERVER_ERROR') && $index === '0') {
-                $this->logger->info('[BaseUploadHandler] Simulating GENERIC_SERVER_ERROR.', [ /* context */ ]);
-                return $this->errorManager->handle('GENERIC_SERVER_ERROR', ['fileName' => $originalName]);
-            }
+            $logContext['file_name'] = $originalName;
+            $index = $request->input('index', 0);
+            Log::channel($this->logChannel)->info('[BaseUploadHandler] Processing file.', $logContext);
 
             // --- Capture Metadata ---
             $fileSize = $file->getSize();
             $originalExtension = $file->getClientOriginalExtension();
-            $this->logger->info('[BaseUploadHandler] File metadata captured.', [ /* context */ ]);
+            $logContext['size'] = $fileSize;
+            $logContext['extension'] = $originalExtension;
+            Log::channel($this->logChannel)->info('[BaseUploadHandler] File metadata captured.', $logContext);
 
-            // --- File Validation Block (with refined error catching) ---
+            // --- File Validation Block ---
             try {
-                $this->logger->debug('[Handler] Attempting file validation...');
-                $this->validateFile($file, $index); // Call trait method
-                $this->logger->info('[Handler] File validation successful.');
-
-            } catch (LogicException $le) { // CATCH 1: Dependency check failed in trait
-                $this->logger->critical('[Handler] Validation failed due to missing dependency inside trait.', ['error' => $le->getMessage()]);
-                // Handle with specific UEM code (Needs definition in config/error-manager.php)
-                return $this->errorManager->handle(
-                    'UUM_DEPENDENCY_MISSING', // Critical: Code setup issue
-                    ['dependency' => 'Likely UltraConfigManager', 'handler' => static::class, 'traitMethod' => 'validateFile'],
-                    $le
-                );
-            } catch (Exception $ve) { // CATCH 2: Validation rule failed (Current behavior of trait)
-                                      // TODO: Change to catch ValidationRuleFailedException if created
-                $this->logger->warning('[Handler] File did not pass validation rules.', [
-                    'file_name' => $originalName,
-                    'validation_error' => $ve->getMessage()
-                ]);
-                // Handle with the CORRECT UEM code for this scenario
-                return $this->errorManager->handle(
-                    'INVALID_FILE_VALIDATION',
-                    ['fileName' => $originalName, 'validation_error' => $ve->getMessage()],
-                    $ve
-                );
-            } catch (Throwable $e_val) { // CATCH 3: Other unexpected error *during* validation
-                 $this->logger->error('[Handler] Unexpected internal error during validation attempt.', [
-                    'file_name' => $originalName,
-                    'exception_class' => get_class($e_val),
-                    'exception_message' => $e_val->getMessage()
-                ]);
-                // Handle with a specific UEM code (Needs definition in config/error-manager.php)
-                 return $this->errorManager->handle(
-                     'UUM_VALIDATION_INTERNAL_ERROR', // Error: Internal validation logic failed unexpectedly
-                     ['fileName' => $originalName],
-                     $e_val
-                 );
+                Log::channel($this->logChannel)->debug('[Handler] Attempting file validation...', $logContext);
+                $this->validateFile($file, $index); // Call refactored trait method
+                Log::channel($this->logChannel)->info('[Handler] File validation successful.', $logContext);
+            } catch (Exception $ve) {
+                Log::channel($this->logChannel)->warning('[Handler] File did not pass validation rules.', array_merge($logContext, ['validation_error' => $ve->getMessage()]));
+                throw new Exception("File validation failed: " . $ve->getMessage(), 422, $ve); // 422 Unprocessable Entity
+            } catch (Throwable $e_val) {
+                 Log::channel($this->logChannel)->error('[Handler] Unexpected internal error during validation attempt.', array_merge($logContext, ['exception_class' => get_class($e_val), 'exception_message' => $e_val->getMessage()]));
+                 throw new Exception("Internal error during file validation.", 500, $e_val); // 500 Internal Server Error
             }
             // --- End File Validation Block ---
 
             // --- File Move ---
             $path = config('upload-manager.default_path');
-             if (!$path) {
-                 $this->logger->error('[BaseUploadHandler] Default storage path is not configured.', ['config_key' => 'upload-manager.default_path']);
-                 // Define UUM_CONFIG_PATH_MISSING in UEM config
-                 return $this->errorManager->handle('UUM_CONFIG_PATH_MISSING');
+             if (!$path || !is_string($path)) {
+                 Log::channel($this->logChannel)->error('[BaseUploadHandler] Default storage path is not configured or invalid.', array_merge($logContext, ['config_key' => 'upload-manager.default_path', 'retrieved_value' => $path]));
+                 throw new LogicException("Default storage path ('upload-manager.default_path') not configured correctly.");
              }
-             $this->logger->info('[BaseUploadHandler] Moving file to storage.', [ /* context */ ]);
+             Log::channel($this->logChannel)->info('[BaseUploadHandler] Moving file to storage.', array_merge($logContext, ['destination_path_config' => $path]));
             try {
-                $file->move($path, $originalName);
-                $storedRealPath = $path . DIRECTORY_SEPARATOR . $originalName;
-                 $this->logger->info('[BaseUploadHandler] File moved successfully.', ['stored_path' => $storedRealPath]);
+                $destinationDirectory = rtrim($path, DIRECTORY_SEPARATOR);
+                $file->move($destinationDirectory, $originalName);
+                $storedRealPath = $destinationDirectory . DIRECTORY_SEPARATOR . $originalName;
+                 Log::channel($this->logChannel)->info('[BaseUploadHandler] File moved successfully.', array_merge($logContext, ['stored_path' => $storedRealPath]));
             } catch (Throwable $e_move) {
-                $this->logger->error('[BaseUploadHandler] Failed to move uploaded file.', [ /* context */ ]);
-                 // Define UUM_FILE_MOVE_FAILED in UEM config
-                return $this->errorManager->handle('UUM_FILE_MOVE_FAILED', ['fileName' => $originalName, 'path' => $path], $e_move);
+                 Log::channel($this->logChannel)->error('[BaseUploadHandler] Failed to move uploaded file.', array_merge($logContext, ['path' => $path, 'error' => $e_move->getMessage()]));
+                 throw new Exception("Failed to store uploaded file.", 500, $e_move);
             }
 
             // --- Prepare Metadata ---
@@ -239,62 +149,73 @@ class BaseUploadHandler
                 'size'      => $fileSize,
                 'extension' => $originalExtension,
                 'stored_at' => now()->toIso8601String(),
+                'stored_path' => $storedRealPath
             ];
-            if ($fileData['hash'] === null) {
-                 $this->logger->warning('[BaseUploadHandler] Could not calculate md5 hash.', ['path' => $storedRealPath]);
+            if ($fileData['hash'] === null && file_exists($storedRealPath)) {
+                 Log::channel($this->logChannel)->warning('[BaseUploadHandler] Could not calculate md5 hash.', array_merge($logContext, ['path' => $storedRealPath]));
             }
-             $this->logger->info('[BaseUploadHandler] File data prepared.', [ /* context */ ]);
+             Log::channel($this->logChannel)->info('[BaseUploadHandler] File data prepared.', $logContext);
 
             // --- Simulate Persistence (JSON) ---
             $relativeJsonPath = 'uploads.json';
             $disk = 'local';
-            $this->logger->debug('[BaseUploadHandler] Attempting to update JSON metadata storage.', [ /* context */ ]);
+            Log::channel($this->logChannel)->debug('[BaseUploadHandler] Attempting to update JSON metadata storage.', array_merge($logContext, ['disk' => $disk, 'json_path' => $relativeJsonPath]));
             try {
                 $uploads = [];
                 if (Storage::disk($disk)->exists($relativeJsonPath)) {
                     $json = Storage::disk($disk)->get($relativeJsonPath);
-                    if ($json === false) throw new Exception("Failed to read JSON file: {$relativeJsonPath}");
-                    $uploads = json_decode($json, true) ?? [];
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        $this->logger->warning('[BaseUploadHandler] Invalid JSON detected, resetting.', [ /* context */ ]);
-                        $uploads = [];
+                    if ($json === false || $json === null) {
+                         Log::channel($this->logChannel)->warning('[BaseUploadHandler] Failed to read existing JSON file or file is empty, starting new.', array_merge($logContext, ['path' => $relativeJsonPath]));
+                         $uploads = [];
+                    } else {
+                        $uploads = json_decode($json, true);
+                         if (json_last_error() !== JSON_ERROR_NONE) {
+                            Log::channel($this->logChannel)->warning('[BaseUploadHandler] Invalid JSON detected in storage file, resetting.', array_merge($logContext, ['path' => $relativeJsonPath, 'json_error' => json_last_error_msg()]));
+                            $uploads = [];
+                        }
                     }
                 }
                 $uploads[] = $fileData;
-                if (!Storage::disk($disk)->put($relativeJsonPath, json_encode($uploads, JSON_PRETTY_PRINT))) {
-                    throw new Exception("Failed to write JSON file: {$relativeJsonPath}");
+                if (!Storage::disk($disk)->put($relativeJsonPath, json_encode($uploads, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))) {
+                     throw new Exception("Failed to write JSON file: {$relativeJsonPath} on disk '{$disk}'");
                 }
-                 $this->logger->info('[BaseUploadHandler] File metadata saved to JSON storage.', ['path' => $relativeJsonPath]);
+                 Log::channel($this->logChannel)->info('[BaseUploadHandler] File metadata saved to JSON storage.', array_merge($logContext, ['path' => $relativeJsonPath]));
             } catch (Throwable $e_json) {
-                $this->logger->error('[BaseUploadHandler] Failed to save file data to JSON storage.', [ /* context */ ]);
-                // Keep original UEM code or make UUM specific? Using original for now.
-                return $this->errorManager->handle('ERROR_SAVING_FILE_METADATA', ['fileName' => $originalName, 'jsonPath' => $relativeJsonPath], $e_json);
+                 Log::channel($this->logChannel)->error('[BaseUploadHandler] Failed to save file data to JSON storage.', array_merge($logContext, ['path' => $relativeJsonPath, 'error' => $e_json->getMessage()]));
+                 throw new Exception("Failed to save upload metadata.", 500, $e_json);
             }
 
             // --- Prepare Success Response ---
-             $successMessage = 'Upload completed successfully.'; // Fallback message
-             // Check if Translator is bound before using trans()
-             if ($this->app->bound(\Illuminate\Contracts\Translation\Translator::class)) {
-                  $successMessage = trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $originalName]);
+             // Use trans() with fallback
+             $successUserMessage = trans('uploadmanager::uploadmanager.file_saved_successfully', ['fileCaricato' => $originalName]);
+             if (empty($successUserMessage) || str_starts_with($successUserMessage, 'uploadmanager::')) {
+                 $successUserMessage = "File '{$originalName}' uploaded successfully.";
              }
-            $responsePayload = ['message' => $successMessage, 'fileData' => $fileData];
 
-            $this->logger->info('[BaseUploadHandler] File upload process completed successfully.', [ /* context */ ]);
+            // *** CORREZIONE CHIAVE RISPOSTA ***
+            $responsePayload = ['userMessage' => $successUserMessage, 'fileData' => $fileData]; // <-- Usa userMessage
+
+            Log::channel($this->logChannel)->info('[BaseUploadHandler] File upload process completed successfully.', $logContext);
 
             // --- Return Success ---
             return response()->json($responsePayload, 200);
 
-        } catch (Throwable $e) { // Final Catch for any unexpected errors outside specific blocks
-            $this->logger->critical('[BaseUploadHandler] Unexpected fatal error during file upload handler execution.', [
-                'file_name' => $originalName,
+        } catch (Throwable $e) { // Final Catch-all
+            Log::channel($this->logChannel)->critical('[BaseUploadHandler] Unexpected fatal error during file upload handler execution.', array_merge($logContext, [
                 'exception_class' => get_class($e),
                 'exception_message' => $e->getMessage(),
                 'exception_file' => $e->getFile(),
                 'exception_line' => $e->getLine(),
-            ]);
-            // Handle with UEM's generic code
-            return $this->errorManager->handle('UNEXPECTED_ERROR', ['fileName' => $originalName, 'context' => 'BaseUploadHandler::handler main catch block'], $e);
+            ]));
+            // Generic JSON error response
+            return response()->json([
+                 // Use trans() with fallback for user message
+                 'userMessage' => trans('uploadmanager::errors.generic_upload_error') ?: 'An unexpected error occurred during upload.', // <-- Usa userMessage anche qui
+                 'error_details' => $e->getMessage()
+                ],
+                 method_exists($e, 'getStatusCode') ? $e->getStatusCode() : (is_int($e->getCode()) && $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500)
+            );
         }
-    } // Fine metodo handler
+    } // End handler method
 
-} // Fine Classe
+} // End Class BaseUploadHandler
