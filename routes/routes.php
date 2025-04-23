@@ -26,10 +26,6 @@ Route::get('/test-event', function() {
     return 'Evento inviato!';
 });
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 // Route::group(['namespace' => 'Ultra\\UploadManager\\Controllers'], function () {
 //     Route::get('/upload', [UploadController::class, 'index']);
 // });
@@ -58,8 +54,7 @@ Route::get('/get-non-blocking-error-constant/{code}', [NonBlockingErrorControlle
 
 Route::middleware(['throttle:50,1'])
     ->group(function () {
-        Route::redirect('/', '/marketplace');
-
+        
         Route::post('/upload-temp', [SaveTemporaryFiles::class, 'saveTemporaryFile']);
 
         Route::post('/uploading-files', [UploadingFiles::class, 'upload']);
