@@ -3,7 +3,7 @@
         'name' => 'ultra/ultra-upload-manager',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '98dd9a5e3334698631123fffcf35647a5fbf6781',
+        'reference' => '41ca2ba96dcba755e5cbcb46389e6610d775ddb5',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -66,6 +66,15 @@
             'replaced' => array(
                 0 => '*',
             ),
+        ),
+        'defuse/php-encryption' => array(
+            'pretty_version' => 'v2.4.0',
+            'version' => '2.4.0.0',
+            'reference' => 'f53396c2d34225064647a05ca76c1da9d99e5828',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../defuse/php-encryption',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'dflydev/dot-access-data' => array(
             'pretty_version' => 'v3.0.3',
@@ -705,6 +714,15 @@
             'install_path' => __DIR__ . '/../orchestra/workbench',
             'aliases' => array(),
             'dev_requirement' => true,
+        ),
+        'paragonie/random_compat' => array(
+            'pretty_version' => 'v9.99.100',
+            'version' => '9.99.100.0',
+            'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../paragonie/random_compat',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'paragonie/sodium_compat' => array(
             'pretty_version' => 'v2.1.0',
@@ -1483,7 +1501,7 @@
         'ultra/ultra-upload-manager' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '98dd9a5e3334698631123fffcf35647a5fbf6781',
+            'reference' => '41ca2ba96dcba755e5cbcb46389e6610d775ddb5',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
