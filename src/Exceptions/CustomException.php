@@ -15,7 +15,7 @@ class CustomException extends Exception
      * @param string $stringCode Codice di errore personalizzato.
      * @param \Throwable|null $previous Eccezione precedente.
      */
-    public function __construct(string $stringCode, \Throwable $previous = null)
+    public function __construct(string $stringCode, ?\Throwable $previous = null)
     {
         $this->stringCode = $stringCode;
 

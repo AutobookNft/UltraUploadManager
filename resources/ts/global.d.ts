@@ -7,6 +7,7 @@ let droppedFiles: FileList | null = null;
 interface Window {
 
     // Environment and configuration
+    fileUploadManager?: FileUploadManagerGlobal;
     droppedFiles: FileList | null
     imagesPath: string;
     assetBaseUrl: string;

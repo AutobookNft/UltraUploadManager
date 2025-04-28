@@ -28,9 +28,9 @@ export class HubFileController {
      */
     constructor() {
         this.pathHandlers = {
-            '/uploading/egi': new EGIUploadHandler(),
-            '/uploading/epp': new EPPUploadHandler(),
-            '/uploading/utility': new UtilityUploadHandler(),
+            '/upload/egi': new EGIUploadHandler(),
+            '/upload/epp': new EPPUploadHandler(),
+            '/upload/utility': new UtilityUploadHandler(),
             // Additional handlers can be registered here or via `registerHandler`.
         };
     }
