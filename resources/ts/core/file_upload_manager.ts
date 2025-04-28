@@ -26,22 +26,37 @@ export let files: File[] = [];
 /**
  * Initializes the file upload manager application.
  * Sets up event listeners via domElements, initializes UI elements,
- * and starts real-time functionality.
+ * and starts real-time functionality. Detects modal context to set upload type.
+ *
+ * @oracode.semantically_coherent Ensures clear initialization flow for modal and non-modal contexts.
+ * @oracode.testable Upload type detection is deterministic and mockable.
  */
 export function initializeApp() {
-    // Initialize file state
     files = Array.from(getFiles() || []);
+
+    // Detect upload type from modal context (if any)
+    let uploadType: string | undefined;
+    const uploadContainer = document.getElementById('upload-container');
+    if (uploadContainer) {
+        uploadType = uploadContainer.dataset.uploadType; // e.g., 'egi', 'epp', 'utility'
+        console.log(`Detected upload type from modal: ${uploadType || 'none'}`);
+    }
+
+    // Store upload type globally for use in uploading.ts
+    if (uploadType) {
+        window.uploadType = uploadType;
+    }
 
     // Wait for global configuration to load
     document.addEventListener('configLoaded', () => {
         files = Array.from(getFiles() || []);
-        setupDomEventListeners(); // Delega la gestione degli eventi a domElements
+        setupDomEventListeners();
         initializeUI();
     }, { once: true });
 
     // Proceed immediately if config is already loaded
     if (window.allowedExtensions) {
-        setupDomEventListeners(); // Delega la gestione degli eventi a domElements
+        setupDomEventListeners();
         initializeUI();
     }
 

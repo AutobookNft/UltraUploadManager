@@ -147,16 +147,16 @@ export async function attemptFileUpload(formData: FormData, maxAttempts: number 
 
 /**
  * Function that handles the upload and scanning of files.
+ *
+ * @oracode.explicitly_intentional Passes upload type for modal contexts to ensure correct handler selection.
  */
 export async function handleUpload(): Promise<void> {
-
     const formData = new FormData();
-
-    console.log('handleUpload called'); // Reinstated
+    console.log('handleUpload called');
     console.time('UploadProcess');
     const files = getFiles() || [];
     if (window.envMode === 'local') {
-        console.log('📤 Uploading files:', files.length); // Reinstated
+        console.log('📤 Uploading files:', files.length);
     }
 
     if (files.length === 0) {
@@ -175,7 +175,7 @@ export async function handleUpload(): Promise<void> {
     let index = 0;
     let userMessage = "";
 
-    for (const file of Array.from(files)) { // Riga 172 corretta
+    for (const file of Array.from(files)) {
         if (window.envMode === 'local') {
             console.log(`📂 Uploading file: ${file.name}`);
         }
@@ -216,7 +216,8 @@ export async function handleUpload(): Promise<void> {
             }
 
             const hubFileController = new HubFileController();
-            const { error, response, success } = await hubFileController.handleFileUpload(formData);
+            // Pass the upload type from window.uploadType (set by file_upload_manager.ts)
+            const { error, response, success } = await hubFileController.handleFileUpload(formData, window.uploadType);
 
             if (!success) {
                 if (error?.details) {
@@ -242,18 +243,10 @@ export async function handleUpload(): Promise<void> {
 
                 if (response instanceof Response) {
                     const resultResponse = await response.json();
-                
-                    // 1. Controllo Esplicito del Tipo e dell'Esistenza:
                     if (typeof resultResponse.userMessage === 'string' && resultResponse.userMessage.trim() !== '') {
-                        // Se 'userMessage' esiste, è una stringa e non è vuota, usala.
                         updateStatusDiv(resultResponse.userMessage, 'success');
                     } else {
-                        // 2. Log Specifico del Problema:
-                        // Se 'userMessage' manca, non è una stringa, o è vuota, logga un warning.
-                        console.warn('Server response missing or invalid "userMessage" string property. Using fallback message.', { responseReceived: resultResponse }); // Logga la risposta per debug
-                
-                        // 3. Chiamata Esplicita al Fallback:
-                        // Esegui il fallback solo DOPO aver identificato il problema.
+                        console.warn('Server response missing or invalid "userMessage" string property. Using fallback message.', { responseReceived: resultResponse });
                         updateStatusDiv(updateFileSavedMessage(file.name), 'success');
                     }
                     updateProgressBar(index, increment);
@@ -273,12 +266,12 @@ export async function handleUpload(): Promise<void> {
                 errorCode: "unexpected_error",
                 blocking: "blocking"
             } : {
-                message: String(error), // Convert any value to string safely
+                message: String(error),
                 userMessage: (window.serverError || 'Error during upload'),
                 state: "unknown",
                 errorCode: "unexpected_error",
                 blocking: "blocking"
-            }; // Riga 251 corretta
+            };
 
             if (uploadError.blocking === 'blocking') {
                 updateStatusMessage(uploadError.userMessage || "Critical error during upload", 'error');
@@ -298,6 +291,7 @@ export async function handleUpload(): Promise<void> {
     finalizeUpload(flagUploadOk, iterFailed);
     console.timeEnd('UploadProcess');
 }
+
 /**
  * Updates the progress bar.
  * @param index - Index of the file currently being uploaded
