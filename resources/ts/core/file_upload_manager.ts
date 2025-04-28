@@ -15,7 +15,8 @@ import {
     deleteTemporaryFileLocal,
     updateStatusMessage,
     setupDomEventListeners,
-    resetButtons
+    resetButtons,
+    csrfToken
 } from '../index';
 
 import Swal from 'sweetalert2';
@@ -25,26 +26,59 @@ export let files: File[] = [];
 
 /**
  * Initializes the file upload manager application.
- * Sets up event listeners via domElements, initializes UI elements,
- * and starts real-time functionality. Detects modal context to set upload type.
+ * Sets up event listeners for modal opening, file selection, and real-time functionality.
+ * Checks user authorization only when attempting to open the upload modal.
  *
- * @oracode.semantically_coherent Ensures clear initialization flow for modal and non-modal contexts.
- * @oracode.testable Upload type detection is deterministic and mockable.
+ * @oracode.semantically_coherent Ensures clear initialization and authorization flow.
+ * @oracode.testable Authorization check is deterministic and mockable.
+ * @oracode.explicitly_intentional Checks authorization only on modal open attempt.
+ * @gdpr No personal data is stored beyond temporary upload type.
  */
 export function initializeApp() {
     files = Array.from(getFiles() || []);
 
-    // Detect upload type from modal context (if any)
-    let uploadType: string | undefined;
-    const uploadContainer = document.getElementById('upload-container');
-    if (uploadContainer) {
-        uploadType = uploadContainer.dataset.uploadType; // e.g., 'egi', 'epp', 'utility'
-        console.log(`Detected upload type from modal: ${uploadType || 'none'}`);
-    }
+    // Set up modal open button listener
+    const openModalButton = document.getElementById('open-upload-modal');
+    if (openModalButton) {
+        openModalButton.addEventListener('click', async (event: Event) => {
+            event.preventDefault();
 
-    // Store upload type globally for use in uploading.ts
-    if (uploadType) {
-        window.uploadType = uploadType;
+            // Detect upload type (default to 'egi' for this use case)
+            const uploadType = openModalButton.dataset.uploadType || 'egi';
+            console.log(`Attempting to open upload modal with type: ${uploadType}`);
+
+            // Check user authorization
+            try {
+                const response = await fetch('/api/check-upload-authorization', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.authorized) {
+                    // User is authorized, open the modal
+                    console.log('User authorized to open upload modal');
+                    openUploadModal(uploadType);
+                    window.uploadType = uploadType; // Store for use in uploading.ts
+                } else {
+                    // User is not authorized, show error and redirect
+                    console.warn(`Authorization failed: ${result.reason}`);
+                    showAuthorizationError(result.reason, result.redirect);
+                }
+            } catch (error) {
+                console.error('Error checking authorization:', error);
+                showAuthorizationError(
+                    window.unknownError || 'Impossibile verificare l\'autorizzazione',
+                    '/'
+                );
+            }
+        });
+    } else {
+        console.warn('Open modal button not found (#open-upload-modal)');
     }
 
     // Wait for global configuration to load
@@ -75,6 +109,48 @@ export function initializeApp() {
                     console.error(`Error deleting ${file.name} on beforeunload:`, error);
                 }
             }
+        }
+    });
+}
+
+/**
+ * Opens the upload modal and sets up the UI.
+ *
+ * @param uploadType - The type of upload (e.g., 'egi', 'epp', 'utility').
+ * @oracode.explicitly_intentional Modal is only opened after authorization.
+ */
+function openUploadModal(uploadType: string): void {
+    const uploadContainer = document.getElementById('upload-container');
+    if (uploadContainer) {
+        uploadContainer.dataset.uploadType = uploadType;
+        // Show the modal (assuming a CSS or JS modal library)
+        uploadContainer.classList.add('active');
+        console.log(`Upload modal opened with type: ${uploadType}`);
+    } else {
+        console.error('Upload container not found (#upload-container)');
+    }
+}
+
+/**
+ * Shows an error message for unauthorized access and redirects if needed.
+ *
+ * @param message - The error message to display.
+ * @param redirectUrl - The URL to redirect to (e.g., login or verification page).
+ * @oracode.semantically_coherent Clear feedback for unauthorized users.
+ * @oracode.explicitly_intentional Saga-inspired visual feedback.
+ */
+function showAuthorizationError(message: string, redirectUrl?: string): void {
+    Swal.fire({
+        icon: 'error',
+        title: window.errorTitle || 'Accesso Negato',
+        text: message,
+        confirmButtonText: window.okButton || 'OK',
+        customClass: {
+            popup: 'swal2-dark-theme', // Saga-inspired styling
+        },
+    }).then(() => {
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
         }
     });
 }
