@@ -290,6 +290,9 @@ export async function handleUpload(): Promise<void> {
 
     finalizeUpload(flagUploadOk, iterFailed);
     console.timeEnd('UploadProcess');
+
+    // Dispatch a custom event to notify that the upload is completed
+    document.dispatchEvent(new CustomEvent('upload-completed'));
 }
 
 /**
@@ -345,3 +348,6 @@ export function updateFileSavedMessage(fileName: string): string {
     }
     return messageTemplate.replace(':fileCaricato', fileName);
 }
+
+
+
