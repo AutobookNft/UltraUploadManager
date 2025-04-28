@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Ultra\ErrorManager\Facades\UltraError;
 use Ultra\UltraLogManager\Facades\UltraLog;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Ultra\UploadManager\Services\SizeParser;
 
 
@@ -179,6 +180,78 @@ class ConfigController extends Controller
         $bytes /= pow(1024, $pow);
 
         return round($bytes, 2) . ' ' . $units[$pow];
+    }
+
+     /**
+     * Verifica se l'utente è autorizzato ad aprire la modale di upload.
+     *
+     * Controlla che l'utente sia autenticato, abbia una sessione valida,
+     * e abbia verificato l'email. Restituisce un JSON con lo stato di autorizzazione.
+     *
+     * @param Request $request La richiesta HTTP.
+     * @return \Illuminate\Http\JsonResponse Risposta JSON con lo stato di autorizzazione.
+     *
+     * @oracode.semantically_coherent Risposta chiara e prevedibile per il client.
+     * @oracode.testable Stato di autorizzazione deterministico e mockabile.
+     * @oracode.explicitly_intentional Rispetta i requisiti di autenticazione di Jetstream.
+     * @oracode.testable_logging Usa Log::channel() per logging testabile.
+     * @gdpr Nessun dato personale viene raccolto oltre l'ID utente autenticato.
+     */
+    public function checkUploadAuthorization(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            Log::channel($this->channel)->info(
+                'CheckUploadAuthorization',
+                ['user_id' => $user ? $user->id : 'guest', 'ip' => $request->ip()]
+            );
+
+            if (!$user) {
+                $response = [
+                    'authorized' => false,
+                    'reason' => trans('uploadmanager::uploadmanager.unauthenticated'),
+                    'redirect' => route('login'),
+                ];
+                Log::channel($this->channel)->warning(
+                    'UnauthorizedAccessAttempt',
+                    ['ip' => $request->ip(), 'response' => $response]
+                );
+                return response()->json($response, 401);
+            }
+
+            if (!$user->hasVerifiedEmail()) {
+                $response = [
+                    'authorized' => false,
+                    'reason' => trans('uploadmanager::uploadmanager.email_not_verified'),
+                    'redirect' => route('verification.notice'),
+                ];
+                Log::channel($this->channel)->warning(
+                    'UnverifiedEmail',
+                    ['user_id' => $user->id, 'response' => $response]
+                );
+                return response()->json($response, 403);
+            }
+
+            Log::channel($this->channel)->info(
+                'AuthorizationSuccess',
+                ['user_id' => $user->id]
+            );
+
+            return response()->json([
+                'authorized' => true,
+                'user_id' => $user->id,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::channel($this->channel)->error(
+                'AuthorizationCheckFailed',
+                ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]
+            );
+            return UltraError::handle('UNEXPECTED_ERROR', [
+                'context' => 'checkUploadAuthorization',
+                'error' => $e->getMessage(),
+            ], $e);
+        }
     }
 }
 
