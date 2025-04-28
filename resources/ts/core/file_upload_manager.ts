@@ -16,6 +16,7 @@ import {
     updateStatusMessage,
     setupDomEventListeners,
     resetButtons,
+   
     
 } from '../index';
 
@@ -149,20 +150,6 @@ export function handleDrop(event: DragEvent) {
         prepareFilesForUploadUI(fileList);
     }
     dropZone.classList.remove('border-blue-400', 'bg-purple-800/40');
-}
-
-
-/**
- * Redirects the user to a collection page.
- * Waits for config to load if not yet available.
- */
-export function redirectToCollection() {
-    if (typeof window.URLRedirectToCollection === 'undefined') {
-        console.warn('Config not yet loaded, delaying redirectToCollection...');
-        document.addEventListener('configLoaded', redirectToCollection, { once: true });
-        return;
-    }
-    window.location.href = window.URLRedirectToCollection;
 }
 
 /**

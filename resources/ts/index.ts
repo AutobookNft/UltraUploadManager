@@ -19,7 +19,7 @@ export {
     handleFileSelect,
     handleDrop,
     cancelUpload,
-    redirectToCollection
+    
 } from './core/file_upload_manager';
 
 export {
@@ -63,5 +63,7 @@ export {
     updateUploadLimitsDisplay,
     validateFilesAgainstLimits,
     formatSize,
+    redirectToCollection,
+    redirectToURL
 } from './utils/uploadUtils';
 

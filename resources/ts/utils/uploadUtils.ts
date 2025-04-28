@@ -441,3 +441,29 @@ export async function removeFile(fileName: string): Promise<void> {
 
         return `${bytes.toFixed(2)} ${units[i]}`;
     }
+
+    /**
+     * Redirects the user to a collection page.
+     * Waits for config to load if not yet available.
+     */
+    export function redirectToCollection() {
+        if (typeof window.URLRedirectToCollection === 'undefined') {
+            console.warn('Config not yet loaded, delaying redirectToCollection...');
+            document.addEventListener('configLoaded', redirectToCollection, { once: true });
+            return;
+        }
+        window.location.href = window.URLRedirectToCollection;
+    }
+    
+    /**
+     * Redirects the user to a collection page.
+     * Waits for config to load if not yet available.
+     */
+    export function redirectToURL() {
+        if (typeof window.uploadRedirectToUrl === 'undefined') {
+            console.warn('Config not yet loaded, delaying redirectToCollection...');
+            document.addEventListener('configLoaded', redirectToURL, { once: true });
+            return;
+        }
+        window.location.href = window.uploadRedirectToUrl;
+    }

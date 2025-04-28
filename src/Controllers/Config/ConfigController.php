@@ -65,6 +65,7 @@ class ConfigController extends Controller
                 'sendEmail' => config('error_constants.SEND_EMAIL'),
                 'devTeamEmailAddress' => config('app.devteam_email'),
                 'URLRedirectToCollection' => config('app.redirect_to_collection'),
+                'uploadRedirectToUrl' => config('app.upload_redirect_to_url'),
                 'errorDelTempLocalFileCode' => config('error_constants.ERROR_DELETING_LOCAL_TEMP_FILE'),
                 'errorDelTempExtFileCode' => config('error_constants.ERROR_DELETING_EXT_TEMP_FILE'),
                 'enableToCreateDirectory' => config('error_constants.UNABLE_TO_CREATE_DIRECTORY'),
@@ -219,18 +220,18 @@ class ConfigController extends Controller
                 return response()->json($response, 401);
             }
 
-            if (!$user->hasVerifiedEmail()) {
-                $response = [
-                    'authorized' => false,
-                    'reason' => trans('uploadmanager::uploadmanager.email_not_verified'),
-                    'redirect' => route('verification.notice'),
-                ];
-                Log::channel($this->channel)->warning(
-                    'UnverifiedEmail',
-                    ['user_id' => $user->id, 'response' => $response]
-                );
-                return response()->json($response, 403);
-            }
+            // if (!$user->hasVerifiedEmail()) {
+            //     $response = [
+            //         'authorized' => false,
+            //         'reason' => trans('uploadmanager::uploadmanager.email_not_verified'),
+            //         'redirect' => route('verification.notice'),
+            //     ];
+            //     Log::channel($this->channel)->warning(
+            //         'UnverifiedEmail',
+            //         ['user_id' => $user->id, 'response' => $response]
+            //     );
+            //     return response()->json($response, 403);
+            // }
 
             Log::channel($this->channel)->info(
                 'AuthorizationSuccess',

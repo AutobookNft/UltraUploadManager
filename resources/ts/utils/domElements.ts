@@ -5,6 +5,7 @@ import {
     handleUpload,
     cancelUpload,
     redirectToCollection,
+    redirectToURL
 } from '../index';
 
 export const statusMessage = document.getElementById('status-message') as HTMLElement;
@@ -70,7 +71,7 @@ export function setupDomEventListeners() {
     // Button click events
     uploadBtn?.addEventListener('click', handleUpload);
     cancelUploadBtn?.addEventListener('click', cancelUpload);
-    returnToCollectionBtn?.addEventListener('click', redirectToCollection);
+    returnToCollectionBtn?.addEventListener('click', redirectToURL);
 
     // Virus scan toggle event
     scanvirus.addEventListener('click', () => {
