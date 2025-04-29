@@ -65,7 +65,7 @@ class ConfigController extends Controller
                 'sendEmail' => config('error_constants.SEND_EMAIL'),
                 'devTeamEmailAddress' => config('app.devteam_email'),
                 'URLRedirectToCollection' => config('app.redirect_to_collection'),
-                'uploadRedirectToUrl' => config('app.upload_redirect_to_url'),
+                'redirectToUrlAfterUpload' => config('app.redirect_to_url_after_upload'),
                 'errorDelTempLocalFileCode' => config('error_constants.ERROR_DELETING_LOCAL_TEMP_FILE'),
                 'errorDelTempExtFileCode' => config('error_constants.ERROR_DELETING_EXT_TEMP_FILE'),
                 'enableToCreateDirectory' => config('error_constants.UNABLE_TO_CREATE_DIRECTORY'),

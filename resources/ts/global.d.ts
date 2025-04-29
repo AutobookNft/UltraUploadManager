@@ -65,6 +65,7 @@ interface Window {
     devTeamEmailAddress: string;
     URLRedirectToCollection: string;
     uploadRedirectToUrl: string;
+    uploadRedirectToUrlAfterLogin: string;
     errorDelTempLocalFileCode: string;
     errorDelTempExtFileCode: string;
     enableToCreateDirectory: string;

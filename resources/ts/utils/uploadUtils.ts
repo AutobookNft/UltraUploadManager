@@ -456,7 +456,8 @@ export async function removeFile(fileName: string): Promise<void> {
     }
     
     /**
-     * Redirects the user to a collection page.
+     * Redirects the user to a URL.
+     * This function is called when the user clicks the "Return to Collection" button.
      * Waits for config to load if not yet available.
      */
     export function redirectToURL() {
@@ -466,4 +467,17 @@ export async function removeFile(fileName: string): Promise<void> {
             return;
         }
         window.location.href = window.uploadRedirectToUrl;
+    }
+
+    /**
+     * Redirects the user to a URL after login.
+     * This function is called when the user successfully logs in.
+     */
+    export function redirectToURLAfterLogin() {
+        if (typeof window.uploadRedirectToUrlAfterLogin === 'undefined') {
+            console.warn('Config not yet loaded, delaying redirectToCollection...');
+            document.addEventListener('configLoaded', redirecredirectToURLAfterLogintToURL, { once: true });
+            return;
+        }
+        window.location.href = window.uploadRedirectToUrlAfterLogin;
     }

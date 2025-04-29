@@ -5,7 +5,8 @@ import {
     handleUpload,
     cancelUpload,
     redirectToCollection,
-    redirectToURL
+    redirectToURL,
+    redirectToURLAfterLogin
 } from '../index';
 
 export const statusMessage = document.getElementById('status-message') as HTMLElement;

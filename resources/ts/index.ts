@@ -64,6 +64,7 @@ export {
     validateFilesAgainstLimits,
     formatSize,
     redirectToCollection,
-    redirectToURL
+    redirectToURL,
+    redirectToURLAfterLogin
 } from './utils/uploadUtils';
 
