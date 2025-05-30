@@ -257,20 +257,20 @@ class UploadManagerServiceProvider extends ServiceProvider
             return; // Exit the method if directory is missing
         }
 
-        $this->logger()?->debug( // Use debug level for standard operation info
-            '[UUM Provider] Attempting to register translation namespace using standard method.',
-            ['namespace' => $namespace, 'path' => $langPath]
-        );
+        // $this->logger()?->debug( // Use debug level for standard operation info
+        //     '[UUM Provider] Attempting to register translation namespace using standard method.',
+        //     ['namespace' => $namespace, 'path' => $langPath]
+        // );
 
         try {
             // Use the standard Laravel helper to load translations.
             // This will utilize whatever Translator implementation is bound in the container (ideally UTM).
             $this->loadTranslationsFrom($langPath, $namespace);
 
-            $this->logger()?->info( // Use info level for successful registration
-                '[UUM Provider] Translation namespace registered successfully.',
-                ['namespace' => $namespace, 'path' => $langPath]
-            );
+            // $this->logger()?->info( // Use info level for successful registration
+            //     '[UUM Provider] Translation namespace registered successfully.',
+            //     ['namespace' => $namespace, 'path' => $langPath]
+            // );
         } catch (Throwable $e) {
             // If loadTranslationsFrom fails for any reason (e.g., filesystem issues)
             $errorMessage = '[UUM Provider] Failed to register translations using loadTranslationsFrom.';
