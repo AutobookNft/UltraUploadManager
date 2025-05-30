@@ -130,7 +130,7 @@ class UploadManagerServiceProvider extends ServiceProvider
     {
         $this->packageBasePath = dirname(__DIR__, 2); // Calculate base path once
 
-        $this->logger()?->info('[UUM] Registering UploadManagerServiceProvider.'); // Use injected logger
+        // $this->logger()?->info('[UUM] Registering UploadManagerServiceProvider.'); // Use injected logger
 
         // Merge configurations needed by UUM
         $this->mergeConfigFrom($this->packageBasePath . '/config/upload-manager.php', 'upload-manager');
@@ -384,7 +384,7 @@ class UploadManagerServiceProvider extends ServiceProvider
                     // $this->logger()?->debug('[UUM] Authorization check for broadcast channel.', ['channel' => 'upload', 'user_id' => $userId]);
                     return true; // Or implement logic: return $user != null; etc.
                 });
-                $this->logger()?->debug('[UUM] Broadcast channel registered.', ['channel' => 'upload']);
+                // $this->logger()?->debug('[UUM] Broadcast channel registered.', ['channel' => 'upload']);
             } catch (Throwable $e) {
                  $errorMessage = '[UUM] Failed to register broadcast channel.';
                  $context = ['channel' => 'upload', 'exception' => $e->getMessage()];
