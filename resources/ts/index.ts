@@ -35,6 +35,7 @@ export {
     getFiles,
     uploadBtn,
     uploadFilebtn,
+    uploadType,
     returnToCollectionBtn,
     cancelUploadBtn,
     circleLoader,

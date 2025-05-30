@@ -27,12 +27,15 @@ export const emojiElements = document.querySelectorAll('.emoji') as NodeListOf<H
 export const dropZone = document.getElementById('upload-drop-zone') as HTMLElement;
 export const collection = document.getElementById('collection') as HTMLElement;
 export const fileInput = document.getElementById('files') as HTMLInputElement; 
+export const uploadType = document.getElementById('upload-container') as HTMLElement;
 
 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
 if (!csrfMeta) {
     throw new Error("Meta tag with csrf-token not found");
 }
 export const csrfToken = csrfMeta.getAttribute('content') as string;
+
+console.log('[Dom Element] upload type:', document.getElementById('upload-container')?.getAttribute('data-upload-type'));
 
 /**
  * Retrieves files selected by the user, either through file input or drag-and-drop.

@@ -15,7 +15,8 @@ import {
     highlightInfectedImages,
     removeImg,
     HubFileController,
-
+    uploadType,
+    
 } from '../index';
 
 interface FileUploadResult {
@@ -122,6 +123,8 @@ export async function attemptFileUpload(formData: FormData, maxAttempts: number 
     while (attempt < maxAttempts && !success) {
         attempt++;
 
+        console.log(`Attempt ${attempt} of ${maxAttempts}...`);
+
         ({ error, response, success } = await fileForUpload(formData));
 
         if (success) {
@@ -214,6 +217,10 @@ export async function handleUpload(): Promise<void> {
                     continue;
                 }
             }
+
+            window.uploadType = uploadType?.dataset.uploadType || '';
+            console.log('Upload type:', window.uploadType);
+
 
             const hubFileController = new HubFileController();
             // Pass the upload type from window.uploadType (set by file_upload_manager.ts)

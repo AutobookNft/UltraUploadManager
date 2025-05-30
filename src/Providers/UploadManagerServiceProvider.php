@@ -141,17 +141,17 @@ class UploadManagerServiceProvider extends ServiceProvider
         $this->mergeConfigFrom($this->packageBasePath . '/config/queue.php', 'queue');
         $this->mergeConfigFrom($this->packageBasePath . '/config/filesystems.php', 'filesystems');
         $this->mergeConfigFrom($this->packageBasePath . '/config/AllowedFileType.php', 'AllowedFileType');
-        $this->logger()?->debug('[UUM] Default configuration merged.', ['key' => 'upload-manager']);
+        // $this->logger()?->debug('[UUM] Default configuration merged.', ['key' => 'upload-manager']);
 
         // Register UUM's specific BroadcastServiceProvider
         $this->app->register(BroadcastServiceProvider::class);
-        $this->logger()?->debug('[UUM] BroadcastServiceProvider registered.');
+        // $this->logger()?->debug('[UUM] BroadcastServiceProvider registered.');
 
         // Register SizeParser as a singleton service
         $this->app->singleton(SizeParser::class, function ($app) {
             return new SizeParser();
         });
-        $this->logger()?->debug('[UUM] SizeParser service bound as singleton.');
+        // $this->logger()?->debug('[UUM] SizeParser service bound as singleton.');
     }
 
     /**
@@ -172,7 +172,7 @@ class UploadManagerServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->logger()?->info('[UUM] Booting UploadManagerServiceProvider.');
+        // $this->logger()?->info('[UUM] Booting UploadManagerServiceProvider.');
 
         // Load core package resources
         $this->loadPackageRoutes();
@@ -188,7 +188,7 @@ class UploadManagerServiceProvider extends ServiceProvider
         // Register the broadcast channel
         $this->registerEchoChannel();
 
-        $this->logger()?->info('[UUM] UploadManagerServiceProvider booted successfully.');
+        // $this->logger()?->info('[UUM] UploadManagerServiceProvider booted successfully.');
     }
 
     /**
@@ -203,7 +203,7 @@ class UploadManagerServiceProvider extends ServiceProvider
         $routesPath = $this->packageBasePath . '/routes/routes.php';
         if (file_exists($routesPath)) {
             $this->loadRoutesFrom($routesPath);
-            $this->logger()?->debug('[UUM] Package routes loaded.', ['path' => $routesPath]);
+            // $this->logger()?->debug('[UUM] Package routes loaded.', ['path' => $routesPath]);
         } else {
             $this->logger()?->warning('[UUM] Package routes file not found, skipping.', ['path' => $routesPath]);
         }
@@ -221,7 +221,7 @@ class UploadManagerServiceProvider extends ServiceProvider
         $viewsPath = $this->packageBasePath . '/resources/views';
         if (is_dir($viewsPath)) {
             $this->loadViewsFrom($viewsPath, 'uploadmanager');
-            $this->logger()?->debug('[UUM] Package views loaded.', ['namespace' => 'uploadmanager', 'path' => $viewsPath]);
+            // $this->logger()?->debug('[UUM] Package views loaded.', ['namespace' => 'uploadmanager', 'path' => $viewsPath]);
         } else {
              $this->logger()?->warning('[UUM] Package views directory not found, skipping.', ['path' => $viewsPath]);
         }
@@ -330,7 +330,7 @@ class UploadManagerServiceProvider extends ServiceProvider
              //     $this->packageBasePath . '/public/build' => public_path('vendor/uploadmanager'),
              // ], 'uum-assets');
 
-            $this->logger()?->debug('[UUM] Publishable resources defined.');
+            // $this->logger()?->debug('[UUM] Publishable resources defined.');
         }
     }
 
@@ -352,13 +352,13 @@ class UploadManagerServiceProvider extends ServiceProvider
                 UltraSetupCommand::class, // Setup command for UUM specific tasks (if any)
                 CleanTempFilesCommand::class, // Command to clean temporary upload files
             ]);
-            $this->logger()?->debug('[UUM] Console commands registered.');
+            // $this->logger()?->debug('[UUM] Console commands registered.');
 
             // Schedule the temporary file cleanup job.
             $this->app->afterResolving(Schedule::class, function (Schedule $schedule) {
                 // Run daily at midnight by default. Frequency can be configured.
                 $schedule->command('ultra:clean-temp')->dailyAt('00:00');
-                $this->logger()?->info('[UUM] Temporary file cleanup job scheduled.', ['frequency' => 'daily@00:00']);
+                // $this->logger()?->info('[UUM] Temporary file cleanup job scheduled.', ['frequency' => 'daily@00:00']);
                 // Example for different frequency:
                 // $schedule->command('ultra:clean-temp', ['--hours' => 6])->everySixHours();
             });
@@ -381,7 +381,7 @@ class UploadManagerServiceProvider extends ServiceProvider
                     // Basic authorization: return true for now.
                     // Implement proper authorization based on user context if needed later.
                     $userId = $user->id ?? 'anonymous';
-                    $this->logger()?->debug('[UUM] Authorization check for broadcast channel.', ['channel' => 'upload', 'user_id' => $userId]);
+                    // $this->logger()?->debug('[UUM] Authorization check for broadcast channel.', ['channel' => 'upload', 'user_id' => $userId]);
                     return true; // Or implement logic: return $user != null; etc.
                 });
                 $this->logger()?->debug('[UUM] Broadcast channel registered.', ['channel' => 'upload']);
