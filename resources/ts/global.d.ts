@@ -22,7 +22,8 @@ interface Window {
     allowedMimeTypesMessage: string;
     allowedMimeTypesListMessage: string;
     allowedExtensionsListMessage: string;
-    uploadFiniscedText: string;
+    showHEICMessage?: () => void; // Function to show HEIC message
+    uploadFinishedText: string;
     maxSize: number;
     invalidFileNameMessage: string;
     titleExtensionNotAllowedMessage: string;
@@ -180,6 +181,7 @@ interface Window {
         file_size_limited_by: string;
         max_files_limited_by: string;
         size_margin: number;
+        
     };
 
     dropZone: HTMLElement;

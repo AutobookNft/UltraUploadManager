@@ -1,112 +1,132 @@
-import Swal from 'sweetalert2';
+/**
+ * Shows HEIC/HEIF detection message with user-friendly instructions
+ */
+function showHEICMessage(): void {
+    // Check if SweetAlert2 is available
+    if (typeof (window as any).Swal === 'undefined') {
+        console.warn('⚠️ SweetAlert2 not available, using alert fallback');
+        alert('📸 HEIC Format Detected\n\nThe selected file is in HEIC/HEIF format.\nWeb browsers don\'t support this format.\n\nSuggestion: Convert the file to JPG or PNG.');
+        return;
+    }
 
-// Interfaccia per il risultato della validazione
-export interface ValidationResult {
-    isValid: boolean;
-    message?: string;
+    const Swal = (window as any).Swal;
+    
+    // Use translation system if available, otherwise fallback to English
+    const getTranslation = (window as any).getTranslation || ((key: string) => {
+        const translations: Record<string, string> = {
+            'heic_detection_title': '📸 HEIC Format Detected',
+            'heic_detection_greeting': 'Hello! 👋 We noticed you\'re trying to upload <strong>HEIC/HEIF</strong> format files.',
+            'heic_detection_explanation': 'These are great for quality and storage space, but unfortunately web browsers don\'t fully support them yet. 😔',
+            'heic_detection_solutions_title': '💡 What you can do:',
+            'heic_detection_solution_ios': '<strong>📱 iPhone/iPad:</strong> Settings → Camera → Formats → "Most Compatible"',
+            'heic_detection_solution_share': '<strong>🔄 Quick conversion:</strong> Share the photo from Photos app (it will convert automatically)',
+            'heic_detection_solution_computer': '<strong>💻 On computer:</strong> Open with Preview (Mac) or online converters',
+            'heic_detection_thanks': 'Thanks for your patience! 💚',
+            'heic_detection_understand_button': '✨ I Understand'
+        };
+        return translations[key] || key;
+    });
+
+    const title = getTranslation('heic_detection_title');
+    const greeting = getTranslation('heic_detection_greeting');
+    const explanation = getTranslation('heic_detection_explanation');
+    const solutionsTitle = getTranslation('heic_detection_solutions_title');
+    const solutionIos = getTranslation('heic_detection_solution_ios');
+    const solutionShare = getTranslation('heic_detection_solution_share');
+    const solutionComputer = getTranslation('heic_detection_solution_computer');
+    const thanks = getTranslation('heic_detection_thanks');
+    const button = getTranslation('heic_detection_understand_button');
+
+    const htmlContent = `
+        <div style="text-align: left; line-height: 1.6;">
+            <p style="margin-bottom: 15px;">${greeting}</p>
+            <p style="margin-bottom: 20px;">${explanation}</p>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px; color: #333;">${solutionsTitle}</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li style="margin-bottom: 8px;">${solutionIos}</li>
+                    <li style="margin-bottom: 8px;">${solutionShare}</li>
+                    <li style="margin-bottom: 8px;">${solutionComputer}</li>
+                </ul>
+            </div>
+            
+            <p style="margin-bottom: 0; text-align: center; font-style: italic;">${thanks}</p>
+        </div>
+    `;
+
+    Swal.fire({
+        title: title,
+        html: htmlContent,
+        icon: 'info',
+        confirmButtonText: button,
+        width: '600px',
+        showCancelButton: false,
+        allowOutsideClick: true,
+        allowEscapeKey: true
+    });
 }
 
 /**
- * Validates that a file meets all system requirements.
- * Performs checks for file extension, MIME type, file size, and filename format.
- * Displays error messages to the user when validation fails.
- *
- * @param file - The file to validate
- * @returns ValidationResult indicating whether the file is valid and any error message
+ * Validates a file based on allowed extensions, MIME types, size limits, and filename format.
+ * Includes HEIC/HEIF detection with user-friendly messaging.
  */
 export function validateFile(file: File): ValidationResult {
-    // Defensive programming: check if global config is available
+    // Environment check
     if (typeof window === 'undefined' || !window.allowedExtensions || !window.allowedMimeTypes) {
-        console.error('Global configuration is not properly initialized');
+        console.warn('⚠️ Upload validation: Window properties not available');
+        return { isValid: false, message: 'Configuration error: upload settings not available' };
+    }
 
-        // Fallback error handling
-        Swal.fire({
-            title: 'Configuration Error',
-            text: 'Upload validation configuration is not loaded. Please contact support.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-
-        return {
-            isValid: false,
-            message: 'Configuration not available'
+    // 🎯 HEIC Detection - NEW FEATURE
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (['heic', 'heif'].includes(extension)) {
+        console.log('📸 HEIC file detected:', file.name);
+        
+        // Use the showHEICMessage function if available
+        if (window.showHEICMessage) {
+            window.showHEICMessage();
+        } else {
+            console.warn('⚠️ showHEICMessage not available');
+        }
+        
+        return { 
+            isValid: false, 
+            message: 'HEIC/HEIF files are not supported by web browsers. Please convert to JPG or PNG format.' 
         };
     }
 
-    // Log execution in local environment
-    if (window.envMode === 'local') {
-        console.log('Validating file:', file.name);
-    }
-
-    // Extract file extension
-    const extension = file.name.split('.').pop()?.toLowerCase() || '';
-
-    // Validation results array to collect all validation errors
-    const validationErrors: string[] = [];
-
-    // Check file extension against allowed list
+    // Extension validation
     if (!window.allowedExtensions.includes(extension)) {
         const allowedExtensionsList = window.allowedExtensions.join(', ');
         const errorMessage = (window.allowedExtensionsMessage || 'File extension :extension is not allowed. Allowed extensions are: :extensions')
             .replace(':extension', extension)
             .replace(':extensions', allowedExtensionsList);
-        validationErrors.push(errorMessage);
+        return { isValid: false, message: errorMessage };
     }
 
-    // Check MIME type against allowed list
+    // MIME type validation
     if (!window.allowedMimeTypes.includes(file.type)) {
         const errorMessage = (window.allowedMimeTypesMessage || 'File type :type is not allowed. Allowed types are: :mimetypes')
             .replace(':type', file.type)
             .replace(':mimetypes', window.allowedMimeTypesListMessage || 'Allowed types');
-        validationErrors.push(errorMessage);
+        return { isValid: false, message: errorMessage };
     }
 
-    // Check file size against maximum allowed size
+    // File size validation
     if (file.size > (window.maxSize || 10 * 1024 * 1024)) {
         const errorMessage = (window.maxSizeMessage || 'File size exceeds the maximum allowed size of :size MB')
             .replace(':size', ((window.maxSize || 10 * 1024 * 1024) / 1024 / 1024).toFixed(2));
-        validationErrors.push(errorMessage);
+        return { isValid: false, message: errorMessage };
     }
 
-    // Check filename format
-    if (!validateFileName(file.name)) {
+    // Filename validation
+    if (!/^[a-zA-Z0-9._\-\s]+$/.test(file.name)) {
         const errorMessage = (window.invalidFileNameMessage || 'Filename :filename contains invalid characters')
             .replace(':filename', file.name);
-        validationErrors.push(errorMessage);
+        return { isValid: false, message: errorMessage };
     }
 
-    // If there are validation errors, show comprehensive error message
-    if (validationErrors.length > 0) {
-        // Combine all validation errors into a single message
-        const combinedErrorMessage = validationErrors.join('\n\n');
-
-        // Show comprehensive error message to user using SweetAlert2
-        Swal.fire({
-            title: 'File Upload Validation Failed',
-            html: `<div style="text-align: left;">${combinedErrorMessage.replace(/\n/g, '<br>')}</div>`,
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-
-        return {
-            isValid: false,
-            message: combinedErrorMessage
-        };
-    }
-
-    // All validation checks passed
+    // All validations passed
     return { isValid: true };
-}
-
-/**
- * Validates a filename against a regular expression pattern.
- * Allows alphanumeric characters, underscores, hyphens, periods and spaces.
- *
- * @param fileName - The filename to validate
- * @returns true if the filename is valid, false otherwise
- */
-export function validateFileName(fileName: string): boolean {
-    // Allow alphanumeric characters, underscores, hyphens, periods and spaces
-    const regex = /^[\w\-. ]+$/;
-    return regex.test(fileName);
 }
