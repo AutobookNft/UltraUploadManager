@@ -101,7 +101,7 @@ function initializeUI() {
     progressText.innerText = '';
 
     if (window.envMode === 'local') {
-        console.log(window.uploadFiniscedText);
+        console.log('Upload finished successfully!');
         console.log('allowedExtensionsMessage:', window.allowedExtensionsMessage);
     }
 
@@ -163,7 +163,7 @@ export async function cancelUpload() {
         document.addEventListener('configLoaded', () => cancelUpload(), { once: true });
         return;
     }
-    if (confirm(window.cancelConfirmation || 'Do you want to cancel?')) {
+    if (confirm('Are you sure you want to cancel the upload?')) {
         const fileList = getFiles();
         if (fileList) {
             for (const file of Array.from(fileList)) {
@@ -177,7 +177,7 @@ export async function cancelUpload() {
             collection.innerHTML = '';
             progressBar.style.width = '0%';
             progressText.innerText = '';
-            updateStatusMessage(window.uploadStatusWaiting || 'Upload Status: Waiting...', 'info');
+            updateStatusMessage('Upload Status: Waiting...', 'info');
             statusDiv.innerHTML = '';
         } else {
             console.error('No files to delete');
@@ -208,15 +208,15 @@ function validateFiles(files: FileList | null): boolean {
     const limitsValidation = validateFilesAgainstLimits(files);
     if (!limitsValidation.valid) {
         Swal.fire({
-            title: window.invalidFilesTitle || 'Invalid Files Detected',
+            title: 'Upload Limits Exceeded',
             html: limitsValidation.message,
             icon: 'warning',
-            confirmButtonText: window.okButton || 'OK',
+            confirmButtonText: 'OK',
         });
         return false;
     }
 
-    // Second validation: extensions, MIME types, etc.
+    // Second validation: extensions, MIME types, etc. - Let validateFile handle its own messages
     let allFilesValid = true;
     const invalidFiles: string[] = [];
 
@@ -224,20 +224,10 @@ function validateFiles(files: FileList | null): boolean {
         const result = validateFile(files[i]);
         if (!result.isValid) {
             console.error(`File ${files[i].name} failed validation: ${result.message}`);
-            invalidFiles.push(files[i].name);
+            // Don't collect invalid files - validateFile already showed its message
             allFilesValid = false;
+            break; // Stop at first invalid file since validateFile already showed message
         }
-    }
-
-    if (!allFilesValid) {
-        Swal.fire({
-            title: window.invalidFilesTitle || 'Invalid Files Detected',
-            html: `${window.invalidFilesMessage || 'The following files could not be uploaded'}:<br><br>
-                <strong>${invalidFiles.join('<br>')}</strong><br><br>
-                ${window.checkFilesGuide || 'Please check file types, sizes, and names.'}`,
-            icon: 'warning',
-            confirmButtonText: window.okButton || 'OK',
-        });
     }
 
     return allFilesValid;

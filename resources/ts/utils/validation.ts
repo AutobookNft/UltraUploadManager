@@ -11,55 +11,44 @@ function showHEICMessage(): void {
 
     const Swal = (window as any).Swal;
     
-    // Use translation system if available, otherwise fallback to English
-    const getTranslation = (window as any).getTranslation || ((key: string) => {
-        const translations: Record<string, string> = {
-            'heic_detection_title': '📸 HEIC Format Detected',
-            'heic_detection_greeting': 'Hello! 👋 We noticed you\'re trying to upload <strong>HEIC/HEIF</strong> format files.',
-            'heic_detection_explanation': 'These are great for quality and storage space, but unfortunately web browsers don\'t fully support them yet. 😔',
-            'heic_detection_solutions_title': '💡 What you can do:',
-            'heic_detection_solution_ios': '<strong>📱 iPhone/iPad:</strong> Settings → Camera → Formats → "Most Compatible"',
-            'heic_detection_solution_share': '<strong>🔄 Quick conversion:</strong> Share the photo from Photos app (it will convert automatically)',
-            'heic_detection_solution_computer': '<strong>💻 On computer:</strong> Open with Preview (Mac) or online converters',
-            'heic_detection_thanks': 'Thanks for your patience! 💚',
-            'heic_detection_understand_button': '✨ I Understand'
-        };
-        return translations[key] || key;
-    });
+    // Use injected HEIC translations from EGI app if available, otherwise fallback to English
+    const translations = (window as any).heicTranslations || {
+        title: '📸 HEIC Format Detected',
+        greeting: 'Hello! 👋 We noticed you\'re trying to upload <strong>HEIC/HEIF</strong> format files.',
+        explanation: 'These are great for quality and storage space, but unfortunately web browsers don\'t fully support them yet. 😔',
+        solutions_title: '💡 What you can do:',
+        solution_ios: '<strong>📱 iPhone/iPad:</strong> Settings → Camera → Formats → "Most Compatible"',
+        solution_share: '<strong>🔄 Quick conversion:</strong> Share the photo from Photos app (it will convert automatically)',
+        solution_computer: '<strong>💻 On computer:</strong> Open with Preview (Mac) or online converters',
+        thanks: 'Thanks for your patience! 💚',
+        button: '✨ I Understand'
+    };
 
-    const title = getTranslation('heic_detection_title');
-    const greeting = getTranslation('heic_detection_greeting');
-    const explanation = getTranslation('heic_detection_explanation');
-    const solutionsTitle = getTranslation('heic_detection_solutions_title');
-    const solutionIos = getTranslation('heic_detection_solution_ios');
-    const solutionShare = getTranslation('heic_detection_solution_share');
-    const solutionComputer = getTranslation('heic_detection_solution_computer');
-    const thanks = getTranslation('heic_detection_thanks');
-    const button = getTranslation('heic_detection_understand_button');
+    console.log('🎯 UUM: Using HEIC translations:', translations);
 
     const htmlContent = `
         <div style="text-align: left; line-height: 1.6;">
-            <p style="margin-bottom: 15px;">${greeting}</p>
-            <p style="margin-bottom: 20px;">${explanation}</p>
+            <p style="margin-bottom: 15px;">${translations.greeting}</p>
+            <p style="margin-bottom: 20px;">${translations.explanation}</p>
             
             <div style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 10px; color: #333;">${solutionsTitle}</h4>
+                <h4 style="margin-bottom: 10px; color: #333;">${translations.solutions_title}</h4>
                 <ul style="margin: 0; padding-left: 20px;">
-                    <li style="margin-bottom: 8px;">${solutionIos}</li>
-                    <li style="margin-bottom: 8px;">${solutionShare}</li>
-                    <li style="margin-bottom: 8px;">${solutionComputer}</li>
+                    <li style="margin-bottom: 8px;">${translations.solution_ios}</li>
+                    <li style="margin-bottom: 8px;">${translations.solution_share}</li>
+                    <li style="margin-bottom: 8px;">${translations.solution_computer}</li>
                 </ul>
             </div>
             
-            <p style="margin-bottom: 0; text-align: center; font-style: italic;">${thanks}</p>
+            <p style="margin-bottom: 0; text-align: center; font-style: italic;">${translations.thanks}</p>
         </div>
     `;
 
     Swal.fire({
-        title: title,
+        title: translations.title,
         html: htmlContent,
         icon: 'info',
-        confirmButtonText: button,
+        confirmButtonText: translations.button,
         width: '600px',
         showCancelButton: false,
         allowOutsideClick: true,
@@ -84,8 +73,8 @@ export function validateFile(file: File): ValidationResult {
         console.log('📸 HEIC file detected:', file.name);
         
         // Use the showHEICMessage function if available
-        if (window.showHEICMessage) {
-            window.showHEICMessage();
+        if (showHEICMessage) {
+            showHEICMessage();
         } else {
             console.warn('⚠️ showHEICMessage not available');
         }
