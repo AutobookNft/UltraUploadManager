@@ -3,7 +3,7 @@
 namespace Ultra\UploadManager\Controllers\Config;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Ultra\ErrorManager\Facades\UltraError;
 use Ultra\UltraLogManager\Facades\UltraLog;
@@ -255,4 +255,3 @@ class ConfigController extends Controller
         }
     }
 }
-

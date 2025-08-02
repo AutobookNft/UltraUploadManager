@@ -357,6 +357,12 @@ export async function removeFile(fileName: string): Promise<void> {
      * @param limits - The upload limits object containing max_files, max_file_size_formatted, and max_total_size_formatted
      */
     export function updateUploadLimitsDisplay(limits: any): void {
+        // Remove any existing upload limits info to prevent duplicates
+        const existingLimitsInfo = dropZone.querySelector('.upload-limits-info');
+        if (existingLimitsInfo) {
+            existingLimitsInfo.remove();
+        }
+
         const limitsInfo = document.createElement('div');
         limitsInfo.className = 'upload-limits-info';
         const maxFilesText = window.translations?.upload?.max_files || 'Max :count file';

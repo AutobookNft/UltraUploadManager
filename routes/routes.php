@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Ultra\UploadManager\Controllers\Config\ConfigController;
 use Ultra\UploadManager\Controllers\ErrorCodeController;
 use Ultra\UploadManager\Controllers\ErrorEmailController;
 use Ultra\UploadManager\Controllers\ErrorReportingController;
@@ -83,9 +82,9 @@ Route::middleware(['throttle:50,1'])
 
         Route::post('/uploading/default', [BaseUploadHandler::class, 'handler'])->name('uploading.hendler');
 
-        Route::get('/api/system/upload-limits', [ConfigController::class, 'getUploadLimits'])->name('global.config.limits');
+        Route::get('/api/system/upload-limits', [Ultra\UploadManager\Controllers\Config\ConfigController::class, 'getUploadLimits'])->name('global.config.limits');
 
-        Route::get('/config/global-config', [ConfigController::class, 'getGlobalConfig'])->name('global.config');
+        Route::get('/config/global-config', [Ultra\UploadManager\Controllers\Config\ConfigController::class, 'getGlobalConfig'])->name('global.config');
 
         Route::post('/upload-system-temp', [SystemTempFileController::class, 'saveToSystemTemp'])
             ->name('upload.system.temp');
@@ -101,4 +100,3 @@ Route::middleware(['throttle:50,1'])
 
 
     Route::get('/trans-test', [TestTransaltionController::class, 'testTranslations']);
-

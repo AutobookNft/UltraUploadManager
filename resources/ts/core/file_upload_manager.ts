@@ -25,6 +25,9 @@ import Swal from 'sweetalert2';
 // Dynamic state for files, shared across the module
 export let files: File[] = [];
 
+// Flag to prevent duplicate initialization
+let isInitialized = false;
+
 /**
  * Initializes the file upload manager application.
  * Sets up event listeners for file selection and real-time upload functionality.
@@ -40,15 +43,20 @@ export function initializeApp() {
 
     // Wait for global configuration to load
     document.addEventListener('configLoaded', () => {
-        files = Array.from(getFiles() || []);
-        setupDomEventListeners();
-        initializeUI();
+        if (!isInitialized) {
+            files = Array.from(getFiles() || []);
+            setupDomEventListeners();
+            initializeUI();
+            isInitialized = true;
+        }
     }, { once: true });
 
     // Proceed immediately if config is already loaded
-    if (window.allowedExtensions) {
+    if (window.allowedExtensions && !isInitialized) {
+        files = Array.from(getFiles() || []);
         setupDomEventListeners();
         initializeUI();
+        isInitialized = true;
     }
 
     // Set up real-time upload listener

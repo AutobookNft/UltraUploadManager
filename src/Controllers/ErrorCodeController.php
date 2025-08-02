@@ -6,7 +6,7 @@ namespace Ultra\UploadManager\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * Summary of ErrorCodeController
@@ -50,6 +50,3 @@ class ErrorCodeController extends Controller
         }
     }
 }
-
-
-
