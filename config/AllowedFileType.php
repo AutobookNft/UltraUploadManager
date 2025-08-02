@@ -15,7 +15,9 @@ return [
      */
     'collection' => [
         // Maximum size for all files (100MB)
-        'max_size' => 104857600,
+        'max_size' => 104857600, // 100 MB
+        // Maximum 100 file da 100 mb l'uno
+        'max_total_size' => 100 * 104857600, // 100 files of 100 MB each
 
         // List of allowed extensions (used for quick validation)
         'allowed_extensions' => [
@@ -195,7 +197,7 @@ return [
         'size_limits' => [
             'image' => 104857600,  // 100MB for images
             'document' => 104857600, // 100MB for documents
-            'audio' => 52428800,  // 50MB for audio
+            'audio' => 104857600,  // 100MB for audio
             'video' => 524288000  // 500MB for video
         ]
     ],
