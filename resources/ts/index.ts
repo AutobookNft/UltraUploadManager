@@ -7,7 +7,7 @@ export { HubFileController } from './core/hubFileController';
 export { handleUpload } from './core/uploading';
 export { saveLocalTempFile } from './utils/saveLocalTempFile';
 export { deleteTemporaryFileExt, deleteTemporaryFileLocal } from './utils/deleteTemporaryFiles';
-export { validateFile, validateFileName } from './utils/validation';
+export { validateFile } from './utils/validation';
 export { prepareFilesForUploadUI } from './utils/prepareFilesForUploadUI';
 export { setupRealTimeUploadListener } from './utils/listener';
 // Aggiungi queste righe in index.ts
