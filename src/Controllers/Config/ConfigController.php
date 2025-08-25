@@ -74,8 +74,10 @@ class ConfigController extends Controller
                 'temporaryFolder' => config('app.bucket_temp_file_folder'),
                 'allowedExtensions' => config('AllowedFileType.collection.allowed_extensions'),
                 'allowedMimeTypes' => config('AllowedFileType.collection.allowed_mime_types'),
-                'maxSize' => config('AllowedFileType.collection.max_size'),
-                'validTypes' => config('upload-manager.collection.valid_types'),
+                'postMaxSize' => config('AllowedFileType.collection.post_max_size'),
+                'uploadMaxFileSize' => config('AllowedFileType.collection.upload_max_filesize'),
+                'maxFileUploads' => config('AllowedFileType.collection.max_file_uploads'),
+                
 
                 'uploadTypePaths' => config('upload-manager.upload_types.paths', [
                     '/uploading/egi' => 'egi',
