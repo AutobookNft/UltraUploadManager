@@ -1,6 +1,7 @@
 // file_upload_manager.ts
 import {
     getFiles,
+    fileInput,
     collection,
     scanProgressText,
     progressBar,
@@ -133,8 +134,49 @@ export function handleFileSelect(event: Event) {
     const fileList = getFiles();
     const validi = fileList ? validateFiles(fileList) : null;
     if (validi && validi.length > 0) {
+        // I file scartati devono sparire DALL'INPUT, non solo dalla nostra lista.
+        //
+        // Il caricamento vero (handleUpload) non legge questa lista: legge getFiles(), che
+        // restituisce fileInput.files, cioè la lista grezza del documento. Senza questa riga
+        // l'utente leggeva «questi sono esclusi, gli altri restano pronti», premeva Carica, e
+        // partivano tutti — scartati compresi, respinti poi dal server uno per uno.
+        // Rilevato dall'audit di chiusura M-EGI-430: il collaudo guardava la giuntura sbagliata.
+        sincronizzaInput(validi);
         files = validi;
         prepareFilesForUploadUI(comeListaDiFile(validi));
+    }
+}
+
+/**
+ * Riscrive l'elenco dell'input con i soli file che possono proseguire.
+ *
+ * Nel browser si usa `DataTransfer`, l'unico modo previsto per costruire una FileList vera.
+ * Dove non esiste — jsdom, e i browser che non lo implementano — si ripiega sulla definizione
+ * diretta della proprietà: la forma è la stessa che il resto del codice legge.
+ */
+function sincronizzaInput(validi: File[]): void {
+    if (!fileInput) return;
+
+    try {
+        if (typeof DataTransfer !== 'undefined') {
+            const dt = new DataTransfer();
+            validi.forEach((f) => dt.items.add(f));
+            fileInput.files = dt.files;
+            return;
+        }
+    } catch {
+        // Alcuni browser rifiutano l'assegnazione: si ripiega qui sotto.
+    }
+
+    try {
+        Object.defineProperty(fileInput, 'files', {
+            value: comeListaDiFile(validi),
+            configurable: true,
+        });
+    } catch {
+        // Se nemmeno questo riesce, la lista nostra resta corretta: la barriera vera è il
+        // server, che rifiuta i file non validi uno per uno.
+        console.warn('Impossibile sincronizzare l\'elenco dei file scelti con i soli validi.');
     }
 }
 

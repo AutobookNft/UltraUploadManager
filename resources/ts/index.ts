@@ -33,6 +33,9 @@ export {
     virusAdvise,
     scanvirusLabel,
     getFiles,
+    // M-EGI-430: serve per riscrivere l'elenco dell'input coi soli file validi — il
+    // caricamento legge di lì, non dalla lista interna del modulo.
+    fileInput,
     uploadBtn,
     uploadFilebtn,
     uploadType,
