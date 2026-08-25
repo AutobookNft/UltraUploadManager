@@ -131,9 +131,10 @@ export function handleFileSelect(event: Event) {
     }
     console.log('Handling file select...');
     const fileList = getFiles();
-    if (fileList && validateFiles(fileList)) {
-        files = Array.from(fileList);
-        prepareFilesForUploadUI(fileList);
+    const validi = fileList ? validateFiles(fileList) : null;
+    if (validi && validi.length > 0) {
+        files = validi;
+        prepareFilesForUploadUI(comeListaDiFile(validi));
     }
 }
 
@@ -152,10 +153,11 @@ export function handleDrop(event: DragEvent) {
     }
     event.preventDefault();
     const fileList = event.dataTransfer?.files;
-    if (fileList && validateFiles(fileList)) {
-        window.droppedFiles = fileList;
-        files = Array.from(fileList);
-        prepareFilesForUploadUI(fileList);
+    const validi = fileList ? validateFiles(fileList) : null;
+    if (validi && validi.length > 0) {
+        window.droppedFiles = comeListaDiFile(validi);
+        files = validi;
+        prepareFilesForUploadUI(comeListaDiFile(validi));
     }
     dropZone.classList.remove('border-blue-400', 'bg-purple-800/40');
 }
@@ -193,26 +195,50 @@ export async function cancelUpload() {
     }
 }
 
+/** Un elenco di File nella forma che il resto del codice si aspetta (length, indici, item). */
+function comeListaDiFile(elenco: File[]): FileList {
+    const lista: Record<string | number | symbol, unknown> = { ...elenco };
+    lista.length = elenco.length;
+    lista.item = (i: number) => elenco[i] ?? null;
+    lista[Symbol.iterator] = function* () { yield* elenco; };
+    return lista as unknown as FileList;
+}
+
 /**
- * Validates a list of files against allowed extensions, size limits, and other criteria.
- * Displays error messages via SweetAlert if validation fails.
+ * Sceglie quali file possono proseguire, e DICE quali no.
  *
- * @param files - The list of files to validate.
- * @returns Boolean indicating if all files are valid.
+ * M-EGI-430 — prima questa funzione rispondeva sì/no e taceva. Al primo file non valido
+ * faceva `break` e restituiva false: chi chiamava lo leggeva come «nessun file», quindi un
+ * solo nome sgradito faceva sparire l'INTERA selezione. E il motivo — che `validateFile`
+ * restituisce — finiva soltanto nella console: accanto c'era scritto «validateFile ha già
+ * mostrato il suo messaggio», cosa non vera (il popup esce solo per i file HEIC). Chi
+ * caricava vedeva i propri file svanire senza una parola.
+ *
+ * Ora: si guardano TUTTI i file, i validi proseguono, e i rifiutati vengono detti — uno per
+ * uno, con il proprio motivo.
+ *
+ * I limiti della selezione (quanti file, quanto pesano in tutto) restano tutto-o-niente:
+ * riguardano l'insieme, non il singolo file, e scartarne alcuni non li rispetterebbe comunque.
+ *
+ * @param files - I file scelti da chi carica.
+ * @returns I file che possono proseguire; `null` quando non è stato possibile valutarli.
  */
-function validateFiles(files: FileList | null): boolean {
+function validateFiles(files: FileList | null): File[] | null {
     if (typeof window.envMode === 'undefined' || !window.allowedExtensions || !window.allowedMimeTypes) {
+        // DEBITO NOTO (M-EGI-430): anche questo è un silenzio — la configurazione non è
+        // ancora arrivata e la selezione va perduta senza che nessuno lo dica. Diverso dal
+        // rifiuto, che ora parla: qui i file non sono stati valutati affatto.
         console.warn('Config not yet loaded, delaying validation...');
         document.addEventListener('configLoaded', () => validateFiles(files), { once: true });
-        return false;
+        return null;
     }
 
-    if (!files) {
+    if (!files || files.length === 0) {
         console.warn('No files selected for validation');
-        return false;
+        return null;
     }
 
-    // First validation: upload limits (number of files, size, etc.)
+    // Primo controllo: i limiti dell'INSIEME (quanti file, quanto pesano). Tutto-o-niente.
     const limitsValidation = validateFilesAgainstLimits(files);
     if (!limitsValidation.valid) {
         Swal.fire({
@@ -221,22 +247,73 @@ function validateFiles(files: FileList | null): boolean {
             icon: 'warning',
             confirmButtonText: 'OK',
         });
-        return false;
+        return null;
     }
 
-    // Second validation: extensions, MIME types, etc. - Let validateFile handle its own messages
-    let allFilesValid = true;
-    const invalidFiles: string[] = [];
+    // Secondo controllo: file per file. Nessun `break`: si guardano tutti.
+    const validi: File[] = [];
+    const rifiutati: Array<{ nome: string; motivo: string }> = [];
 
     for (let i = 0; i < files.length; i++) {
         const result = validateFile(files[i]);
-        if (!result.isValid) {
+        if (result.isValid) {
+            validi.push(files[i]);
+        } else {
             console.error(`File ${files[i].name} failed validation: ${result.message}`);
-            // Don't collect invalid files - validateFile already showed its message
-            allFilesValid = false;
-            break; // Stop at first invalid file since validateFile already showed message
+            rifiutati.push({ nome: files[i].name, motivo: result.message ?? '' });
         }
     }
 
-    return allFilesValid;
+    if (rifiutati.length > 0) {
+        mostraFileRifiutati(rifiutati, validi.length);
+    }
+
+    return validi;
+}
+
+/**
+ * Dice a chi carica quali file sono stati esclusi e perché, uno per uno.
+ *
+ * Le parole vengono dalle chiavi già esistenti dell'organo, iniettate in pagina come le altre
+ * etichette del form: qui non si scrive nessun testo nuovo. Il nome del file passa da
+ * `textContent`, mai concatenato nel markup: un nome è dato di chi carica, e finirebbe
+ * altrimenti dentro l'HTML del messaggio (CWE-79).
+ */
+function mostraFileRifiutati(
+    rifiutati: Array<{ nome: string; motivo: string }>,
+    quantiRestano: number,
+): void {
+    const elenco = document.createElement('ul');
+    elenco.style.textAlign = 'left';
+    elenco.style.margin = '0';
+    elenco.style.paddingInlineStart = '1.2em';
+
+    rifiutati.forEach(({ nome, motivo }) => {
+        const riga = document.createElement('li');
+        const titolo = document.createElement('strong');
+        titolo.textContent = nome;
+        riga.appendChild(titolo);
+        if (motivo) {
+            riga.appendChild(document.createTextNode(` — ${motivo}`));
+        }
+        elenco.appendChild(riga);
+    });
+
+    const corpo = document.createElement('div');
+    corpo.appendChild(elenco);
+
+    // Quanti file proseguono: se ne restano, chi carica deve sapere che non ha perso tutto.
+    if (quantiRestano > 0 && window.filesRemainingMessage) {
+        const coda = document.createElement('p');
+        coda.style.marginTop = '0.75em';
+        coda.textContent = window.filesRemainingMessage.replace(':count', String(quantiRestano));
+        corpo.appendChild(coda);
+    }
+
+    Swal.fire({
+        title: window.errorsInTheFilesTitle || 'Errors in the files',
+        html: corpo,
+        icon: 'warning',
+        confirmButtonText: 'OK',
+    });
 }

@@ -63,8 +63,17 @@ class SaveTemporaryFiles extends Controller
         }
 
         try {
-            // Get the file name
-            $fileName = $file->getClientOriginalName();
+            // Il nome arriva dal client: si bonifica PRIMA di qualunque uso (M-EGI-430).
+            //
+            // Questo nome finisce concatenato nel percorso di scrittura, poco più sotto. Finché
+            // la regola di ammissione era strettissima — solo lettere latine, numeri, punto,
+            // trattino e spazio — la sicurezza era coperta per accidente. Ora che ammette i nomi
+            // veri (parentesi, virgole, apostrofi, accenti) l'accidente non basta più, e non
+            // bastava comunque: una richiesta costruita a mano non passa dal browser, e la
+            // regola di ammissione è configurabile, quindi può essere allargata ancora domani.
+            //
+            // La difesa sta qui, dove si scrive, non in ciò che si accetta.
+            $fileName = $this->bonificaNomeFile($file->getClientOriginalName());
             UltraLog::info('TemporaryFileDetails', 'File to save in temp folder', [
                 'filename' => $fileName,
                 'size' => $file->getSize(),
@@ -91,8 +100,19 @@ class SaveTemporaryFiles extends Controller
                     'exception' => get_class($e),
                     'message' => $e->getMessage()
                 ], $this->channel);
-                return UltraError::handle('INVALID_FILE_VALIDATION', [
+
+                // M-EGI-430 — se a non andare è il NOME, si emette il codice suo.
+                // INVALID_FILE_NAME è registrato nel gestore errori con il messaggio per
+                // l'utente nelle sei lingue, e fino a oggi non lo emetteva nessuno: ogni
+                // rifiuto usciva come INVALID_FILE_VALIDATION con dentro il testo inglese
+                // dell'eccezione, che chi carica non capisce.
+                $codice = $e->getCode() === self::CODICE_NOME_FILE_NON_VALIDO
+                    ? 'INVALID_FILE_NAME'
+                    : 'INVALID_FILE_VALIDATION';
+
+                return UltraError::handle($codice, [
                     'fileName' => $fileName,
+                    'filename' => $fileName,
                     'error' => $e->getMessage()
                 ], $e);
             }
@@ -147,6 +167,43 @@ class SaveTemporaryFiles extends Controller
                 'exceptionMessage' => $e->getMessage()
             ], $e);
         }
+    }
+
+    /**
+     * Rende innocuo il nome che arriva dal client, prima che tocchi il disco (M-EGI-430).
+     *
+     * Tiene il nome leggibile — chi carica deve ritrovare il proprio file — e toglie soltanto
+     * ciò con cui si esce dalla cartella prevista o si rompe un filesystem:
+     *
+     *   - il percorso: si prende solo l'ultimo segmento, così «../../etc/passwd» diventa
+     *     «passwd» e «/tmp/x.png» diventa «x.png». Si tagliano sia `/` sia `\`, perché il
+     *     separatore di Windows su Linux passerebbe indenne dentro il nome;
+     *   - i caratteri di controllo, byte-zero compreso: un nome troncato da uno zero può
+     *     puntare a un file diverso da quello che si legge;
+     *   - i caratteri vietati dai filesystem: : * ? " < > |
+     *   - i punti in testa: un nome che comincia per punto è un file nascosto, e «..» da solo
+     *     non è un nome.
+     *
+     * Se dopo la bonifica non resta niente di utilizzabile, il nome viene sostituito: meglio un
+     * nome generico di un nome vuoto concatenato in un percorso.
+     *
+     * @param string $nomeDalClient Il nome così come lo manda il browser, non fidato.
+     * @return string Un nome utilizzabile per comporre un percorso.
+     */
+    protected function bonificaNomeFile(string $nomeDalClient): string
+    {
+        // Solo l'ultimo segmento, tagliando entrambi i separatori.
+        $nome = (string) preg_replace('#^.*[\\\\/]#', '', $nomeDalClient);
+
+        // Via i caratteri di controllo (byte-zero compreso) e quelli vietati dai filesystem.
+        $nome = (string) preg_replace('/[\x00-\x1F\x7F:*?"<>|]/u', '', $nome);
+
+        // Via i punti in testa: niente file nascosti, niente «..».
+        $nome = ltrim($nome, '.');
+
+        $nome = trim($nome);
+
+        return $nome === '' ? 'file' : $nome;
     }
 
     /**

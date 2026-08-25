@@ -109,8 +109,24 @@ export function validateFile(file: File): ValidationResult {
         return { isValid: false, message: errorMessage };
     }
 
-    // Filename validation
-    if (!/^[a-zA-Z0-9._\-\s]+$/.test(file.name)) {
+    // Nome del file (M-EGI-430).
+    //
+    // Ammette i nomi VERI: quelli che escono da WhatsApp — «foto (1).jpeg» — dalle macchine
+    // fotografiche e dai telefoni, con parentesi, virgole, apostrofi, e-commerciali e lettere
+    // accentate di qualunque alfabeto. Prima passavano solo lettere latine senza accento,
+    // numeri, punto, trattino basso, trattino e spazio: misurato su una cartella reale, 5
+    // immagini su 29 venivano respinte per le sole parentesi, e chi caricava doveva
+    // rinominare a mano.
+    //
+    // Resta fuori ciò che è pericoloso o insensato in un nome, non ciò che è scomodo:
+    // separatori di percorso (/ \), caratteri di controllo, e i caratteri vietati dai
+    // filesystem (: * ? " < > |). La risalita di cartella («..») non si ferma qui ma alla
+    // scrittura, dove il nome viene bonificato: questo controllo è nel browser e chi manda
+    // una richiesta costruita a mano non ci passa nemmeno.
+    //
+    // La stessa regola vive sul server (HasValidation::validateFileName): se le due divergono,
+    // si crea il caso peggiore — un file che il browser accetta e il server rifiuta.
+    if (!/^[\p{L}\p{N}\s._\-(),'&+#@!]+$/u.test(file.name)) {
         const errorMessage = (window.invalidFileNameMessage || 'Filename :filename contains invalid characters')
             .replace(':filename', file.name);
         return { isValid: false, message: errorMessage };

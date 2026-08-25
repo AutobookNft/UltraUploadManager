@@ -61,6 +61,17 @@ trait HasValidation
      * @see self::validateFileName()
      * @see self::validatePdfContent()
      */
+    /**
+     * Marchio dell'eccezione lanciata quando a non andare è il NOME del file.
+     *
+     * M-EGI-430 — prima ogni motivo di rifiuto (estensione, tipo, dimensione, nome) usciva da
+     * qui come Exception indistinguibile, e chi la raccoglieva poteva solo emettere il codice
+     * generico INVALID_FILE_VALIDATION con dentro il testo inglese grezzo. Il codice
+     * INVALID_FILE_NAME, registrato nel gestore errori con il messaggio per l'utente in sei
+     * lingue, non lo emetteva nessuno. Questo marchio lo rende raggiungibile.
+     */
+    public const CODICE_NOME_FILE_NON_VALIDO = 4301;
+
     protected function validateFile(UploadedFile $file, int|string $index = 0): void
     {
         $logChannel = property_exists($this, 'logChannel') ? $this->logChannel : 'stack'; // Usa il canale definito nella classe o 'stack'
@@ -329,13 +340,19 @@ trait HasValidation
         $nameLength = mb_strlen($fileName, 'UTF-8');
         if ($nameLength < $minLength || $nameLength > $maxLength) {
              Log::channel($logChannel)->error('[HasValidation] Filename length validation failed.', ['fileName' => $fileName, 'length' => $nameLength, 'minLength' => $minLength, 'maxLength' => $maxLength]);
-             throw new Exception("Invalid filename: Length must be between {$minLength} and {$maxLength} characters.");
+             throw new Exception(
+                 "Invalid filename: Length must be between {$minLength} and {$maxLength} characters.",
+                 self::CODICE_NOME_FILE_NON_VALIDO
+             );
         }
 
         // 2. Check Pattern
         if (!preg_match($allowedPattern, $fileName)) {
             Log::channel($logChannel)->error('[HasValidation] Filename pattern validation failed.', ['fileName' => $fileName, 'pattern' => $allowedPattern]);
-            throw new Exception("Invalid filename: Contains disallowed characters or does not match required pattern '{$allowedPattern}'.");
+            throw new Exception(
+                "Invalid filename: Contains disallowed characters or does not match required pattern '{$allowedPattern}'.",
+                self::CODICE_NOME_FILE_NON_VALIDO
+            );
         }
 
         Log::channel($logChannel)->info('[HasValidation] Filename validation passed.', ['fileName' => $fileName]);

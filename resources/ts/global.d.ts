@@ -26,6 +26,10 @@ interface Window {
     uploadFinishedText: string;
     maxSize: number;
     invalidFileNameMessage: string;
+    /** Titolo del riepilogo dei file esclusi (M-EGI-430). */
+    errorsInTheFilesTitle?: string;
+    /** «Gli altri :count file restano pronti» — coda del riepilogo (M-EGI-430). */
+    filesRemainingMessage?: string;
     titleExtensionNotAllowedMessage: string;
     titleFileTypeNotAllowedMessage: string;
     titleFileSizeExceedsMessage: string;
