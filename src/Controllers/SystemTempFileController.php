@@ -83,7 +83,8 @@ class SystemTempFileController extends Controller
                 return UltraError::handle('INVALID_FILE', ['fileName' => 'unknown'], $exception);
             }
 
-            $fileName = $file->getClientOriginalName();
+            // M-EGI-430: bonificato PRIMA di comporre il percorso — questo nome viene da fuori.
+            $fileName = uum_nome_file_innocuo($file->getClientOriginalName());
 
             UltraLog::info(
                 'SystemTempSaveAttempt',
@@ -271,7 +272,8 @@ class SystemTempFileController extends Controller
                     return UltraError::handle('INVALID_FILE', ['fileName' => 'unknown'], $exception);
                 }
 
-                $fileName = $file->getClientOriginalName();
+                // M-EGI-430: anche il ramo d'ultima istanza scrive su disco: stessa bonifica.
+                $fileName = uum_nome_file_innocuo($file->getClientOriginalName());
                 $contents = file_get_contents($file->getRealPath());
 
                 $lastResortPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid() . '_' . $fileName;

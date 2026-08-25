@@ -192,18 +192,11 @@ class SaveTemporaryFiles extends Controller
      */
     protected function bonificaNomeFile(string $nomeDalClient): string
     {
-        // Solo l'ultimo segmento, tagliando entrambi i separatori.
-        $nome = (string) preg_replace('#^.*[\\\\/]#', '', $nomeDalClient);
-
-        // Via i caratteri di controllo (byte-zero compreso) e quelli vietati dai filesystem.
-        $nome = (string) preg_replace('/[\x00-\x1F\x7F:*?"<>|]/u', '', $nome);
-
-        // Via i punti in testa: niente file nascosti, niente «..».
-        $nome = ltrim($nome, '.');
-
-        $nome = trim($nome);
-
-        return $nome === '' ? 'file' : $nome;
+        // M-EGI-430 — la bonifica vive in UN SOLO POSTO, l'helper del pacchetto: la chiamano
+        // anche il salvataggio nella cartella di sistema (entrambi i rami) e get_temp_file_path.
+        // Averla qui dentro e basta significava lasciare scoperti tre percorsi vivi, che è
+        // esattamente quello che l'audit di chiusura ha trovato.
+        return uum_nome_file_innocuo($nomeDalClient);
     }
 
     /**
