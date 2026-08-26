@@ -37,8 +37,21 @@ if (!function_exists('uum_nome_file_innocuo')) {
      */
     function uum_nome_file_innocuo(string $nomeDalClient): string
     {
-        $nome = (string) preg_replace('#^.*[\\\\/]#', '', $nomeDalClient);
-        $nome = (string) preg_replace('/[\x00-\x1F\x7F:*?"<>|]/u', '', $nome);
+        // L'ORDINE CONTA, e non è ovvio (rilievo dell'audit, M-EGI-430).
+        //
+        // I caratteri di controllo si tolgono PRIMA del taglio del percorso. Il taglio usa un
+        // «qualunque cosa fino all'ultima barra», ma in un'espressione regolare il punto NON
+        // attraversa un a-capo: con «a\n../../etc/passwd» il taglio non agganciava niente e le
+        // barre sopravvivevano — il nome usciva ancora con «../..» dentro. Pulendo prima, il
+        // taglio vede una riga sola e fa il suo lavoro.
+        $nome = (string) preg_replace('/[\x00-\x1F\x7F:*?"<>|]/u', '', $nomeDalClient);
+
+        // Solo l'ultimo segmento, tagliando entrambi i separatori.
+        $nome = (string) preg_replace('#^.*[\\\\/]#', '', $nome);
+
+        // Cintura oltre alle bretelle: qualunque cosa sia sopravvissuta, qui resta un nome.
+        $nome = basename($nome);
+
         $nome = ltrim($nome, '.');
         $nome = trim($nome);
 

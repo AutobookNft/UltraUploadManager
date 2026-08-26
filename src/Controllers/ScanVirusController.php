@@ -124,6 +124,14 @@ class ScanVirusController extends Controller
             return null;
         }
 
+        // Il byte-zero si rifiuta QUI: `realpath()` su un percorso che lo contiene non
+        // restituisce `false`, LANCIA — e sarebbe un errore 500 su una rotta non autenticata,
+        // fuori dal gestore errori. Il vecchio `file_exists()` invece rispondeva `false`.
+        // Rilievo dell'audit di chiusura: introdotto dalla riparazione precedente.
+        if (str_contains($percorsoDalClient, "\0")) {
+            return null;
+        }
+
         $vero = realpath($percorsoDalClient);
         if ($vero === false) {
             return null;
