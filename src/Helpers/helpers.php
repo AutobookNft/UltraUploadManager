@@ -172,10 +172,22 @@ if (!function_exists('uum_prefisso_temporaneo_ammesso')) {
             return null;
         }
 
-        $dentro = $normalizzato === $radice
-            || str_starts_with($normalizzato, $radice . '/');
+        // ⚠️ La radice NUDA si rifiuta: ammetterla vuol dire poter cancellare in un colpo solo
+        // tutto ciò che sta nella cartella temporanea, che è il danno da cui questa guardia
+        // difende. Chi cancella una cartella temporanea ne cancella UNA, e la nomina.
+        //
+        // La prima versione ammetteva `$normalizzato === $radice`. Con `BUCKET_TMP_FILE_FOLDER`
+        // valorizzata — lo è, in produzione — il prefisso «temp» passava intero (audit di
+        // chiusura M-EGI-430, terzo giro).
+        if (!str_starts_with($normalizzato, $radice . '/')) {
+            return null;
+        }
 
-        return $dentro ? $normalizzato : null;
+        // E dopo la barra ci dev'essere qualcosa: «temp/» normalizzato è «temp», già rifiutato
+        // sopra, ma la regola si scrive lo stesso perché la si legga.
+        $sotto = substr($normalizzato, strlen($radice) + 1);
+
+        return $sotto === '' ? null : $normalizzato;
     }
 }
 
