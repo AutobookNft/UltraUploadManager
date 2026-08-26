@@ -66,7 +66,23 @@ Route::middleware(['throttle:50,1'])
         Route::post('/set-file-ACL', [UploadingFiles::class, 'setFileACL']);
         Route::post('/delete-temporary-file-local', [UploadingFiles::class, 'deleteTemporaryFileLocal']);
         Route::post('/delete-temporary-file-DO', [UploadingFiles::class, 'deleteTemporaryFileDO']);
-        Route::post('/delete-temporary-folder', [UploadingFiles::class, 'deleteTemporaryFolder']);
+        // PORTA CHIUSA (M-EGI-430, audit di chiusura). Questa rotta prendeva `folderName` grezzo dal
+        // corpo della richiesta e lo passava a DeleteTempFolder, che lo usa come PREFISSO S3 per
+        // elencare-e-cancellare in ciclo: le sole guardie erano `empty()` e `=== '/'`. Cioe' una
+        // richiesta non autenticata — questo gruppo di rotte non ha ne' auth ne' CSRF — poteva
+        // cancellare OGNI oggetto sotto un prefisso arbitrario del bucket, con credenziali che in
+        // produzione sono popolate e vive (verificato).
+        //
+        // Non e' stata contenuta ma CHIUSA perche' non la chiama nessuno: zero riferimenti nei
+        // sorgenti del pacchetto, zero in EGI, zero in EGI-HUB, NATAN_LOC, LA-BOTTEGA,
+        // EGI-Credential. Contenere avrebbe richiesto di sapere quale prefisso sia legittimo, e
+        // `do_bucket_folder` non e' usato da nessuna parte: non si indovina (REGOLA ZERO).
+        //
+        // Il metodo del controller e il job restano al loro posto (Strategia Delta): si chiude la
+        // porta, non si demolisce la stanza. Il job ha ora una guardia propria, cosi' chi
+        // riaprisse questa riga non riaprirebbe anche la falla. Per riattivarla servono un
+        // chiamante vero, un prefisso legittimo dichiarato, e l'autenticazione.
+        // Route::post('/delete-temporary-folder', [UploadingFiles::class, 'deleteTemporaryFolder']);
         Route::post('/notify-upload-complete', [UploadingFiles::class, 'notifyUploadComplete']);
         Route::post('/finalize-upload', [UploadingFiles::class, 'finalizeUpload']);
 

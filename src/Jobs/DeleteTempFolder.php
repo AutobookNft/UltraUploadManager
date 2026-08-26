@@ -39,6 +39,26 @@ class DeleteTempFolder implements ShouldQueue
 
         Log::channel('upload')->info('Classe: UploadingFiles. Method: deleteTemporaryFolder. Action: Tentativo di eliminazione della cartella temporanea:', ['folderName' => $folderName]);
 
+        // ⚠️ GUARDIA DI CONTENIMENTO (M-EGI-430, audit di chiusura).
+        //
+        // Sotto, $folderName diventa il PREFISSO di una listObjectsV2 seguita da una deleteObject
+        // per ogni risultato: un prefisso largo cancella un ramo intero del bucket. Le due guardie
+        // in cima al metodo non contengono niente — «users/» non e' vuoto e non e' «/».
+        //
+        // La rotta che portava qui e' stata chiusa perche' non la chiamava nessuno, ma la guardia
+        // sta QUI e non li': il job e' dispatchabile da chiunque, e una porta chiusa in un file di
+        // rotte si riapre togliendo un commento. La difesa sta dove avviene il danno.
+        //
+        // Sta DOPO la riga di registro qui sopra, di proposito: cosi' ogni tentativo — ammesso o
+        // rifiutato — resta tracciato, e il rifiuto non ha bisogno di una riga di registro propria.
+        $prefissoAmmesso = uum_prefisso_temporaneo_ammesso($folderName);
+
+        if ($prefissoAmmesso === null) {
+            return response()->json(['error' => 'Folder outside the temporary root. Deletion aborted.'], 400);
+        }
+
+        $folderName = $prefissoAmmesso;
+
         $s3Client = new S3Client([
             'version' => 'latest',
             'region'  => config('app.do_default_region'),

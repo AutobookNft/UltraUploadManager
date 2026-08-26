@@ -59,6 +59,40 @@ if (!function_exists('uum_nome_file_innocuo')) {
     }
 }
 
+if (!function_exists('uum_cartella_temporanea')) {
+    /**
+     * La cartella temporanea dell'applicazione, risolta in percorso ASSOLUTO.
+     *
+     * ⚠️ Il valore di configurazione `upload-manager.temp_path` è ASSOLUTO per come lo scrive il
+     * file di configurazione del pacchetto — `storage_path('app/private/temp')`, valutato al
+     * caricamento. Passarlo a `storage_path()` una seconda volta produce un percorso doppio
+     * (`…/storage/home/…/storage/app/private/temp`) che non esiste.
+     *
+     * Non è un dettaglio: `uum_percorso_temporaneo_ammesso` scartava la radice così composta —
+     * `realpath()` di un percorso inesistente è `false` — e restava viva la sola `sys_get_temp_dir()`.
+     * Cioè: i percorsi LEGITTIMI dentro la cartella dell'applicazione venivano RIFIUTATI, e nel
+     * frattempo era ammessa `/tmp` per intero. Misurato con l'applicazione avviata (audit M-EGI-430).
+     *
+     * Qui si accetta l'una e l'altra forma: se il valore è già assoluto lo si usa com'è, altrimenti
+     * lo si àncora a `storage_path()`. Così la funzione regge anche se un organo lo configura
+     * relativo, che è la forma che il nome del parametro suggerisce.
+     *
+     * @return string Percorso assoluto (non necessariamente esistente: chi chiama usa realpath).
+     */
+    function uum_cartella_temporanea(): string
+    {
+        $configurato = (string) config('upload-manager.temp_path', 'app/private/temp');
+
+        // Assoluto su POSIX, oppure con lettera di unità/UNC su Windows.
+        $eAssoluto = str_starts_with($configurato, DIRECTORY_SEPARATOR)
+            || str_starts_with($configurato, '/')
+            || (bool) preg_match('#^[A-Za-z]:[\\\\/]#', $configurato)
+            || str_starts_with($configurato, '\\\\');
+
+        return $eAssoluto ? $configurato : storage_path($configurato);
+    }
+}
+
 if (!function_exists('get_temp_file_path')) {
     /**
      * Generate the full path for a temporary file in the private storage directory.
@@ -72,9 +106,66 @@ if (!function_exists('get_temp_file_path')) {
      */
     function get_temp_file_path(string $filename): string
     {
-        return storage_path(
-            config('upload-manager.temp_path') . DIRECTORY_SEPARATOR . uum_nome_file_innocuo($filename)
-        );
+        return uum_cartella_temporanea() . DIRECTORY_SEPARATOR . uum_nome_file_innocuo($filename);
+    }
+}
+
+if (!function_exists('uum_prefisso_temporaneo_ammesso')) {
+    /**
+     * Accetta un PREFISSO di storage remoto (S3/Spaces) solo se cade dentro la cartella temporanea
+     * dichiarata; altrimenti lo scarta.
+     *
+     * Il gemello di `uum_percorso_temporaneo_ammesso` per lo storage remoto, dove non esiste
+     * `realpath`: non c'e' un filesystem da interrogare, quindi il contenimento è puramente
+     * lessicale e la risalita va rifiutata a mano, prima del confronto — «tmp/../altrove»
+     * comincia per «tmp» pur non essendoci dentro.
+     *
+     * Serve a `DeleteTempFolder`, dove il prefisso alimenta una listObjectsV2 seguita da una
+     * deleteObject per ogni risultato: un prefisso largo cancella un ramo intero del bucket
+     * (audit M-EGI-430).
+     *
+     * FALLISCE CHIUSO: se `app.do_bucket_folder` non e' configurato non si indovina un valore
+     * plausibile — si rifiuta tutto. Meglio una cancellazione che non parte di una che parte
+     * troppo larga.
+     *
+     * @param mixed $prefissoDalClient Il valore così come arriva dalla richiesta, non fidato.
+     * @return string|null Il prefisso normalizzato, se ammesso; `null` altrimenti.
+     */
+    function uum_prefisso_temporaneo_ammesso($prefissoDalClient): ?string
+    {
+        if (empty($prefissoDalClient) || !is_string($prefissoDalClient)) {
+            return null;
+        }
+
+        if (str_contains($prefissoDalClient, "\0")) {
+            return null;
+        }
+
+        $radice = trim((string) config('app.do_bucket_folder', ''), '/');
+        if ($radice === '') {
+            return null;
+        }
+
+        // Il separatore di Windows diventa quello di S3 prima di qualunque confronto: senza questo
+        // passaggio «..\..\altrove» attraverserebbe i controlli sotto senza essere visto.
+        $normalizzato = trim(str_replace('\\', '/', $prefissoDalClient), '/');
+        if ($normalizzato === '') {
+            return null;
+        }
+
+        $risalita = $normalizzato === '..'
+            || str_starts_with($normalizzato, '../')
+            || str_contains($normalizzato, '/../')
+            || str_ends_with($normalizzato, '/..');
+
+        if ($risalita) {
+            return null;
+        }
+
+        $dentro = $normalizzato === $radice
+            || str_starts_with($normalizzato, $radice . '/');
+
+        return $dentro ? $normalizzato : null;
     }
 }
 
@@ -83,8 +174,14 @@ if (!function_exists('uum_percorso_temporaneo_ammesso')) {
      * Accetta un percorso che arriva dal client SOLO se cade dentro una cartella temporanea
      * prevista; altrimenti lo scarta.
      *
-     * ⚠️ QUESTO È L'UNICO CONTENIMENTO DEL PACCHETTO, come `uum_nome_file_innocuo` è l'unica
-     * bonifica. Chiunque riceva un PERCORSO da fuori — non un nome, un percorso — passa di qui.
+     * ⚠️ Questo è il contenimento dei percorsi sul FILESYSTEM LOCALE. Non è l'unico del pacchetto:
+     * per i prefissi dello storage remoto c'è `uum_prefisso_temporaneo_ammesso`, che non può usare
+     * `realpath` perché non ha un filesystem da interrogare.
+     *
+     * La versione precedente di questo commento diceva «l'unico contenimento… chiunque riceva un
+     * percorso da fuori passa di qui», e non era vero: `DeleteTempFolder` riceveva un prefisso dal
+     * client e non passava di qui affatto (audit M-EGI-430). Un commento che promette più di quanto
+     * mantiene è peggio di nessun commento: chi legge smette di cercare.
      *
      * Bonificare il nome non basta quando è il percorso a essere libero: due rotte di questo
      * pacchetto prendevano un percorso intero dal corpo della richiesta e ci scrivevano sopra
@@ -119,7 +216,7 @@ if (!function_exists('uum_percorso_temporaneo_ammesso')) {
         }
 
         $ammesse = array_filter([
-            realpath(storage_path((string) config('upload-manager.temp_path', 'app/private/temp'))),
+            realpath(uum_cartella_temporanea()),
             realpath(sys_get_temp_dir()),
         ]);
 
