@@ -700,7 +700,15 @@ class UploadingFiles extends Controller
 
         // Ottieni il nome del bucket dalla configurazione
         $bucket = config('app.do_bucket');
-        $file = config('app.bucket_temp_file_folder') . '/' . $file;
+
+        // ⚠️ M-EGI-430 — `$file` viene dal CORPO della richiesta, e qui veniva concatenato com'era:
+        // una risalita («../../altro/opera.png») usciva dalla cartella temporanea e cancellava un
+        // oggetto qualunque del bucket, su una rotta senza autenticazione né CSRF. È lo stesso
+        // difetto della cancellazione di cartella, in forma singola invece che di massa.
+        //
+        // Qui non serve il contenimento di un percorso: quello che arriva DEVE essere un nome di
+        // file, e la bonifica unica lo riduce a tale — separatori compresi.
+        $file = config('app.bucket_temp_file_folder') . '/' . uum_nome_file_innocuo((string) $file);
 
         try {
             // Eliminazione del file specificato

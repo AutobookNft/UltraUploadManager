@@ -124,7 +124,17 @@ if (!function_exists('uum_prefisso_temporaneo_ammesso')) {
      * deleteObject per ogni risultato: un prefisso largo cancella un ramo intero del bucket
      * (audit M-EGI-430).
      *
-     * FALLISCE CHIUSO: se `app.do_bucket_folder` non e' configurato non si indovina un valore
+     * La radice è `app.bucket_temp_file_folder` — la cartella TEMPORANEA dentro il bucket, quella
+     * che il pacchetto usa davvero per comporre l'indirizzo remoto di un file temporaneo
+     * (`UploadingFiles`, `ConfigController`, `TempFilesCleaner`).
+     *
+     * ⚠️ La prima versione di questa guardia usava `app.do_bucket_folder`, che è un'ALTRA cosa: la
+     * cartella base del bucket. Ancorata lì avrebbe ammesso l'intera cartella base e rifiutato il
+     * prefisso legittimo — una difesa che sembra una difesa (audit di chiusura M-EGI-430, secondo
+     * giro). Non era sfruttabile, perché la rotta è chiusa; ma una guardia ancorata al posto
+     * sbagliato è peggio di una assente, perché chi legge smette di guardare.
+     *
+     * FALLISCE CHIUSO: se la cartella temporanea non è configurata non si indovina un valore
      * plausibile — si rifiuta tutto. Meglio una cancellazione che non parte di una che parte
      * troppo larga.
      *
@@ -141,7 +151,7 @@ if (!function_exists('uum_prefisso_temporaneo_ammesso')) {
             return null;
         }
 
-        $radice = trim((string) config('app.do_bucket_folder', ''), '/');
+        $radice = trim((string) config('app.bucket_temp_file_folder', ''), '/');
         if ($radice === '') {
             return null;
         }
