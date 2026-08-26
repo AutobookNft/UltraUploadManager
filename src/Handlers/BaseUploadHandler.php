@@ -99,7 +99,11 @@ class BaseUploadHandler
             }
 
             $file = $request->file('file');
-            $originalName = $file->getClientOriginalName();
+            // M-EGI-430: bonificato prima di comporre il percorso di scrittura (riga ~137).
+            // Era il quarto punto rimasto scoperto: qui non c'era traversal solo perche la
+            // regola di ammissione respinge le barre — sicurezza «per accidente», su una regola
+            // che vive in un file di configurazione e puo essere allargata.
+            $originalName = uum_nome_file_innocuo($file->getClientOriginalName());
             $logContext['file_name'] = $originalName;
             $index = $request->input('index', 0);
             Log::channel($this->logChannel)->info('[BaseUploadHandler] Processing file.', $logContext);

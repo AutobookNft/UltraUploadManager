@@ -101,6 +101,49 @@ class ScanVirusController extends Controller
     }
 
     /**
+     * Accetta un percorso che arriva dal client SOLO se cade dentro una cartella temporanea
+     * prevista; altrimenti lo scarta (M-EGI-430).
+     *
+     * Non si confrontano stringhe: si risolve il percorso vero con `realpath`, perché
+     * «/tmp/../home/forge/…» comincia per «/tmp» pur non essendoci dentro. Un percorso che non
+     * esiste non ha realpath e non serve a questo controller, che lo usa solo per leggere un
+     * file già scritto: scartarlo è la risposta giusta.
+     *
+     * Le cartelle ammesse sono le stesse due che il pacchetto usa per i file temporanei: quella
+     * dell'applicazione e quella di sistema.
+     *
+     * Decide soltanto: non scrive nel registro e non tocca nulla. Chi la chiama annota il
+     * rifiuto — così questa resta una funzione pura, provabile senza avviare l'applicazione.
+     *
+     * @param mixed $percorsoDalClient Il valore così come arriva dalla richiesta, non fidato.
+     * @return string|null Il percorso, se ammesso; `null` altrimenti.
+     */
+    protected function percorsoTemporaneoAmmesso($percorsoDalClient): ?string
+    {
+        if (empty($percorsoDalClient) || !is_string($percorsoDalClient)) {
+            return null;
+        }
+
+        $vero = realpath($percorsoDalClient);
+        if ($vero === false) {
+            return null;
+        }
+
+        $ammesse = array_filter([
+            realpath(storage_path((string) config('upload-manager.temp_path', 'app/private/temp'))),
+            realpath(sys_get_temp_dir()),
+        ]);
+
+        foreach ($ammesse as $radice) {
+            if ($vero === $radice || str_starts_with($vero, rtrim($radice, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) {
+                return $vero;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Initiates a virus scan on an uploaded file.
      *
      * This method performs a virus scan using ClamAV on the specified file.
@@ -125,7 +168,26 @@ class ScanVirusController extends Controller
         $fileName = basename($fileName); // Sanitize fileName to prevent directory traversal
 
         $index = $request->input('index');
-        $customTempPath = $request->input('customTempPath'); // Parameter for the alternative path
+
+        // Il percorso alternativo arriva dal client: si accetta SOLO se cade dentro una delle
+        // cartelle temporanee previste (M-EGI-430, rilievo dell'audit di chiusura).
+        //
+        // Prima si prendeva così com'era. Più sotto questo percorso finisce in `dirname()` e poi
+        // in `move()`: con un file allegato si sovrascriveva QUALUNQUE file esistente scrivibile
+        // dall'utente PHP, con contenuto scelto da chi chiama — e queste rotte sono caricate
+        // senza gruppo `web`, quindi senza autenticazione e senza CSRF. Bonificare il solo nome
+        // (riga sopra) non serviva a niente finché il PERCORSO restava libero.
+        $percorsoRichiesto = $request->input('customTempPath');
+        $customTempPath = $this->percorsoTemporaneoAmmesso($percorsoRichiesto);
+
+        if (!empty($percorsoRichiesto) && $customTempPath === null) {
+            UltraLog::warning(
+                'CustomTempPathRifiutato',
+                'Percorso temporaneo fuori dalle cartelle ammesse: scartato',
+                ['percorso' => $percorsoRichiesto],
+                $this->channel
+            );
+        }
 
         UltraLog::info(
             'VirusScanStart',
