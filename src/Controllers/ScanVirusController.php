@@ -120,35 +120,9 @@ class ScanVirusController extends Controller
      */
     protected function percorsoTemporaneoAmmesso($percorsoDalClient): ?string
     {
-        if (empty($percorsoDalClient) || !is_string($percorsoDalClient)) {
-            return null;
-        }
-
-        // Il byte-zero si rifiuta QUI: `realpath()` su un percorso che lo contiene non
-        // restituisce `false`, LANCIA — e sarebbe un errore 500 su una rotta non autenticata,
-        // fuori dal gestore errori. Il vecchio `file_exists()` invece rispondeva `false`.
-        // Rilievo dell'audit di chiusura: introdotto dalla riparazione precedente.
-        if (str_contains($percorsoDalClient, "\0")) {
-            return null;
-        }
-
-        $vero = realpath($percorsoDalClient);
-        if ($vero === false) {
-            return null;
-        }
-
-        $ammesse = array_filter([
-            realpath(storage_path((string) config('upload-manager.temp_path', 'app/private/temp'))),
-            realpath(sys_get_temp_dir()),
-        ]);
-
-        foreach ($ammesse as $radice) {
-            if ($vero === $radice || str_starts_with($vero, rtrim($radice, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) {
-                return $vero;
-            }
-        }
-
-        return null;
+        // M-EGI-430 — il contenimento vive in UN SOLO POSTO, l'helper del pacchetto: lo chiama
+        // anche la cancellazione del file temporaneo, che aveva lo stesso buco.
+        return uum_percorso_temporaneo_ammesso($percorsoDalClient);
     }
 
     /**

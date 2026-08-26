@@ -77,3 +77,59 @@ if (!function_exists('get_temp_file_path')) {
         );
     }
 }
+
+if (!function_exists('uum_percorso_temporaneo_ammesso')) {
+    /**
+     * Accetta un percorso che arriva dal client SOLO se cade dentro una cartella temporanea
+     * prevista; altrimenti lo scarta.
+     *
+     * ⚠️ QUESTO È L'UNICO CONTENIMENTO DEL PACCHETTO, come `uum_nome_file_innocuo` è l'unica
+     * bonifica. Chiunque riceva un PERCORSO da fuori — non un nome, un percorso — passa di qui.
+     *
+     * Bonificare il nome non basta quando è il percorso a essere libero: due rotte di questo
+     * pacchetto prendevano un percorso intero dal corpo della richiesta e ci scrivevano sopra
+     * (`/scan-virus`) o lo cancellavano (`/delete-system-temp`), senza autenticazione né CSRF.
+     *
+     * Non si confrontano stringhe: si risolve il percorso vero con `realpath`, perché
+     * «/tmp/../altrove» comincia per «/tmp» pur non essendoci dentro, e perché `realpath`
+     * risolve anche i collegamenti simbolici prima del confronto. Un percorso che non esiste
+     * non ha realpath, e a queste rotte non serve: scartarlo è la risposta giusta.
+     *
+     * Decide soltanto: non scrive nel registro. Chi la chiama annota il rifiuto — così resta
+     * una funzione pura, provabile senza avviare l'applicazione.
+     *
+     * @param mixed $percorsoDalClient Il valore così come arriva dalla richiesta, non fidato.
+     * @return string|null Il percorso risolto, se ammesso; `null` altrimenti.
+     */
+    function uum_percorso_temporaneo_ammesso($percorsoDalClient): ?string
+    {
+        if (empty($percorsoDalClient) || !is_string($percorsoDalClient)) {
+            return null;
+        }
+
+        // Il byte-zero si rifiuta QUI: `realpath()` su un percorso che lo contiene non
+        // restituisce `false`, LANCIA — e sarebbe un 500 su una rotta non autenticata.
+        if (str_contains($percorsoDalClient, "\0")) {
+            return null;
+        }
+
+        $vero = realpath($percorsoDalClient);
+        if ($vero === false) {
+            return null;
+        }
+
+        $ammesse = array_filter([
+            realpath(storage_path((string) config('upload-manager.temp_path', 'app/private/temp'))),
+            realpath(sys_get_temp_dir()),
+        ]);
+
+        foreach ($ammesse as $radice) {
+            $radice = rtrim($radice, DIRECTORY_SEPARATOR);
+            if ($vero === $radice || str_starts_with($vero, $radice . DIRECTORY_SEPARATOR)) {
+                return $vero;
+            }
+        }
+
+        return null;
+    }
+}

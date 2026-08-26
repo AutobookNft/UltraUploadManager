@@ -342,7 +342,22 @@ class SystemTempFileController extends Controller
      */
     public function deleteSystemTempFile(Request $request)
     {
-        $tempPath = $request->input('tempPath');
+        // M-EGI-430 — il percorso arriva dal client e finisce in File::delete(): si accetta
+        // SOLO se cade dentro una cartella temporanea prevista. Prima si cancellava qualunque
+        // file scrivibile dall'utente PHP, da una rotta senza autenticazione ne CSRF.
+        // Stessa famiglia della falla di /scan-virus, trovata dal giudice di chiusura.
+        $percorsoRichiesto = $request->input('tempPath');
+        $tempPath = uum_percorso_temporaneo_ammesso($percorsoRichiesto);
+
+        if (!empty($percorsoRichiesto) && $tempPath === null) {
+            UltraLog::warning(
+                'TempPathRifiutato',
+                'Percorso di cancellazione fuori dalle cartelle ammesse: scartato',
+                ['percorso' => $percorsoRichiesto],
+                $this->channel
+            );
+        }
+
         if (empty($tempPath) || !is_string($tempPath)) {
             UltraLog::error(
                 'InvalidTempPath',
